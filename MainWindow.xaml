@@ -1,0 +1,83 @@
+<!-- Copyright (c) Microsoft Corporation and Contributors. -->
+<!-- Licensed under the MIT License. -->
+
+<Window
+    x:Class="MediFiler_V2.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MediFiler_V2"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+
+    <Grid x:Name="MainContent" AllowDrop="True" Drop="Window_OnDrop" DragOver="Window_OnDragOver">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="32"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <!--Title bar-->
+        <Grid x:Name="AppTitleBar" Height="32" Background="#000000" VerticalAlignment="Top" Grid.Row="0">
+            
+            <Image Source="Images/WindowIcon.png"
+                   HorizontalAlignment="Left" 
+                   Width="16" Height="16" Margin="8,0"/>
+
+            <TextBlock x:Name="AppTitleTextBlock" Text="App title is looong"
+                       TextWrapping="NoWrap"
+                       Style="{StaticResource CaptionTextBlockStyle}" 
+                       VerticalAlignment="Center"
+                       Margin="28,0,0,0"/>
+        </Grid>
+
+        <!--Left navigation panel-->
+        <NavigationView Grid.Row="1" Grid.Column="0"
+                        IsBackButtonVisible="Collapsed"
+                        IsSettingsVisible="True"
+                        PaneDisplayMode="LeftCompact">
+            
+            <!--Default image view-->
+            <Grid Background="Black" PointerWheelChanged="MouseWheelScrollHandler">
+                <Image
+                    Name="FileViewer"
+                    Source="Assets/Square150x150Logo.png"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+
+                </StackPanel>
+            </Grid>
+            
+        </NavigationView>
+
+
+        <TreeView Grid.Row="1" 
+                  Name="FileTreeView"
+                  Background="Transparent" 
+                  HorizontalAlignment="Left" 
+                  Width="500" 
+                  VerticalAlignment="Stretch"
+                  CanDrag="False"
+                  CanDragItems="False"
+                  CanReorderItems="False"
+                  SelectionMode="None">
+            <TreeView.Resources>
+                <local:IndentConverter x:Key="IndentConverter"></local:IndentConverter>
+            </TreeView.Resources>
+            <TreeView.ItemTemplate>
+                <DataTemplate x:DataType="local:FileNode">
+                    <TreeViewItem 
+                        Tapped="FolderListLeftClick"
+                        CanDrag="False"
+                        RightTapped="FolderListRightClick"
+                        Margin="{Binding Depth, Converter={StaticResource IndentConverter}}"
+                        Content="{Binding Name}"></TreeViewItem>
+
+
+                </DataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
+    </Grid>
+    
+
+    
+</Window>

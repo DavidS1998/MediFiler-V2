@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "MediFiler-V2 (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "MediFiler-V2 (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
