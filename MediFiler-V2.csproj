@@ -12,6 +12,9 @@
     <EnableMsixTooling>true</EnableMsixTooling>
     <WindowsPackageType>None</WindowsPackageType>
   </PropertyGroup>
+  <ItemGroup>
+    <Content Remove="Assets\Icon.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <Content Include="Assets\SplashScreen.scale-200.png" />

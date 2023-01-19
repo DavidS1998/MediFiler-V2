@@ -12,7 +12,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
+using Microsoft.UI.Xaml.Controls;
 using BitmapImage = Microsoft.UI.Xaml.Media.Imaging.BitmapImage;
+using Windows.UI.Core;
+using Windows.Storage.Streams;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -26,7 +29,7 @@ namespace MediFiler_V2
     {
         private Dictionary<int, BitmapImage> lowResImages = new Dictionary<int, BitmapImage>();
 
-        private int preloadCount = 2;
+        private int preloadCount = 5;
         private Thread preloadThread;
         private bool preloadThreadRunning;
 
@@ -34,6 +37,7 @@ namespace MediFiler_V2
         private List<FileNode> fullFolderList = new();
 
         private FileNode currentFolder;
+        private FileNode currentFile;
         private int currentFolderIndex = 0;
 
         public MainWindow()
@@ -46,7 +50,17 @@ namespace MediFiler_V2
             Activated += MainWindow_Activated;
 
             //
-            preloadThread = new Thread(new ThreadStart(PreloadImages));
+            lowResPreloadedImages = new Dictionary<int, BitmapImage>();
+            //preloadThread = new Thread(new ThreadStart(PreloadImages));
+        }
+
+        private void ShowMetadata()
+        {
+            string metadataText = "";
+            metadataText += "(" + (currentFolderIndex + 1) + "/" + (currentFolder.SubFiles.Count) + ") ";
+            metadataText += currentFile.Name;
+
+            AppTitleTextBlock.Text = metadataText;
         }
 
         private void DisplayCurrentFile()
@@ -56,9 +70,27 @@ namespace MediFiler_V2
             if (currentFolder == null) return;
             if (currentFolder.SubFiles.Count <= 0) return;
 
-            // TODO: Handle different file types
+            currentFile = currentFolder.SubFiles[currentFolderIndex];
 
-            FileViewer.Source = new BitmapImage(new Uri(currentFolder.SubFiles[currentFolderIndex].Path));
+            ShowMetadata();
+            PreloadImages(currentFolderIndex);
+
+            switch (FileTypeHelper.GetFileCategory(currentFile.Path))
+            {
+                case FileTypeHelper.FileCategory.IMAGE:
+                    DisplayImage();
+                    break;
+                case FileTypeHelper.FileCategory.VIDEO:
+                    DisplayThumbnail();
+                    break;
+                case FileTypeHelper.FileCategory.TEXT:
+                    DisplayThumbnail();
+                    break;
+                default:
+                    DisplayThumbnail();
+                    break;
+            }
+            //FileViewer.Source = new BitmapImage(new Uri(currentFolder.SubFiles[currentFolderIndex].Path));
 
             /*
             if (lowResImages.ContainsKey(currentFileIndex))
@@ -72,8 +104,72 @@ namespace MediFiler_V2
             }*/
         }
 
-        private void PreloadImages()
+        private async void DisplayImage()
         {
+            /*
+            if (lowResPreloadedImages.ContainsKey(currentFolderIndex))
+            {
+                FileViewer.Source = lowResPreloadedImages[currentFolderIndex];
+            }*/
+
+
+            BitmapImage bitmap = new BitmapImage();
+            bitmap.DecodePixelHeight = (int)FileViewer.ActualHeight;
+
+            // TODO: Old behavior is to let the screen be black when loading,
+            // TODO: rather than keeping the current image displayed.
+            // TODO: Keep current behavior and experiment with pre-loading...?
+            //FileViewer.Source = null;
+            
+            ////
+
+            int sentInIndex = currentFolderIndex;
+
+            var file = await StorageFile.GetFileFromPathAsync(currentFile.Path);
+            using (var stream = await file.OpenAsync(FileAccessMode.Read))
+            {
+                await bitmap.SetSourceAsync(stream);
+                stream.Dispose();
+            }
+
+            // Throw away result if current file changed
+            if (sentInIndex != currentFolderIndex) return;
+
+            FileViewer.Source = bitmap;
+            
+        }
+        private async void DisplayThumbnail()
+        {
+            StorageFile file = await StorageFile.GetFileFromPathAsync(currentFile.Path);
+            var thumbnail = await file.GetThumbnailAsync(Windows.Storage.FileProperties.ThumbnailMode.SingleItem);
+            if (thumbnail == null) return;
+
+            var bitmap = new BitmapImage();
+            await bitmap.SetSourceAsync(thumbnail);
+            FileViewer.Source = bitmap;
+        }
+
+        private Dictionary<int, BitmapImage> lowResPreloadedImages;
+
+        private void PreloadImages(int loadIndex)
+        {
+            for (int i = loadIndex - preloadCount; i <= loadIndex + preloadCount; i++)
+            {
+                if (i >= 0 && i < currentFolder.SubFiles.Count)
+                {
+                    if (lowResPreloadedImages.ContainsKey(i)) continue;
+                    Debug.WriteLine("Preloading " + i);
+                    // Create a new instance of the BitmapImage class with the low resolution settings
+                    BitmapImage lowResBitmap = new BitmapImage();
+                    lowResBitmap.DecodePixelWidth = 100;
+                    lowResBitmap.UriSource = new Uri(currentFolder.SubFiles[i].Path);
+                    // Store the low resolution image in a dictionary with the key being the index of the image
+                    lowResPreloadedImages.Add(i, lowResBitmap);
+                }
+            }
+
+
+
             /*
             while (preloadThreadRunning)
             {
@@ -95,7 +191,7 @@ namespace MediFiler_V2
 
 
         // Runs when the window changes focus
-        private void MainWindow_Activated(object sender, WindowActivatedEventArgs args)
+        private void MainWindow_Activated(object sender, Microsoft.UI.Xaml.WindowActivatedEventArgs args)
         {
             if (args.WindowActivationState == WindowActivationState.Deactivated)
             {
@@ -122,8 +218,10 @@ namespace MediFiler_V2
             // Should run in the background
             await buildTree(items);
 
+            // By default load the first dropped root. Desired behavior?
             currentFolder = fullFolderList.First();
-            DisplayCurrentFile();
+
+            SwitchFolder(currentFolder);
         }
 
         private async Task buildTree(IReadOnlyList<IStorageItem> filesAndFolders)
@@ -136,9 +234,8 @@ namespace MediFiler_V2
             // TODO: Show loading indicator
             await Task.Run(() =>
             {
-                // TODO: Handle files as root nodes
                 // Extract all root nodes
-                Parallel.ForEach(filesAndFolders, path => rootNodes.Add(new FileNode(path, 0, null)));
+                Parallel.ForEach(filesAndFolders, path => rootNodes.Add(new FileNode(path, 0)));
 
                 // Go down each root node and build a tree
                 foreach (FileNode node in rootNodes)
@@ -179,10 +276,16 @@ namespace MediFiler_V2
             DisplayCurrentFile();
         }
 
-        private void SwitchFolder(FileNode newFolder)
+        // For loading a different folder context
+        private void SwitchFolder(FileNode newFolder, int Position = 0)
         {
             currentFolder = newFolder;
-            currentFolderIndex = 0;
+            currentFolderIndex = Position < 0 ? 0 : currentFolderIndex;
+            currentFolderIndex = Position > newFolder.SubFiles.Count ? Position : 0;
+
+            lowResPreloadedImages.Clear();
+
+            AppTitleTextBlock.Text = "MediFiler";
             FileViewer.Source = null;
             DisplayCurrentFile();
         }
@@ -190,13 +293,12 @@ namespace MediFiler_V2
         // Handler for the folder list
         private void FolderListClick(RoutedEventArgs e, bool leftClick)
         {
-            FileNode respectiveNode = ((FrameworkElement)e.OriginalSource).DataContext as FileNode;
-            if (respectiveNode == null) return;
+            if (((FrameworkElement)e.OriginalSource).DataContext is not FileNode respectiveNode) return;
 
+            // TODO: Handle left and right click differently
             SwitchFolder(respectiveNode);
 
             /*
-            // TODO: Temp, left click reveals files, right click folders
             var items = leftClick ? respectiveNode.SubFiles : respectiveNode.SubFolders;
 
             foreach (var childNode in items)

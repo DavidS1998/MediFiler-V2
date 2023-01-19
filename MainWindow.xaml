@@ -24,7 +24,7 @@
                    HorizontalAlignment="Left" 
                    Width="16" Height="16" Margin="8,0"/>
 
-            <TextBlock x:Name="AppTitleTextBlock" Text="App title is looong"
+            <TextBlock x:Name="AppTitleTextBlock" Text="MediFiler v2"
                        TextWrapping="NoWrap"
                        Style="{StaticResource CaptionTextBlockStyle}" 
                        VerticalAlignment="Center"
@@ -41,7 +41,7 @@
             <Grid Background="Black" PointerWheelChanged="MouseWheelScrollHandler">
                 <Image
                     Name="FileViewer"
-                    Source="Assets/Square150x150Logo.png"/>
+                    Source="Assets/Icon.ico"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
 
                 </StackPanel>
@@ -67,12 +67,14 @@
                 <DataTemplate x:DataType="local:FileNode">
                     <TreeViewItem 
                         Tapped="FolderListLeftClick"
-                        CanDrag="False"
                         RightTapped="FolderListRightClick"
-                        Margin="{Binding Depth, Converter={StaticResource IndentConverter}}"
-                        Content="{Binding Name}"></TreeViewItem>
+                        CanDrag="False">
+                        <TextBlock
+                            Margin="{Binding Depth, Converter={StaticResource IndentConverter}}"
+                            Text="{Binding Name}">
 
-
+                        </TextBlock>
+                    </TreeViewItem>
                 </DataTemplate>
             </TreeView.ItemTemplate>
         </TreeView>
