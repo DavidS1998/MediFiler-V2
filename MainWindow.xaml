@@ -49,37 +49,78 @@
             
         </NavigationView>
 
+        <!-- Preview bottom bar -->
+        <Grid x:Name="PreviewBar" Height="150" Width="Auto" VerticalAlignment="Bottom"
+            Row="1" Opacity="0.3" 
+              PointerEntered="PreviewEnter" PointerExited="PreviewLeave">
 
-        <TreeView Grid.Row="1" 
-                  Name="FileTreeView"
-                  Background="Transparent" 
-                  HorizontalAlignment="Left" 
-                  Width="500" 
-                  VerticalAlignment="Stretch"
-                  CanDrag="False"
-                  CanDragItems="False"
-                  CanReorderItems="False"
-                  SelectionMode="None">
-            <TreeView.Resources>
-                <local:IndentConverter x:Key="IndentConverter"></local:IndentConverter>
-            </TreeView.Resources>
-            <TreeView.ItemTemplate>
-                <DataTemplate x:DataType="local:FileNode">
-                    <TreeViewItem 
-                        Tapped="FolderListLeftClick"
-                        RightTapped="FolderListRightClick"
-                        CanDrag="False">
-                        <TextBlock
-                            Margin="{Binding Depth, Converter={StaticResource IndentConverter}}"
-                            Text="{Binding Name}">
+            <Grid.Background>
+                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0" Opacity="0.75">
+                    <GradientStop Color="#7F000000" Offset="1"/>
+                    <GradientStop Color="#00000000"/>
+                </LinearGradientBrush>
+            </Grid.Background>
 
-                        </TextBlock>
-                    </TreeViewItem>
-                </DataTemplate>
-            </TreeView.ItemTemplate>
-        </TreeView>
+            <Grid.RenderTransform>
+                <TranslateTransform x:Name="MoveHelper" Y="135"/>
+            </Grid.RenderTransform>
+
+            <StackPanel Name="PreviewImageContainer" Orientation="Horizontal" HorizontalAlignment="Center">
+                <Border Width="150">
+                    <Image VerticalAlignment="Center" Stretch="UniformToFill" HorizontalAlignment="Center" Source="Assets/TestAssets/manga.jpg"/>
+                </Border>
+                <Border Width="150">
+                    <Image VerticalAlignment="Center" Stretch="UniformToFill" HorizontalAlignment="Center" Source="Assets/TestAssets/default.png"/>
+                </Border>
+                <Border Width="150">
+                    <Image VerticalAlignment="Center" Stretch="UniformToFill" HorizontalAlignment="Center" Source="Assets/TestAssets/manga.jpg"/>
+                </Border>
+
+            </StackPanel>
+
+            <Grid.Resources>
+                <Storyboard x:Name="ShowPreviews">
+                    <DoubleAnimation Storyboard.TargetName="MoveHelper" Storyboard.TargetProperty="Y" To="0" Duration="0:0:0.1"/>
+                    <DoubleAnimation Storyboard.TargetName="PreviewBar" Storyboard.TargetProperty="Grid.Opacity" To="1" Duration="0:0:0.1" />
+                </Storyboard>
+                <Storyboard x:Name="HidePreviews">
+                    <DoubleAnimation Storyboard.TargetName="MoveHelper" Storyboard.TargetProperty="Y" To="135" Duration="0:0:0.1"/>
+                    <DoubleAnimation Storyboard.TargetName="PreviewBar" Storyboard.TargetProperty="Grid.Opacity" To="0.3" Duration="0:0:0.1" />
+                </Storyboard>
+            </Grid.Resources>
+                
+        </Grid>
+
+        <!--Sorting panel-->
+        <Grid Grid.Row="1">
+            <TreeView 
+                Name="FileTreeView"
+                Background="Transparent" 
+                HorizontalAlignment="Left" 
+                Width="500" 
+                VerticalAlignment="Stretch"
+                CanDrag="False"
+                CanDragItems="False"
+                CanReorderItems="False"
+                SelectionMode="None">
+                <TreeView.Resources>
+                    <local:IndentConverter x:Key="IndentConverter"></local:IndentConverter>
+                </TreeView.Resources>
+                <TreeView.ItemTemplate>
+                    <DataTemplate x:DataType="local:FileNode">
+                        <TreeViewItem 
+                            Tapped="FolderListLeftClick"
+                            RightTapped="FolderListRightClick"
+                            CanDrag="False">
+                            <TextBlock
+                                Margin="{Binding Depth, Converter={StaticResource IndentConverter}}"
+                                Text="{Binding Name}">
+
+                            </TextBlock>
+                        </TreeViewItem>
+                    </DataTemplate>
+                </TreeView.ItemTemplate>
+            </TreeView>
+        </Grid>
     </Grid>
-    
-
-    
 </Window>

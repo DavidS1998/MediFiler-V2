@@ -8,15 +8,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
-using Microsoft.UI.Xaml.Controls;
+using Windows.Storage.FileProperties;
 using BitmapImage = Microsoft.UI.Xaml.Media.Imaging.BitmapImage;
-using Windows.UI.Core;
-using Windows.Storage.Streams;
-using Microsoft.UI.Windowing;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -28,11 +24,8 @@ namespace MediFiler_V2
     /// </summary>
     public sealed partial class MainWindow : Window
     {
-        private Dictionary<int, BitmapImage> lowResImages = new Dictionary<int, BitmapImage>();
-
-        /*private int preloadCount = 5;
-        private Thread preloadThread;
-        private bool preloadThreadRunning;*/
+        private Dictionary<int, BitmapImage> lowResImages = new();
+        private Dictionary<int, BitmapImage> thumbnails = new();
 
         private List<FileNode> rootNodes = new();
         private List<FileNode> fullFolderList = new();
@@ -41,6 +34,8 @@ namespace MediFiler_V2
         private FileNode currentFile;
         private int currentFolderIndex = 0;
         private int latestLoaded = -1;
+
+        private int preloadDistance = 10;
 
 
         // Initialize window
@@ -53,9 +48,6 @@ namespace MediFiler_V2
             SetTitleBar(AppTitleBar);
             Activated += MainWindow_Activated;
 
-            //
-            //lowResPreloadedImages = new Dictionary<int, BitmapImage>();
-            //preloadThread = new Thread(new ThreadStart(PreloadImages));
         }
 
 
@@ -100,40 +92,16 @@ namespace MediFiler_V2
                     DisplayThumbnail();
                     break;
             }
-            //FileViewer.Source = new BitmapImage(new Uri(currentFolder.SubFiles[currentFolderIndex].Path));
-
-            /*
-            if (lowResImages.ContainsKey(currentFileIndex))
-            {
-                //BitmapImage highResBitmap = new BitmapImage(new Uri(fileTree.root.Children[currentFileIndex].Name));
-                //FileViewer.Source = highResBitmap;
-            }
-            else
-            {
-                //FileViewer.Source = new BitmapImage(new Uri(fileTree.root.Children[currentFileIndex].Name));
-            }*/
         }
 
         // Creates a BitMap from file and sets it as FileViewer source. Works with GIFs
         private async void DisplayImage()
         {
-            /*
-            if (lowResPreloadedImages.ContainsKey(currentFolderIndex))
-            {
-                FileViewer.Source = lowResPreloadedImages[currentFolderIndex];
-            }*/
-            
             BitmapImage bitmap = new BitmapImage();
             bitmap.DecodePixelHeight = (int)FileHolder.ActualHeight;
 
-            // TODO: Old behavior is to let the screen be black when loading,
-            // TODO: rather than keeping the current image displayed.
-            // TODO: Keep current behavior and experiment with pre-loading...?
-            //FileViewer.Source = null;
-            
-            ////
-
             int sentInIndex = currentFolderIndex;
+            var sentInFolder = currentFolder.Path;
 
             var file = await StorageFile.GetFileFromPathAsync(currentFile.Path);
             using (var stream = await file.OpenAsync(FileAccessMode.Read))
@@ -144,6 +112,7 @@ namespace MediFiler_V2
 
             // Throw away result if current file changed
             if (sentInIndex != currentFolderIndex) return;
+            if (sentInFolder != currentFolder.Path) return;
 
             latestLoaded = sentInIndex;
             FileViewer.Source = bitmap;
@@ -152,6 +121,12 @@ namespace MediFiler_V2
         // Creates BitMap from File Explorer thumbnail and sets it as FileViewer source
         private async void DisplayThumbnail()
         {
+            if (thumbnails.ContainsKey(currentFolderIndex))
+            {
+                FileViewer.Source = thumbnails[currentFolderIndex];
+                return;
+            }
+
             int sentInIndex = currentFolderIndex;
 
             StorageFile file = await StorageFile.GetFileFromPathAsync(currentFile.Path);
@@ -169,47 +144,49 @@ namespace MediFiler_V2
             FileViewer.Source = bitmap;
         }
 
-        /*
-        // PRELOAD TEST
-        private Dictionary<int, BitmapImage> lowResPreloadedImages;
-
-        private void PreloadImages(int loadIndex)
+        // 
+        private async void LoadThumbnail(string path, int index)
         {
-            for (int i = loadIndex - preloadCount; i <= loadIndex + preloadCount; i++)
+            if (thumbnails.ContainsKey(index)) return;
+            thumbnails.Add(index, null); // Lock the index
+
+            StorageFile file = await StorageFile.GetFileFromPathAsync(path);
+            StorageItemThumbnail thumbnail;
+            try
             {
-                if (i >= 0 && i < currentFolder.SubFiles.Count)
+                thumbnail = await file.GetThumbnailAsync(Windows.Storage.FileProperties.ThumbnailMode.SingleItem);
+                if (thumbnail == null)
                 {
-                    if (lowResPreloadedImages.ContainsKey(i)) continue;
-                    Debug.WriteLine("Preloading " + i);
-                    // Create a new instance of the BitmapImage class with the low resolution settings
-                    BitmapImage lowResBitmap = new BitmapImage();
-                    lowResBitmap.DecodePixelWidth = 100;
-                    lowResBitmap.UriSource = new Uri(currentFolder.SubFiles[i].Path);
-                    // Store the low resolution image in a dictionary with the key being the index of the image
-                    lowResPreloadedImages.Add(i, lowResBitmap);
+                    thumbnails.Remove(index);
+                    return;
                 }
             }
-
-
-
-            /*
-            while (preloadThreadRunning)
+            catch (Exception e)
             {
-                for (int i = currentFileIndex - preloadCount; i <= currentFileIndex + preloadCount; i++)
+                Debug.WriteLine("Failed getting thumbnail for " + path + ": " + e);
+                thumbnails.Remove(index);
+                return;
+            }
+
+            var bitmap = new BitmapImage();
+            await bitmap.SetSourceAsync(thumbnail);
+
+            thumbnails.Remove(index); // Unlock the index
+            thumbnails.Add(index, bitmap);
+        }
+
+        //
+        private void PreloadThumbnails()
+        {
+            for (int i = currentFolderIndex - preloadDistance; i < (currentFolderIndex + preloadDistance); i++)
+            {
+                if (i < currentFolder.SubFiles.Count && i >= 0)
                 {
-                    if (i >= 0 && i < fileTree.root.Children.Count)
-                    {
-                        // Create a new instance of the BitmapImage class with the low resolution settings
-                        BitmapImage lowResBitmap = new BitmapImage();
-                        lowResBitmap.DecodePixelWidth = 200;
-                        lowResBitmap.UriSource = new Uri(fileTree.root.Children[i].Name);
-                        // Store the low resolution image in a dictionary with the key being the index of the image
-                        lowResImages[i] = lowResBitmap;
-                    }
+                    var path = currentFolder.SubFiles[i].Path;
+                    LoadThumbnail(path, i);
                 }
             }
-            
-        }*/
+        }
 
 
         // Runs when file(s) have been dropped on the main window
@@ -277,9 +254,11 @@ namespace MediFiler_V2
             var delta = e.GetCurrentPoint(FileViewer).Properties.MouseWheelDelta;
             if (delta == 0) return;
             var increment = delta > 0 ? -1 : 1;
+            if (currentFolder == null) return;
             if (currentFolderIndex + increment < 0 || currentFolderIndex + increment >= currentFolder.SubFiles.Count) return;
 
             currentFolderIndex += increment;
+            PreloadThumbnails();
             DisplayCurrentFile();
         }
 
@@ -296,10 +275,12 @@ namespace MediFiler_V2
             latestLoaded = -1;
 
             //lowResPreloadedImages.Clear();
+            thumbnails.Clear();
 
             AppTitleTextBlock.Text = "MediFiler";
             FileViewer.Source = null;
             DisplayCurrentFile();
+            PreloadThumbnails();
         }
 
 
@@ -333,6 +314,16 @@ namespace MediFiler_V2
         private void FolderListRightClick(object sender, RightTappedRoutedEventArgs e)
         {
             FolderListClick(e, false);
+        }
+
+
+        private void PreviewEnter(object sender, PointerRoutedEventArgs e)
+        {
+            ShowPreviews.Begin();
+        }
+        private void PreviewLeave(object sender, PointerRoutedEventArgs e)
+        {
+            HidePreviews.Begin();
         }
 
 
