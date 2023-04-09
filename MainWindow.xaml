@@ -38,7 +38,7 @@
                         PaneDisplayMode="LeftCompact">
             
             <!--Default image view-->
-            <Grid Background="Black" PointerWheelChanged="MouseWheelScrollHandler">
+            <Grid Background="Black" Name="FileHolder" PointerWheelChanged="MouseWheelScrollHandler" SizeChanged="ImageViewer_SizeChanged">
                 <Image
                     Name="FileViewer"
                     Source="Assets/Icon.ico"/>

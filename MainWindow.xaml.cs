@@ -16,6 +16,7 @@ using Microsoft.UI.Xaml.Controls;
 using BitmapImage = Microsoft.UI.Xaml.Media.Imaging.BitmapImage;
 using Windows.UI.Core;
 using Windows.Storage.Streams;
+using Microsoft.UI.Windowing;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -56,6 +57,9 @@ namespace MediFiler_V2
             //lowResPreloadedImages = new Dictionary<int, BitmapImage>();
             //preloadThread = new Thread(new ThreadStart(PreloadImages));
         }
+
+
+
 
         // Gets secondary data from the current file
         private void ShowMetadata()
@@ -120,7 +124,7 @@ namespace MediFiler_V2
             }*/
             
             BitmapImage bitmap = new BitmapImage();
-            bitmap.DecodePixelHeight = (int)FileViewer.Height;
+            bitmap.DecodePixelHeight = (int)FileHolder.ActualHeight;
 
             // TODO: Old behavior is to let the screen be black when loading,
             // TODO: rather than keeping the current image displayed.
@@ -206,22 +210,6 @@ namespace MediFiler_V2
             }
             
         }*/
-
-
-        // Runs when the window changes focus
-        private void MainWindow_Activated(object sender, Microsoft.UI.Xaml.WindowActivatedEventArgs args)
-        {
-            if (args.WindowActivationState == WindowActivationState.Deactivated)
-            {
-                AppTitleTextBlock.Foreground =
-                    (SolidColorBrush)App.Current.Resources["WindowCaptionForegroundDisabled"];
-            }
-            else
-            {
-                AppTitleTextBlock.Foreground =
-                    (SolidColorBrush)App.Current.Resources["WindowCaptionForeground"];
-            }
-        }
 
 
         // Runs when file(s) have been dropped on the main window
@@ -314,7 +302,10 @@ namespace MediFiler_V2
             DisplayCurrentFile();
         }
 
-        // TODO: Reload FileViewer when window size has changed
+
+
+        // // // UI EVENTS
+
 
 
         // Handler for the folder list
@@ -342,6 +333,33 @@ namespace MediFiler_V2
         private void FolderListRightClick(object sender, RightTappedRoutedEventArgs e)
         {
             FolderListClick(e, false);
+        }
+
+
+
+        // // // WINDOW EVENTS
+
+
+
+        // Runs when the window changes focus
+        private void MainWindow_Activated(object sender, Microsoft.UI.Xaml.WindowActivatedEventArgs args)
+        {
+            if (args.WindowActivationState == WindowActivationState.Deactivated)
+            {
+                AppTitleTextBlock.Foreground =
+                    (SolidColorBrush)App.Current.Resources["WindowCaptionForegroundDisabled"];
+            }
+            else
+            {
+                AppTitleTextBlock.Foreground =
+                    (SolidColorBrush)App.Current.Resources["WindowCaptionForeground"];
+            }
+        }
+
+        private void ImageViewer_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (FileViewer.Source != null)
+                (FileViewer.Source as BitmapImage).DecodePixelHeight = (int)FileHolder.ActualHeight;
         }
     }
 }
