@@ -24,14 +24,12 @@ namespace MediFiler_V2
     /// </summary>
     public sealed partial class MainWindow : Window
     {
-        private Dictionary<int, BitmapImage> lowResImages = new();
         private Dictionary<int, BitmapImage> thumbnails = new();
 
         private List<FileNode> rootNodes = new();
         private List<FileNode> fullFolderList = new();
 
         private FileNode currentFolder;
-        private FileNode currentFile;
         private int currentFolderIndex = 0;
         private int latestLoaded = -1;
 
@@ -50,52 +48,53 @@ namespace MediFiler_V2
 
         }
 
+        // Load next file
+        private void Load()
+        {
+            // Nothing to load
+            if (currentFolder == null) return;
+            if (currentFolder.SubFiles.Count <= 0) return;
 
+            FileNode currentFile = currentFolder.SubFiles[currentFolderIndex];
 
+            ShowMetadata(currentFile);
+            DisplayCurrentFile(currentFile);
+            PreloadThumbnails();
+        }
 
         // Gets secondary data from the current file
-        private void ShowMetadata()
+        private void ShowMetadata(FileNode file)
         {
             string metadataText = "";
             metadataText += "(" + (currentFolderIndex + 1) + "/" + (currentFolder.SubFiles.Count) + ") ";
-            metadataText += currentFile.Name;
+            metadataText += file.Name;
 
             AppTitleTextBlock.Text = metadataText;
         }
 
         // Decides how each file type should be shown
-        private void DisplayCurrentFile()
+        private void DisplayCurrentFile(FileNode file)
         {
-            // TODO: This should be done on a separate UI thread
-
-            if (currentFolder == null) return;
-            if (currentFolder.SubFiles.Count <= 0) return;
-
-            currentFile = currentFolder.SubFiles[currentFolderIndex];
-
-            ShowMetadata();
-            //PreloadImages(currentFolderIndex);
-
-            switch (FileTypeHelper.GetFileCategory(currentFile.Path))
+            switch (FileTypeHelper.GetFileCategory(file.Path))
             {
                 case FileTypeHelper.FileCategory.IMAGE:
-                    DisplayThumbnail();
-                    DisplayImage();
+                    DisplayThumbnail(file);
+                    DisplayImage(file);
                     break;
                 case FileTypeHelper.FileCategory.VIDEO:
-                    DisplayThumbnail();
+                    DisplayThumbnail(file);
                     break;
                 case FileTypeHelper.FileCategory.TEXT:
-                    DisplayThumbnail();
+                    DisplayThumbnail(file);
                     break;
                 default:
-                    DisplayThumbnail();
+                    DisplayThumbnail(file);
                     break;
             }
         }
 
         // Creates a BitMap from file and sets it as FileViewer source. Works with GIFs
-        private async void DisplayImage()
+        private async void DisplayImage(FileNode file)
         {
             BitmapImage bitmap = new BitmapImage();
             bitmap.DecodePixelHeight = (int)FileHolder.ActualHeight;
@@ -103,8 +102,8 @@ namespace MediFiler_V2
             int sentInIndex = currentFolderIndex;
             var sentInFolder = currentFolder.Path;
 
-            var file = await StorageFile.GetFileFromPathAsync(currentFile.Path);
-            using (var stream = await file.OpenAsync(FileAccessMode.Read))
+            var loadedFile = await StorageFile.GetFileFromPathAsync(file.Path);
+            using (var stream = await loadedFile.OpenAsync(FileAccessMode.Read))
             {
                 await bitmap.SetSourceAsync(stream);
                 stream.Dispose();
@@ -119,7 +118,7 @@ namespace MediFiler_V2
         }
 
         // Creates BitMap from File Explorer thumbnail and sets it as FileViewer source
-        private async void DisplayThumbnail()
+        private async void DisplayThumbnail(FileNode file)
         {
             if (thumbnails.ContainsKey(currentFolderIndex))
             {
@@ -129,8 +128,8 @@ namespace MediFiler_V2
 
             int sentInIndex = currentFolderIndex;
 
-            StorageFile file = await StorageFile.GetFileFromPathAsync(currentFile.Path);
-            var thumbnail = await file.GetThumbnailAsync(Windows.Storage.FileProperties.ThumbnailMode.SingleItem);
+            StorageFile loadedFile = await StorageFile.GetFileFromPathAsync(file.Path);
+            var thumbnail = await loadedFile.GetThumbnailAsync(Windows.Storage.FileProperties.ThumbnailMode.SingleItem);
             if (thumbnail == null) return;
 
             var bitmap = new BitmapImage();
@@ -258,8 +257,7 @@ namespace MediFiler_V2
             if (currentFolderIndex + increment < 0 || currentFolderIndex + increment >= currentFolder.SubFiles.Count) return;
 
             currentFolderIndex += increment;
-            PreloadThumbnails();
-            DisplayCurrentFile();
+            Load();
         }
 
         // For loading a different folder context
@@ -279,8 +277,7 @@ namespace MediFiler_V2
 
             AppTitleTextBlock.Text = "MediFiler";
             FileViewer.Source = null;
-            DisplayCurrentFile();
-            PreloadThumbnails();
+            Load();
         }
 
 
