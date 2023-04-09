@@ -29,9 +29,9 @@ namespace MediFiler_V2
     {
         private Dictionary<int, BitmapImage> lowResImages = new Dictionary<int, BitmapImage>();
 
-        private int preloadCount = 5;
+        /*private int preloadCount = 5;
         private Thread preloadThread;
-        private bool preloadThreadRunning;
+        private bool preloadThreadRunning;*/
 
         private List<FileNode> rootNodes = new();
         private List<FileNode> fullFolderList = new();
@@ -39,7 +39,10 @@ namespace MediFiler_V2
         private FileNode currentFolder;
         private FileNode currentFile;
         private int currentFolderIndex = 0;
+        private int latestLoaded = -1;
 
+
+        // Initialize window
         public MainWindow()
         {
             this.InitializeComponent();
@@ -50,10 +53,11 @@ namespace MediFiler_V2
             Activated += MainWindow_Activated;
 
             //
-            lowResPreloadedImages = new Dictionary<int, BitmapImage>();
+            //lowResPreloadedImages = new Dictionary<int, BitmapImage>();
             //preloadThread = new Thread(new ThreadStart(PreloadImages));
         }
 
+        // Gets secondary data from the current file
         private void ShowMetadata()
         {
             string metadataText = "";
@@ -63,6 +67,7 @@ namespace MediFiler_V2
             AppTitleTextBlock.Text = metadataText;
         }
 
+        // Decides how each file type should be shown
         private void DisplayCurrentFile()
         {
             // TODO: This should be done on a separate UI thread
@@ -73,11 +78,12 @@ namespace MediFiler_V2
             currentFile = currentFolder.SubFiles[currentFolderIndex];
 
             ShowMetadata();
-            PreloadImages(currentFolderIndex);
+            //PreloadImages(currentFolderIndex);
 
             switch (FileTypeHelper.GetFileCategory(currentFile.Path))
             {
                 case FileTypeHelper.FileCategory.IMAGE:
+                    DisplayThumbnail();
                     DisplayImage();
                     break;
                 case FileTypeHelper.FileCategory.VIDEO:
@@ -104,6 +110,7 @@ namespace MediFiler_V2
             }*/
         }
 
+        // Creates a BitMap from file and sets it as FileViewer source. Works with GIFs
         private async void DisplayImage()
         {
             /*
@@ -111,10 +118,9 @@ namespace MediFiler_V2
             {
                 FileViewer.Source = lowResPreloadedImages[currentFolderIndex];
             }*/
-
-
+            
             BitmapImage bitmap = new BitmapImage();
-            bitmap.DecodePixelHeight = (int)FileViewer.ActualHeight;
+            bitmap.DecodePixelHeight = (int)FileViewer.Height;
 
             // TODO: Old behavior is to let the screen be black when loading,
             // TODO: rather than keeping the current image displayed.
@@ -135,20 +141,32 @@ namespace MediFiler_V2
             // Throw away result if current file changed
             if (sentInIndex != currentFolderIndex) return;
 
+            latestLoaded = sentInIndex;
             FileViewer.Source = bitmap;
-            
         }
+
+        // Creates BitMap from File Explorer thumbnail and sets it as FileViewer source
         private async void DisplayThumbnail()
         {
+            int sentInIndex = currentFolderIndex;
+
             StorageFile file = await StorageFile.GetFileFromPathAsync(currentFile.Path);
             var thumbnail = await file.GetThumbnailAsync(Windows.Storage.FileProperties.ThumbnailMode.SingleItem);
             if (thumbnail == null) return;
 
             var bitmap = new BitmapImage();
             await bitmap.SetSourceAsync(thumbnail);
+
+            // Throw away result if current file changed
+            if (sentInIndex != currentFolderIndex) return;
+
+            // Only prioritize thumbnails for unloaded images
+            if (latestLoaded == currentFolderIndex) return;
             FileViewer.Source = bitmap;
         }
 
+        /*
+        // PRELOAD TEST
         private Dictionary<int, BitmapImage> lowResPreloadedImages;
 
         private void PreloadImages(int loadIndex)
@@ -186,8 +204,8 @@ namespace MediFiler_V2
                     }
                 }
             }
-            */
-        }
+            
+        }*/
 
 
         // Runs when the window changes focus
@@ -206,7 +224,7 @@ namespace MediFiler_V2
         }
 
 
-
+        // Runs when file(s) have been dropped on the main window
         private async void Window_OnDrop(object sender, DragEventArgs e)
         {
             // Only accept files and folders
@@ -216,6 +234,7 @@ namespace MediFiler_V2
             if (items.Count == 0) return;
 
             // Should run in the background
+            // TODO: Indicate that something is loading while it builds the tree
             await buildTree(items);
 
             // By default load the first dropped root. Desired behavior?
@@ -280,15 +299,23 @@ namespace MediFiler_V2
         private void SwitchFolder(FileNode newFolder, int Position = 0)
         {
             currentFolder = newFolder;
+
+            // Reset index unless position requested
             currentFolderIndex = Position < 0 ? 0 : currentFolderIndex;
             currentFolderIndex = Position > newFolder.SubFiles.Count ? Position : 0;
 
-            lowResPreloadedImages.Clear();
+            // Nothing has been loaded yet
+            latestLoaded = -1;
+
+            //lowResPreloadedImages.Clear();
 
             AppTitleTextBlock.Text = "MediFiler";
             FileViewer.Source = null;
             DisplayCurrentFile();
         }
+
+        // TODO: Reload FileViewer when window size has changed
+
 
         // Handler for the folder list
         private void FolderListClick(RoutedEventArgs e, bool leftClick)
