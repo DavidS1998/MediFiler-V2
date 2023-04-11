@@ -22,7 +22,6 @@ public static class FileThumbnail
     public static async Task SaveThumbnailToCache(string path, int index)
     {
         if (ThumbnailCache.ContainsKey(index)) return;
-        ThumbnailCache.Add(index, null); // Lock the index
 
         var file = await StorageFile.GetFileFromPathAsync(path);
         StorageItemThumbnail thumbnail;
@@ -76,12 +75,13 @@ public static class FileThumbnail
         // Use PreloadDistance to determine how many Borders to create
         for (var i = 0; i < previewCount; i++)
         {
-            var container = new Border { Width = 150 };
+            var container = new Border { Width = 150, IsTapEnabled = true, IsHitTestVisible = true };
+            // Make the container clickable
             var image = new Image
             {
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,
-                Stretch = Stretch.UniformToFill,
+                Stretch = Stretch.UniformToFill
             };
             container.Child = image;
             previewImageContainer.Children.Add(container);

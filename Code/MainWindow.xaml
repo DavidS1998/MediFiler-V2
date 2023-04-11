@@ -78,39 +78,40 @@
                 </Grid>
 
                 <!-- Preview bottom bar -->
-                <Grid x:Name="PreviewBar" Height="150" Width="Auto" VerticalAlignment="Bottom"
-                      Opacity="0.3" HorizontalAlignment="Stretch"
+                <Grid Height="150" Width="Auto" VerticalAlignment="Bottom" Background="#000000FF"
+                      HorizontalAlignment="Stretch" PointerReleased="PreviewBar_OnPointerReleased"
                       PointerEntered="PreviewEnter" PointerExited="PreviewLeave">
+                    <Grid x:Name="PreviewBar" Height="150" VerticalAlignment="Bottom" Opacity="0.3">
+                        <Grid.Background>
+                            <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0" Opacity="0.75">
+                                <GradientStop Color="#7F000000" Offset="1" />
+                                <GradientStop Color="#00000000" />
+                            </LinearGradientBrush>
+                        </Grid.Background>
 
-                    <Grid.Background>
-                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0" Opacity="0.75">
-                            <GradientStop Color="#7F000000" Offset="1" />
-                            <GradientStop Color="#00000000" />
-                        </LinearGradientBrush>
-                    </Grid.Background>
+                        <Grid.RenderTransform>
+                            <TranslateTransform x:Name="MoveHelper" Y="135" />
+                        </Grid.RenderTransform>
 
-                    <Grid.RenderTransform>
-                        <TranslateTransform x:Name="MoveHelper" Y="135" />
-                    </Grid.RenderTransform>
+                        <StackPanel Name="PreviewImageContainer" Orientation="Horizontal" HorizontalAlignment="Center">
+                            <!-- Location for thumbnail image elements -->
+                        </StackPanel>
 
-                    <StackPanel Name="PreviewImageContainer" Orientation="Horizontal" HorizontalAlignment="Center">
-                        <!-- Location for thumbnail image elements -->
-                    </StackPanel>
-
-                    <Grid.Resources>
-                        <Storyboard x:Name="ShowPreviews">
-                            <DoubleAnimation Storyboard.TargetName="MoveHelper" Storyboard.TargetProperty="Y" To="0"
-                                             Duration="0:0:0.1" />
-                            <DoubleAnimation Storyboard.TargetName="PreviewBar"
-                                             Storyboard.TargetProperty="Grid.Opacity" To="1" Duration="0:0:0.1" />
-                        </Storyboard>
-                        <Storyboard x:Name="HidePreviews">
-                            <DoubleAnimation Storyboard.TargetName="MoveHelper" Storyboard.TargetProperty="Y" To="135"
-                                             Duration="0:0:0.1" />
-                            <DoubleAnimation Storyboard.TargetName="PreviewBar"
-                                             Storyboard.TargetProperty="Grid.Opacity" To="0.3" Duration="0:0:0.1" />
-                        </Storyboard>
-                    </Grid.Resources>
+                        <Grid.Resources>
+                            <Storyboard x:Name="ShowPreviews">
+                                <DoubleAnimation Storyboard.TargetName="MoveHelper" Storyboard.TargetProperty="Y" To="0"
+                                                 Duration="0:0:0.1" />
+                                <DoubleAnimation Storyboard.TargetName="PreviewBar"
+                                                 Storyboard.TargetProperty="Grid.Opacity" To="1" Duration="0:0:0.1" />
+                            </Storyboard>
+                            <Storyboard x:Name="HidePreviews">
+                                <DoubleAnimation Storyboard.TargetName="MoveHelper" Storyboard.TargetProperty="Y" To="135"
+                                                 Duration="0:0:0.1" />
+                                <DoubleAnimation Storyboard.TargetName="PreviewBar"
+                                                 Storyboard.TargetProperty="Grid.Opacity" To="0.3" Duration="0:0:0.1" />
+                            </Storyboard>
+                        </Grid.Resources>
+                    </Grid>
                 </Grid>
                 
             </Grid>

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using Windows.ApplicationModel.DataTransfer;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
@@ -38,18 +39,18 @@ namespace MediFiler_V2.Code
         }
 
         // Load file
-        private void Load()
+        public void Load()
         {
             // Nothing to load
             if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0) return;
         
             var currentFile = CurrentFolder.SubFiles[CurrentFolderIndex];
-
-            FileThumbnail.ClearPreviews(PreviewImageContainer);
-            ShowMetadata(currentFile);
-            DisplayCurrentFile(currentFile);
             
+            ShowMetadata(currentFile);
+            FileThumbnail.ClearPreviews(PreviewImageContainer);
             FileThumbnail.PreloadThumbnails(CurrentFolderIndex, CurrentFolder, PreviewImageContainer);
+            
+            DisplayCurrentFile(currentFile);
         }
 
         // Gets secondary data from the current file
@@ -93,8 +94,8 @@ namespace MediFiler_V2.Code
             var bitmap = await FileImage.LoadImage(fileSystem, (int)FileHolder.ActualHeight);
             // Throw away result if current file changed; Invalid images don't overwrite thumbnails
             if (sentInIndex != CurrentFolderIndex || sentInFolder != CurrentFolder.Path || bitmap == null) return;
-            _latestLoadedImage = sentInIndex; // Stops thumbnail from overwriting image
             FileViewer.Source = bitmap;
+            _latestLoadedImage = sentInIndex; // Stops thumbnail from overwriting image
         }
         
         // Creates BitMap from File Explorer thumbnail and sets it as FileViewer source
@@ -169,14 +170,37 @@ namespace MediFiler_V2.Code
             FolderListClick(e, false);
         }
 
-
+        // Hover on preview bar
         private void PreviewEnter(object sender, PointerRoutedEventArgs e)
         {
             ShowPreviews.Begin();
         }
+        
+        // Leave preview bar
         private void PreviewLeave(object sender, PointerRoutedEventArgs e)
         {
             HidePreviews.Begin();
+        }
+        
+        // Click on preview bar
+        private void PreviewBar_OnPointerReleased(object sender, PointerRoutedEventArgs e)
+        {
+            var parent = ((FrameworkElement)e.OriginalSource).Parent;
+            var index = PreviewImageContainer.Children.IndexOf((FrameworkElement)parent);
+            // Print out class of clicked child
+            Debug.WriteLine(index);
+
+            // Invalid element clicked
+            if (index == -1 || e.OriginalSource.GetType() != typeof(Image)) return;
+            
+            // Figure out the requested index
+            var middleIndex = (int)Math.Floor(PreviewImageContainer.Children.Count / 2.0);
+            var fileIndex = CurrentFolderIndex + (index - middleIndex);
+            if (fileIndex < 0 || fileIndex >= CurrentFolder.SubFiles.Count) return;
+            
+            // Load the file
+            CurrentFolderIndex = fileIndex;
+            Load();
         }
         
 
