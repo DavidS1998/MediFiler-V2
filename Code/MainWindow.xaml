@@ -105,7 +105,7 @@
                     <local:IndentConverter x:Key="IndentConverter"></local:IndentConverter>
                 </TreeView.Resources>
                 <TreeView.ItemTemplate>
-                    <DataTemplate x:DataType="local:FileNode">
+                    <DataTemplate x:DataType="local:FileSystemNode">
                         <TreeViewItem 
                             Tapped="FolderListLeftClick"
                             RightTapped="FolderListRightClick"

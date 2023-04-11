@@ -9,11 +9,9 @@ namespace MediFiler_V2;
 
 public static class TreeHandler
 {
-    // TODO: Make helper functions for these lists
-    private static List<FileNode> _rootNodes = new(); // Top folders
-    private static List<FileNode> _fullFolderList = new(); // Used for the folder list view
-    
-    // TODO: Show loading indicator
+    private static readonly List<FileSystemNode> RootNodes = new(); // Top folders
+    private static readonly List<FileSystemNode> FullFolderList = new(); // Used for the folder list view
+
     public static async Task BuildTree(IReadOnlyList<IStorageItem> filesAndFolders, TreeView fileTreeView)
     {
         ClearTree(fileTreeView);
@@ -22,24 +20,22 @@ public static class TreeHandler
         await Task.Run(() =>
         {
             // Extract all root nodes
-            Parallel.ForEach(filesAndFolders, path => _rootNodes.Add(new FileNode(path, 0)));
+            Parallel.ForEach(filesAndFolders, path => RootNodes.Add(new FileSystemNode(path, 0)));
 
             // Go down each root node and build a tree
-            foreach (var node in _rootNodes)
+            foreach (var node in RootNodes)
             {
                 AddFolderToTree(node);
             }
         });
-
         CreateTree(fileTreeView);
     }
-
     
     // Recursively extracts folder data from nodes
-    public static void AddFolderToTree(FileNode node)
+    public static void AddFolderToTree(FileSystemNode systemNode)
     {
-        _fullFolderList.Add(node);
-        foreach (var subNode in node.SubFolders)
+        FullFolderList.Add(systemNode);
+        foreach (var subNode in systemNode.SubFolders)
         {
             AddFolderToTree(subNode);
         }
@@ -52,17 +48,17 @@ public static class TreeHandler
     public static void ClearTree(TreeView fileTreeView)
     {
         fileTreeView.ItemsSource = null;
-        _rootNodes.Clear();
-        _fullFolderList.Clear();
+        RootNodes.Clear();
+        FullFolderList.Clear();
     }
 
     public static void CreateTree(TreeView fileTreeView)
     {
-        fileTreeView.ItemsSource = _fullFolderList;
+        fileTreeView.ItemsSource = FullFolderList;
     }
     
-    public static FileNode LoadRootNode(int index)
+    public static FileSystemNode LoadRootNode(int index)
     {
-        return _rootNodes[index];
+        return RootNodes[index];
     }
 }

@@ -2,18 +2,10 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
-using Windows.Storage;
-using Windows.Storage.FileProperties;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Media.Imaging;
 using BitmapImage = Microsoft.UI.Xaml.Media.Imaging.BitmapImage;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -24,10 +16,10 @@ namespace MediFiler_V2.Code
     /// <summary>
     /// An empty window that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class MainWindow : Window
+    public sealed partial class MainWindow
     {
         // TODO: Stop using global variables
-        private FileNode _currentFolder;
+        private FileSystemNode _currentFolder;
         private int _currentFolderIndex;
         private int _latestLoadedImage = -1;
         
@@ -57,11 +49,11 @@ namespace MediFiler_V2.Code
         }
 
         // Gets secondary data from the current file
-        private void ShowMetadata(FileNode file)
+        private void ShowMetadata(FileSystemNode fileSystem)
         {
             var metadataText = "";
             metadataText += "(" + (_currentFolderIndex + 1) + "/" + (_currentFolder.SubFiles.Count) + ") ";
-            metadataText += file.Name;
+            metadataText += fileSystem.Name;
 
             AppTitleTextBlock.Text = metadataText;
         }
@@ -71,14 +63,14 @@ namespace MediFiler_V2.Code
         
 
         // Decides how each file type should be shown
-        private void DisplayCurrentFile(FileNode file)
+        private void DisplayCurrentFile(FileSystemNode fileSystem)
         {
-            DisplayThumbnail(file);
+            DisplayThumbnail(fileSystem);
             
-            switch (FileTypeHelper.GetFileCategory(file.Path))
+            switch (FileTypeHelper.GetFileCategory(fileSystem.Path))
             {
                 case FileTypeHelper.FileCategory.IMAGE:
-                    DisplayImage(file);
+                    DisplayImage(fileSystem);
                     break;
                 case FileTypeHelper.FileCategory.VIDEO:
                     break;
@@ -90,11 +82,11 @@ namespace MediFiler_V2.Code
         }
         
         // Displays an image file in FileViewer, also works with GIFs
-        public async void DisplayImage(FileNode file)
+        private async void DisplayImage(FileSystemNode fileSystem)
         {
             var sentInIndex = _currentFolderIndex; // File change check
             var sentInFolder = _currentFolder.Path; // Context change check
-            var bitmap = await FileImage.LoadImage(file, (int)FileHolder.ActualHeight);
+            var bitmap = await FileImage.LoadImage(fileSystem, (int)FileHolder.ActualHeight);
             // Throw away result if current file changed; Invalid images don't overwrite thumbnails
             if (sentInIndex != _currentFolderIndex || sentInFolder != _currentFolder.Path || bitmap == null) return;
             _latestLoadedImage = sentInIndex; // Stops thumbnail from overwriting image
@@ -102,11 +94,11 @@ namespace MediFiler_V2.Code
         }
         
         // Creates BitMap from File Explorer thumbnail and sets it as FileViewer source
-        private async void DisplayThumbnail(FileNode file)
+        private async void DisplayThumbnail(FileSystemNode fileSystem)
         {
             var sentInIndex = _currentFolderIndex; // File change check
-            await FileThumbnail.SaveThumbnailToCache(file.Path, sentInIndex);
-            // Don't overwrite full imagwes; Don't show if file changed
+            await FileThumbnail.SaveThumbnailToCache(fileSystem.Path, sentInIndex);
+            // Don't overwrite full images; Don't show if file changed
             if (_latestLoadedImage == _currentFolderIndex || sentInIndex != _currentFolderIndex) return;
             FileViewer.Source = FileThumbnail.ThumbnailCache[sentInIndex];
         }
@@ -129,7 +121,7 @@ namespace MediFiler_V2.Code
         }
 
         // For loading a different folder context
-        private void SwitchFolder(FileNode newFolder, int position = 0)
+        private void SwitchFolder(FileSystemNode newFolder, int position = 0)
         {
             _currentFolder = newFolder;
             // Set position if within bounds
@@ -154,7 +146,7 @@ namespace MediFiler_V2.Code
         // Handler for the folder list
         private void FolderListClick(RoutedEventArgs e, bool leftClick)
         {
-            if (((FrameworkElement)e.OriginalSource).DataContext is not FileNode respectiveNode) return;
+            if (((FrameworkElement)e.OriginalSource).DataContext is not FileSystemNode respectiveNode) return;
             
             if (leftClick)
             {
@@ -188,7 +180,7 @@ namespace MediFiler_V2.Code
         
 
         // Runs when the window changes focus
-        private void MainWindow_Activated(object sender, Microsoft.UI.Xaml.WindowActivatedEventArgs args)
+        private void MainWindow_Activated(object sender, WindowActivatedEventArgs args)
         {
             if (args.WindowActivationState == WindowActivationState.Deactivated)
             {

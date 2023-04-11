@@ -10,14 +10,14 @@ public static class FileImage
 {
     
     // Load image from file
-    public static async Task<BitmapImage> LoadImage(FileNode file, int size)
+    public static async Task<BitmapImage> LoadImage(FileSystemNode fileSystem, int size)
     {
         var bitmap = new BitmapImage();
         bitmap.DecodePixelHeight = size;
 
         try
         {
-            var loadedFile = await StorageFile.GetFileFromPathAsync(file.Path);
+            var loadedFile = await StorageFile.GetFileFromPathAsync(fileSystem.Path);
             using var stream = await loadedFile.OpenAsync(FileAccessMode.Read);
             await bitmap.SetSourceAsync(stream);
             stream.Dispose();

@@ -45,7 +45,7 @@ public static class FileThumbnail
     }
     
     // Caches several adjacent file thumbnails
-    public static async void PreloadThumbnails(int currentPositionInFolder, FileNode currentFolder)
+    public static async void PreloadThumbnails(int currentPositionInFolder, FileSystemNode currentFolder)
     {
         var tasks = new List<Task>();
         for (var fileIndex = currentPositionInFolder - PreloadDistance; 

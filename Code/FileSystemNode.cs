@@ -8,44 +8,44 @@ using Windows.Storage;
 
 namespace MediFiler_V2
 {
-    public class FileNode
+    public class FileSystemNode
     {
         public string Name { get; set; }
         public string Path { get; set; }
         public int Depth { get; set; }
-        public List<FileNode> SubFiles { get; set; } = new();
-        public List<FileNode> SubFolders { get; set; } = new();
-
-        public FileNode(IStorageItem node, int depth)
+        public List<FileSystemNode> SubFiles { get; set; } = new();
+        public List<FileSystemNode> SubFolders { get; set; } = new();
+        
+        public FileSystemNode(IStorageItem storageItem, int depth)
         {
-            Path = node.Path;
-            Name = node.Name;
+            Name = storageItem.Name;
+            Path = storageItem.Path;
             Depth = depth;
 
-            // If root node is a file, pretend this is a folder with only this as a file
-            if (depth == 0 && node is StorageFile)
+            // If root node is a file, pretend it's a folder with only this as a file
+            if (depth == 0 && storageItem is StorageFile)
             {
-                SubFiles.Add(new FileNode(node, Depth + 1));
+                SubFiles.Add(new FileSystemNode(storageItem, Depth + 1));
             }
+            
+            // Return if this is a file (leaf)
+            if (!storageItem.IsOfType(StorageItemTypes.Folder)) return;
+            
+            var folder = (StorageFolder) storageItem;
+            var filesAndFolders = folder.GetItemsAsync().AsTask().Result;
 
-            // If this item is a folder, continue on
-            if (node is not StorageFolder folder) return;
-
-            var folderItems = folder.GetItemsAsync().GetAwaiter().GetResult();
-
-            foreach (var folderItem in folderItems)
+            // Make a node for each file and folder
+            Parallel.ForEach(filesAndFolders, item =>
             {
-                // Add child nodes to respective list
-                switch (folderItem)
+                if (item.IsOfType(StorageItemTypes.File))
                 {
-                    case StorageFile file:
-                        SubFiles.Add(new FileNode(file, depth + 1));
-                        break;
-                    case StorageFolder subFolder:
-                        SubFolders.Add(new FileNode(subFolder, depth + 1));
-                        break;
+                    SubFiles.Add(new FileSystemNode(item, depth + 1));
                 }
-            }
+                if (item.IsOfType(StorageItemTypes.Folder))
+                {
+                    SubFolders.Add(new FileSystemNode(item, depth + 1));
+                }
+            });
         }
     }
 }
