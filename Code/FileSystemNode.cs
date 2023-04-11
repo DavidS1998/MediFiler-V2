@@ -46,6 +46,10 @@ namespace MediFiler_V2
                     SubFolders.Add(new FileSystemNode(item, depth + 1));
                 }
             });
+            
+            // Sort result
+            SubFiles = SubFiles.OrderBy(x => x.Name).ToList();
+            SubFolders = SubFolders.OrderBy(x => x.Name).ToList();
         }
     }
 }

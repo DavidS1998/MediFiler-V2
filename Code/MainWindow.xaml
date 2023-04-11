@@ -10,22 +10,22 @@
 
     <Grid x:Name="MainContent" AllowDrop="True" Drop="Window_OnDrop" DragOver="Window_OnDragOver">
         <Grid.RowDefinitions>
-            <RowDefinition Height="32"/>
-            <RowDefinition/>
+            <RowDefinition Height="32" />
+            <RowDefinition />
         </Grid.RowDefinitions>
 
         <!--Title bar-->
         <Grid x:Name="AppTitleBar" Height="32" Background="#000000" VerticalAlignment="Top" Grid.Row="0">
-            
+
             <Image Source="../Assets/Icon.ico"
-                   HorizontalAlignment="Left" 
-                   Width="16" Height="16" Margin="8,0"/>
+                   HorizontalAlignment="Left"
+                   Width="16" Height="16" Margin="8,0" />
 
             <TextBlock x:Name="AppTitleTextBlock" Text="MediFiler v2"
                        TextWrapping="NoWrap"
-                       Style="{StaticResource CaptionTextBlockStyle}" 
+                       Style="{StaticResource CaptionTextBlockStyle}"
                        VerticalAlignment="Center"
-                       Margin="28,0,0,0"/>
+                       Margin="28,0,0,0" />
         </Grid>
 
         <!--Left navigation panel-->
@@ -33,92 +33,87 @@
                         IsBackButtonVisible="Collapsed"
                         IsSettingsVisible="True"
                         PaneDisplayMode="LeftCompact">
-            
+
             <!--Default image view-->
-            <Grid Background="Black" Name="FileHolder" PointerWheelChanged="MouseWheelScrollHandler" SizeChanged="ImageViewer_SizeChanged">
+            <Grid Background="Black" Name="FileHolder" PointerWheelChanged="MouseWheelScrollHandler"
+                  SizeChanged="ImageViewer_SizeChanged">
                 <Image
                     Name="FileViewer"
                     Stretch="Uniform"
-                    Source="../Assets/Icon.ico"/>
+                    Source="../Assets/Icon.ico" />
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
 
                 </StackPanel>
-            </Grid>
-            
-        </NavigationView>
 
-        <!-- Preview bottom bar -->
-        <Grid x:Name="PreviewBar" Height="150" Width="Auto" VerticalAlignment="Bottom"
-            Row="1" Opacity="0.3" 
-              PointerEntered="PreviewEnter" PointerExited="PreviewLeave">
+                <!--Sorting panel-->
+                <Grid>
+                    <TreeView
+                        Name="FileTreeView"
+                        Background="Transparent"
+                        HorizontalAlignment="Left"
+                        Width="500"
+                        VerticalAlignment="Stretch"
+                        CanDrag="False"
+                        CanDragItems="False"
+                        CanReorderItems="False"
+                        SelectionMode="None">
+                        <TreeView.Resources>
+                            <local:IndentConverter x:Key="IndentConverter"></local:IndentConverter>
+                        </TreeView.Resources>
+                        <TreeView.ItemTemplate>
+                            <DataTemplate x:DataType="local:FileSystemNode">
+                                <TreeViewItem
+                                    Tapped="FolderListLeftClick"
+                                    RightTapped="FolderListRightClick"
+                                    CanDrag="False">
+                                    <TextBlock
+                                        Margin="{Binding Depth, Converter={StaticResource IndentConverter}}"
+                                        Text="{Binding Name}">
 
-            <Grid.Background>
-                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0" Opacity="0.75">
-                    <GradientStop Color="#7F000000" Offset="1"/>
-                    <GradientStop Color="#00000000"/>
-                </LinearGradientBrush>
-            </Grid.Background>
+                                    </TextBlock>
+                                </TreeViewItem>
+                            </DataTemplate>
+                        </TreeView.ItemTemplate>
+                    </TreeView>
+                </Grid>
 
-            <Grid.RenderTransform>
-                <TranslateTransform x:Name="MoveHelper" Y="135"/>
-            </Grid.RenderTransform>
+                <!-- Preview bottom bar -->
+                <Grid x:Name="PreviewBar" Height="150" Width="Auto" VerticalAlignment="Bottom"
+                      Opacity="0.3" HorizontalAlignment="Stretch"
+                      PointerEntered="PreviewEnter" PointerExited="PreviewLeave">
 
-            <StackPanel Name="PreviewImageContainer" Orientation="Horizontal" HorizontalAlignment="Center">
-                <Border Width="150">
-                    <Image VerticalAlignment="Center" Stretch="UniformToFill" HorizontalAlignment="Center" Source="../Assets/TestAssets/manga.jpg"/>
-                </Border>
-                <Border Width="150">
-                    <Image VerticalAlignment="Center" Stretch="UniformToFill" HorizontalAlignment="Center" Source="../Assets/TestAssets/default.png"/>
-                </Border>
-                <Border Width="150">
-                    <Image VerticalAlignment="Center" Stretch="UniformToFill" HorizontalAlignment="Center" Source="../Assets/TestAssets/manga.jpg"/>
-                </Border>
+                    <Grid.Background>
+                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0" Opacity="0.75">
+                            <GradientStop Color="#7F000000" Offset="1" />
+                            <GradientStop Color="#00000000" />
+                        </LinearGradientBrush>
+                    </Grid.Background>
 
-            </StackPanel>
+                    <Grid.RenderTransform>
+                        <TranslateTransform x:Name="MoveHelper" Y="135" />
+                    </Grid.RenderTransform>
 
-            <Grid.Resources>
-                <Storyboard x:Name="ShowPreviews">
-                    <DoubleAnimation Storyboard.TargetName="MoveHelper" Storyboard.TargetProperty="Y" To="0" Duration="0:0:0.1"/>
-                    <DoubleAnimation Storyboard.TargetName="PreviewBar" Storyboard.TargetProperty="Grid.Opacity" To="1" Duration="0:0:0.1" />
-                </Storyboard>
-                <Storyboard x:Name="HidePreviews">
-                    <DoubleAnimation Storyboard.TargetName="MoveHelper" Storyboard.TargetProperty="Y" To="135" Duration="0:0:0.1"/>
-                    <DoubleAnimation Storyboard.TargetName="PreviewBar" Storyboard.TargetProperty="Grid.Opacity" To="0.3" Duration="0:0:0.1" />
-                </Storyboard>
-            </Grid.Resources>
+                    <StackPanel Name="PreviewImageContainer" Orientation="Horizontal" HorizontalAlignment="Center">
+                        <!-- Location for thumbnail image elements -->
+                    </StackPanel>
+
+                    <Grid.Resources>
+                        <Storyboard x:Name="ShowPreviews">
+                            <DoubleAnimation Storyboard.TargetName="MoveHelper" Storyboard.TargetProperty="Y" To="0"
+                                             Duration="0:0:0.1" />
+                            <DoubleAnimation Storyboard.TargetName="PreviewBar"
+                                             Storyboard.TargetProperty="Grid.Opacity" To="1" Duration="0:0:0.1" />
+                        </Storyboard>
+                        <Storyboard x:Name="HidePreviews">
+                            <DoubleAnimation Storyboard.TargetName="MoveHelper" Storyboard.TargetProperty="Y" To="135"
+                                             Duration="0:0:0.1" />
+                            <DoubleAnimation Storyboard.TargetName="PreviewBar"
+                                             Storyboard.TargetProperty="Grid.Opacity" To="0.3" Duration="0:0:0.1" />
+                        </Storyboard>
+                    </Grid.Resources>
+                </Grid>
                 
-        </Grid>
-
-        <!--Sorting panel-->
-        <Grid Grid.Row="1">
-            <TreeView 
-                Name="FileTreeView"
-                Background="Transparent" 
-                HorizontalAlignment="Left" 
-                Width="500" 
-                VerticalAlignment="Stretch"
-                CanDrag="False"
-                CanDragItems="False"
-                CanReorderItems="False"
-                SelectionMode="None">
-                <TreeView.Resources>
-                    <local:IndentConverter x:Key="IndentConverter"></local:IndentConverter>
-                </TreeView.Resources>
-                <TreeView.ItemTemplate>
-                    <DataTemplate x:DataType="local:FileSystemNode">
-                        <TreeViewItem 
-                            Tapped="FolderListLeftClick"
-                            RightTapped="FolderListRightClick"
-                            CanDrag="False">
-                            <TextBlock
-                                Margin="{Binding Depth, Converter={StaticResource IndentConverter}}"
-                                Text="{Binding Name}">
-
-                            </TextBlock>
-                        </TreeViewItem>
-                    </DataTemplate>
-                </TreeView.ItemTemplate>
-            </TreeView>
-        </Grid>
+            </Grid>
+        </NavigationView>
     </Grid>
 </Window>

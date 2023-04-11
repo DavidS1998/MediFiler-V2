@@ -1,9 +1,8 @@
-// Copyright (c) Microsoft Corporation and Contributors.
-// Licensed under the MIT License.
-
 using System;
 using Windows.ApplicationModel.DataTransfer;
+using Microsoft.UI;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using BitmapImage = Microsoft.UI.Xaml.Media.Imaging.BitmapImage;
@@ -19,10 +18,10 @@ namespace MediFiler_V2.Code
     public sealed partial class MainWindow
     {
         // TODO: Stop using global variables
-        private FileSystemNode _currentFolder;
-        private int _currentFolderIndex;
         private int _latestLoadedImage = -1;
         
+        public static FileSystemNode CurrentFolder;
+        public static int CurrentFolderIndex;
         
         // Initialize window
         public MainWindow()
@@ -33,26 +32,31 @@ namespace MediFiler_V2.Code
             ExtendsContentIntoTitleBar = true;
             SetTitleBar(AppTitleBar);
             Activated += MainWindow_Activated;
+            
+            // Set thumbnail preview count on startup
+            FileThumbnail.CreatePreviews(FileThumbnail.PreloadDistance, PreviewImageContainer);
         }
 
         // Load file
         private void Load()
         {
             // Nothing to load
-            if (_currentFolder == null || _currentFolder.SubFiles.Count <= 0) return;
+            if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0) return;
         
-            var currentFile = _currentFolder.SubFiles[_currentFolderIndex];
+            var currentFile = CurrentFolder.SubFiles[CurrentFolderIndex];
 
+            FileThumbnail.ClearPreviews(PreviewImageContainer);
             ShowMetadata(currentFile);
             DisplayCurrentFile(currentFile);
-            FileThumbnail.PreloadThumbnails(_currentFolderIndex, _currentFolder);
+            
+            FileThumbnail.PreloadThumbnails(CurrentFolderIndex, CurrentFolder, PreviewImageContainer);
         }
 
         // Gets secondary data from the current file
         private void ShowMetadata(FileSystemNode fileSystem)
         {
             var metadataText = "";
-            metadataText += "(" + (_currentFolderIndex + 1) + "/" + (_currentFolder.SubFiles.Count) + ") ";
+            metadataText += "(" + (CurrentFolderIndex + 1) + "/" + (CurrentFolder.SubFiles.Count) + ") ";
             metadataText += fileSystem.Name;
 
             AppTitleTextBlock.Text = metadataText;
@@ -60,7 +64,7 @@ namespace MediFiler_V2.Code
         
         
         // // // FILE DISPLAY  // // //
-        
+
 
         // Decides how each file type should be shown
         private void DisplayCurrentFile(FileSystemNode fileSystem)
@@ -84,11 +88,11 @@ namespace MediFiler_V2.Code
         // Displays an image file in FileViewer, also works with GIFs
         private async void DisplayImage(FileSystemNode fileSystem)
         {
-            var sentInIndex = _currentFolderIndex; // File change check
-            var sentInFolder = _currentFolder.Path; // Context change check
+            var sentInIndex = CurrentFolderIndex; // File change check
+            var sentInFolder = CurrentFolder.Path; // Context change check
             var bitmap = await FileImage.LoadImage(fileSystem, (int)FileHolder.ActualHeight);
             // Throw away result if current file changed; Invalid images don't overwrite thumbnails
-            if (sentInIndex != _currentFolderIndex || sentInFolder != _currentFolder.Path || bitmap == null) return;
+            if (sentInIndex != CurrentFolderIndex || sentInFolder != CurrentFolder.Path || bitmap == null) return;
             _latestLoadedImage = sentInIndex; // Stops thumbnail from overwriting image
             FileViewer.Source = bitmap;
         }
@@ -96,10 +100,10 @@ namespace MediFiler_V2.Code
         // Creates BitMap from File Explorer thumbnail and sets it as FileViewer source
         private async void DisplayThumbnail(FileSystemNode fileSystem)
         {
-            var sentInIndex = _currentFolderIndex; // File change check
+            var sentInIndex = CurrentFolderIndex; // File change check
             await FileThumbnail.SaveThumbnailToCache(fileSystem.Path, sentInIndex);
             // Don't overwrite full images; Don't show if file changed
-            if (_latestLoadedImage == _currentFolderIndex || sentInIndex != _currentFolderIndex) return;
+            if (_latestLoadedImage == CurrentFolderIndex || sentInIndex != CurrentFolderIndex) return;
             FileViewer.Source = FileThumbnail.ThumbnailCache[sentInIndex];
         }
         
@@ -111,21 +115,20 @@ namespace MediFiler_V2.Code
         private void MouseWheelScrollHandler(object sender, PointerRoutedEventArgs e)
         {
             var delta = e.GetCurrentPoint(FileViewer).Properties.MouseWheelDelta;
-            if (delta == 0) return;
+            if (delta == 0 || CurrentFolder == null) return;
             var increment = delta > 0 ? -1 : 1;
-            if (_currentFolder == null) return;
-            if (_currentFolderIndex + increment < 0 || _currentFolderIndex + increment >= _currentFolder.SubFiles.Count) return;
+            if (CurrentFolderIndex + increment < 0 || CurrentFolderIndex + increment >= CurrentFolder.SubFiles.Count) return;
 
-            _currentFolderIndex += increment;
+            CurrentFolderIndex += increment;
             Load();
         }
 
         // For loading a different folder context
         private void SwitchFolder(FileSystemNode newFolder, int position = 0)
         {
-            _currentFolder = newFolder;
+            CurrentFolder = newFolder;
             // Set position if within bounds
-            _currentFolderIndex = position < 0 ? 0 : (position > newFolder.SubFiles.Count ? 0 : position);
+            CurrentFolderIndex = position < 0 ? 0 : (position > newFolder.SubFiles.Count ? 0 : position);
             Clear();
             Load();
         }
@@ -137,6 +140,7 @@ namespace MediFiler_V2.Code
             FileThumbnail.ThumbnailCache.Clear();
             AppTitleTextBlock.Text = "MediFiler";
             FileViewer.Source = null;
+            FileThumbnail.ClearPreviews(PreviewImageContainer);
         }
 
         
@@ -209,7 +213,7 @@ namespace MediFiler_V2.Code
             if (items.Count == 0) return;
 
             // Show loading animation while building tree
-            _currentFolder = null;
+            CurrentFolder = null;
             Clear();
             FileViewer.Source = new BitmapImage(new Uri("ms-appx:///Assets/Loading.gif"));
             FileViewer.Stretch = Stretch.None;
@@ -218,9 +222,9 @@ namespace MediFiler_V2.Code
             FileViewer.Stretch = Stretch.Uniform;
 
             // By default load the first dropped root
-            _currentFolder = TreeHandler.LoadRootNode(0);
+            CurrentFolder = TreeHandler.LoadRootNode(0);
 
-            SwitchFolder(_currentFolder);
+            SwitchFolder(CurrentFolder);
         }
 
         // Shows what drag operations are allowed
