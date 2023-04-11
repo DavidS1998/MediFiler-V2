@@ -12,6 +12,7 @@ namespace MediFiler_V2
     {
         public string Name { get; set; }
         public string Path { get; set; }
+        public IStorageFile File { get; set; }
         public int Depth { get; set; }
         public List<FileSystemNode> SubFiles { get; set; } = new();
         public List<FileSystemNode> SubFolders { get; set; } = new();
@@ -29,7 +30,7 @@ namespace MediFiler_V2
             }
             
             // Return if this is a file (leaf)
-            if (!storageItem.IsOfType(StorageItemTypes.Folder)) return;
+            if (!storageItem.IsOfType(StorageItemTypes.Folder)) {File = storageItem as IStorageFile; return;}
             
             var folder = (StorageFolder) storageItem;
             var filesAndFolders = folder.GetItemsAsync().AsTask().Result;

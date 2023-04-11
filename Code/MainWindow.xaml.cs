@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.Storage;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -28,12 +30,10 @@ namespace MediFiler_V2.Code
         public MainWindow()
         {
             InitializeComponent();
-
             // Hide default title bar.
             ExtendsContentIntoTitleBar = true;
             SetTitleBar(AppTitleBar);
             Activated += MainWindow_Activated;
-            
             // Set thumbnail preview count on startup
             FileThumbnail.CreatePreviews(FileThumbnail.PreloadDistance, PreviewImageContainer);
         }
@@ -43,27 +43,49 @@ namespace MediFiler_V2.Code
         {
             // Nothing to load
             if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0) return;
-        
             var currentFile = CurrentFolder.SubFiles[CurrentFolderIndex];
-            
             ShowMetadata(currentFile);
             FileThumbnail.ClearPreviews(PreviewImageContainer);
             FileThumbnail.PreloadThumbnails(CurrentFolderIndex, CurrentFolder, PreviewImageContainer);
-            
             DisplayCurrentFile(currentFile);
         }
 
         // Gets secondary data from the current file
-        private void ShowMetadata(FileSystemNode fileSystem)
+        private async void ShowMetadata(FileSystemNode fileSystem)
         {
+            // Current position and name
+            var titleText = "";
+            titleText += "(" + (CurrentFolderIndex + 1) + "/" + (CurrentFolder.SubFiles.Count) + ") ";
+            titleText += fileSystem.Name;
+            
+            AppTitleTextBlock.Text = titleText;
+            
+            // Get file size given path to a file
             var metadataText = "";
-            metadataText += "(" + (CurrentFolderIndex + 1) + "/" + (CurrentFolder.SubFiles.Count) + ") ";
-            metadataText += fileSystem.Name;
+            
+            ulong size;
+            try
+            {
+                var file = await fileSystem.File.GetBasicPropertiesAsync();
+                size = file.Size;
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("ERROR: " + e);
+                size = 0;
+            }
+            var sizeString = FileSizeHelper.GetReadableFileSize(size);
+            metadataText += sizeString + " - ";
 
-            AppTitleTextBlock.Text = metadataText;
+            var path = fileSystem.Path;
+            var name = fileSystem.Name;
+            var pathWithoutName = path.Substring(0, path.Length - name.Length);
+            metadataText += pathWithoutName;
+            
+            InfoTextBlock.Text = metadataText;
         }
         
-        
+
         // // // FILE DISPLAY  // // //
 
 

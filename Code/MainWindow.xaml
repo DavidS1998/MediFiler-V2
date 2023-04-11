@@ -10,16 +10,17 @@
 
     <Grid x:Name="MainContent" AllowDrop="True" Drop="Window_OnDrop" DragOver="Window_OnDragOver">
         <Grid.RowDefinitions>
-            <RowDefinition Height="32" />
-            <RowDefinition />
+            <RowDefinition Height="32"/>
+            <RowDefinition Height="48"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <!--Title bar-->
         <Grid x:Name="AppTitleBar" Height="32" Background="#000000" VerticalAlignment="Top" Grid.Row="0">
-
+            
             <Image Source="../Assets/Icon.ico"
                    HorizontalAlignment="Left"
-                   Width="16" Height="16" Margin="8,0" />
+                   Width="16" Height="16" Margin="8,8" />
 
             <TextBlock x:Name="AppTitleTextBlock" Text="MediFiler v2"
                        TextWrapping="NoWrap"
@@ -27,20 +28,48 @@
                        VerticalAlignment="Center"
                        Margin="28,0,0,0" />
         </Grid>
+        <!--Info bar-->
+        <Grid Row="1" Height="48" VerticalAlignment="Top">
+            <TextBlock x:Name="InfoTextBlock" Text="Nothing loaded!"
+                       TextWrapping="NoWrap"
+                       Style="{StaticResource CaptionTextBlockStyle}"
+                       VerticalAlignment="Center"
+                       Margin="28,0,0,0" />
+            
+            <CommandBar HorizontalAlignment="Center" 
+                Background="Transparent" IsOpen="False" DefaultLabelPosition="Collapsed">
+                <AppBarButton Icon="Add" Label="Add" Width="32"/>
+                <AppBarButton Icon="Edit" Label="Edit" Width="32"/>
+                <AppBarButton Icon="Share" Label="Share" Width="32"/>
+                <CommandBar.SecondaryCommands>
+                    <AppBarButton Icon="Setting" Label="Include subfolder content"/>
+                    <AppBarButton Icon="Setting" Label="Include subfolder content">
+                        <AppBarButton.KeyboardAccelerators>
+                            <KeyboardAccelerator Key="Shift" />
+                        </AppBarButton.KeyboardAccelerators>
+                    </AppBarButton>
+                </CommandBar.SecondaryCommands>
+            </CommandBar>
+            
+        </Grid>
 
-        <!--Left navigation panel-->
-        <NavigationView Grid.Row="1" Grid.Column="0"
+        <!--Navigation rail and content views-->
+        <NavigationView Grid.Row="2" Grid.Column="0"
                         IsBackButtonVisible="Collapsed"
                         IsSettingsVisible="True"
                         PaneDisplayMode="LeftCompact">
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="Sorting View" Icon="Play" Tag="SortView"/>
+            </NavigationView.MenuItems>
 
             <!--Default image view-->
+            
             <Grid Background="Black" Name="FileHolder" PointerWheelChanged="MouseWheelScrollHandler"
                   SizeChanged="ImageViewer_SizeChanged">
                 <Image
                     Name="FileViewer"
                     Stretch="Uniform"
-                    Source="../Assets/Icon.ico" />
+                    />
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
 
                 </StackPanel>

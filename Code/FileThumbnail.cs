@@ -31,20 +31,22 @@ public static class FileThumbnail
             thumbnail = await file.GetThumbnailAsync(ThumbnailMode.SingleItem);
             if (thumbnail == null)
             {
-                ThumbnailCache.Remove(index);
+                if (ThumbnailCache.ContainsKey(index))
+                    ThumbnailCache.Remove(index);
                 return;
             }
         }
         catch (Exception e)
         {
             Debug.WriteLine("Failed getting thumbnail for " + path + ": " + e);
-            ThumbnailCache.Remove(index);
+            if (ThumbnailCache.ContainsKey(index))
+                ThumbnailCache.Remove(index);
             return;
         }
 
         var bitmap = new BitmapImage();
         await bitmap.SetSourceAsync(thumbnail);
-        ThumbnailCache[index] = bitmap;
+        ThumbnailCache.TryAdd(index, bitmap);
     }
     
     // Caches several adjacent file thumbnails
@@ -96,7 +98,7 @@ public static class FileThumbnail
     private static void FillPreviews(StackPanel previewImageContainer)
     {
         // Check if ThumbnailCache at index exists
-        if (ThumbnailCache[MainWindow.CurrentFolderIndex] == null) return;
+        if (!ThumbnailCache.ContainsKey(MainWindow.CurrentFolderIndex)) return;
             
         var previewCount = previewImageContainer.Children.Count;
         var middleIndex = previewCount / 2;
@@ -111,6 +113,8 @@ public static class FileThumbnail
             var image = (Image) border.Child;
             var index = MainWindow.CurrentFolderIndex - (middleIndex - i);
             if (index < 0) continue;
+
+            if (!ThumbnailCache.ContainsKey(index)) continue;
             image.Source = ThumbnailCache[index];
         }
             
@@ -121,6 +125,8 @@ public static class FileThumbnail
             var image = (Image) border.Child;
             var index = MainWindow.CurrentFolderIndex + (i - middleIndex);
             if (index >= MainWindow.CurrentFolder.SubFiles.Count) continue;
+            
+            if (!ThumbnailCache.ContainsKey(index)) continue;
             image.Source = ThumbnailCache[index];
         }
     }
