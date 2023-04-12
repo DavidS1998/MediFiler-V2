@@ -34,6 +34,8 @@ namespace MediFiler_V2.Code
         public FileSystemNode CurrentFolder;
         public int CurrentFolderIndex;
         
+        // TODO: Move most methods to a Model class
+
         // Initialize window
         public MainWindow()
         {
@@ -85,7 +87,7 @@ namespace MediFiler_V2.Code
             }
         }
         
-        // Displays an image file in FileViewer, also works with GIFs
+        // Displays an image file in FileViewer. Also works with GIFs
         private async void DisplayImage(FileSystemNode fileSystem)
         {
             var sentInIndex = CurrentFolderIndex; // File change check
@@ -203,6 +205,17 @@ namespace MediFiler_V2.Code
             // Load the file
             CurrentFolderIndex = fileIndex;
             Load();
+        }
+        
+        private void FileAction_RightClick(object sender, RightTappedRoutedEventArgs e)
+        {
+            var path = CurrentFolder.SubFiles[CurrentFolderIndex].Path;
+            
+            // TODO: Change action based on file type
+            ProcessStartInfo psi = new ProcessStartInfo();
+            psi.FileName = path;
+            psi.UseShellExecute = true;
+            Process.Start(psi);
         }
         
 

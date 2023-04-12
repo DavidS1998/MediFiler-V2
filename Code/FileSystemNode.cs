@@ -18,7 +18,9 @@ namespace MediFiler_V2
         public FileSystemNode Parent { get; set; }
         public List<FileSystemNode> SubFiles { get; set; } = new();
         public List<FileSystemNode> SubFolders { get; set; } = new();
-        
+        public int FileCount { get; set; }
+        public int ChildFileCount { get { return FileCount + SubFolders.Sum(f => f.ChildFileCount); } }
+
         public FileSystemNode(IStorageItem storageItem, int depth, FileSystemNode parent = null)
         {
             Name = storageItem.Name;
@@ -55,6 +57,14 @@ namespace MediFiler_V2
             // Sort result
             SubFiles = SubFiles.OrderBy(x => x.Name).ToList();
             SubFolders = SubFolders.OrderBy(x => x.Name).ToList();
+            
+            // Supplementary information
+            FileCount = SubFiles.Count;
+        }
+        
+        public string GetFormattedText(int fileCount, string name, int childFileCount)
+        {
+            return string.Format("({0}/{2}) - {1}", fileCount, name, childFileCount);
         }
     }
 }

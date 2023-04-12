@@ -15,6 +15,10 @@ public static class TreeHandler
     public static async Task BuildTree(IReadOnlyList<IStorageItem> filesAndFolders, TreeView fileTreeView)
     {
         ClearTree(fileTreeView);
+        
+        // Performance measuring
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
 
         // Create the file structure in the background, may be very resource intensive
         await Task.Run(() =>
@@ -29,6 +33,10 @@ public static class TreeHandler
             }
         });
         CreateTree(fileTreeView);
+        
+        // Print performance data
+        stopwatch.Stop();
+        Debug.WriteLine("Tree generated in " + stopwatch.ElapsedMilliseconds + "ms");
     }
     
     // Recursively extracts folder data from nodes

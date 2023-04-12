@@ -5,6 +5,7 @@
     xmlns:local="using:MediFiler_V2"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:sys="using:System"
     mc:Ignorable="d">
 
 
@@ -38,8 +39,8 @@
             
             <CommandBar HorizontalAlignment="Center" 
                 Background="Transparent" IsOpen="False" DefaultLabelPosition="Collapsed">
+                <AppBarButton Icon="Refresh" Label="Edit" Width="32"/>
                 <AppBarButton Icon="Add" Label="Add" Width="32"/>
-                <AppBarButton Icon="Edit" Label="Edit" Width="32"/>
                 <AppBarButton Icon="Share" Label="Share" Width="32"/>
                 <CommandBar.SecondaryCommands>
                     <AppBarButton Icon="Setting" Label="Include subfolder content"/>
@@ -65,26 +66,15 @@
             <!--Default image view-->
             
             <Grid Background="Black" Name="FileHolder" PointerWheelChanged="MouseWheelScrollHandler"
-                  SizeChanged="ImageViewer_SizeChanged">
-                <Image
-                    Name="FileViewer"
-                    Stretch="Uniform"
-                    />
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-
-                </StackPanel>
+                  SizeChanged="ImageViewer_SizeChanged" RightTapped="FileAction_RightClick">
+                
+                <Image Name="FileViewer" Stretch="Uniform"/>
 
                 <!--Sorting panel-->
                 <Grid>
                     <TreeView
-                        Name="FileTreeView"
-                        Background="Transparent"
-                        HorizontalAlignment="Left"
-                        Width="500"
-                        VerticalAlignment="Stretch"
-                        CanDrag="False"
-                        CanDragItems="False"
-                        CanReorderItems="False"
+                        Name="FileTreeView" Background="Transparent" HorizontalAlignment="Left" Width="500"
+                        VerticalAlignment="Stretch" CanDrag="False" CanDragItems="False" CanReorderItems="False"
                         SelectionMode="None">
                         <TreeView.Resources>
                             <local:IndentConverter x:Key="IndentConverter"></local:IndentConverter>
@@ -92,14 +82,10 @@
                         <TreeView.ItemTemplate>
                             <DataTemplate x:DataType="local:FileSystemNode">
                                 <TreeViewItem
-                                    Tapped="FolderListLeftClick"
-                                    RightTapped="FolderListRightClick"
-                                    CanDrag="False">
-                                    <TextBlock
-                                        Margin="{Binding Depth, Converter={StaticResource IndentConverter}}"
-                                        Text="{Binding Name}">
-
-                                    </TextBlock>
+                                    Tapped="FolderListLeftClick" RightTapped="FolderListRightClick" CanDrag="False">
+                                    <Grid Margin="{Binding Depth, Converter={StaticResource IndentConverter}}">
+                                        <TextBlock Text="{x:Bind GetFormattedText(FileCount, Name, ChildFileCount)}"/>
+                                    </Grid>
                                 </TreeViewItem>
                             </DataTemplate>
                         </TreeView.ItemTemplate>
