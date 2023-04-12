@@ -12,14 +12,22 @@ using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace MediFiler_V2.Code;
 
-public static class FileThumbnail
+public class FileThumbnail
 {
     // TODO: Use helper functions for the dictionary
-    public static Dictionary<int, BitmapImage> ThumbnailCache = new();
-    public const int PreloadDistance = 21;
+    public Dictionary<int, BitmapImage> ThumbnailCache = new();
+
+    MainWindow _mainWindow;
+    int PreloadDistance;
+    
+    public FileThumbnail(MainWindow mainWindow, int preloadDistance)
+    {
+        _mainWindow = mainWindow;
+        PreloadDistance = preloadDistance;
+    }
     
     // Saves thumbnail to the dictionary with the index as key
-    public static async Task SaveThumbnailToCache(string path, int index)
+    public async Task SaveThumbnailToCache(string path, int index)
     {
         if (ThumbnailCache.ContainsKey(index)) return;
 
@@ -50,7 +58,7 @@ public static class FileThumbnail
     }
     
     // Caches several adjacent file thumbnails
-    public static async void PreloadThumbnails(int currentPositionInFolder, FileSystemNode currentFolder, StackPanel previewImageContainer)
+    public async void PreloadThumbnails(int currentPositionInFolder, FileSystemNode currentFolder, StackPanel previewImageContainer)
     {
         var tasks = new List<Task>();
         // For loop using PreloadDistance as length in both directions
@@ -72,7 +80,7 @@ public static class FileThumbnail
     
     
     // Initialize image preview container
-    public static void CreatePreviews(int previewCount, StackPanel previewImageContainer)
+    public void CreatePreviews(int previewCount, StackPanel previewImageContainer)
     {
         // Use PreloadDistance to determine how many Borders to create
         for (var i = 0; i < previewCount; i++)
@@ -95,23 +103,23 @@ public static class FileThumbnail
     }
         
     // Fill preview images with thumbnails, putting the current image in the middle
-    private static void FillPreviews(StackPanel previewImageContainer)
+    private void FillPreviews(StackPanel previewImageContainer)
     {
         // Check if ThumbnailCache at index exists
-        if (!ThumbnailCache.ContainsKey(MainWindow.CurrentFolderIndex)) return;
+        if (!ThumbnailCache.ContainsKey(_mainWindow.CurrentFolderIndex)) return;
             
         var previewCount = previewImageContainer.Children.Count;
         var middleIndex = previewCount / 2;
         var middleBorder = (Border) previewImageContainer.Children[middleIndex];
         var middleImage = (Image) middleBorder.Child;
-        middleImage.Source = ThumbnailCache[MainWindow.CurrentFolderIndex];
+        middleImage.Source = ThumbnailCache[_mainWindow.CurrentFolderIndex];
             
         // Fill previews to the left
         for (var i = middleIndex - 1; i >= 0; i--)
         {
             var border = (Border) previewImageContainer.Children[i];
             var image = (Image) border.Child;
-            var index = MainWindow.CurrentFolderIndex - (middleIndex - i);
+            var index = _mainWindow.CurrentFolderIndex - (middleIndex - i);
             if (index < 0) continue;
 
             if (!ThumbnailCache.ContainsKey(index)) continue;
@@ -123,15 +131,15 @@ public static class FileThumbnail
         {
             var border = (Border) previewImageContainer.Children[i];
             var image = (Image) border.Child;
-            var index = MainWindow.CurrentFolderIndex + (i - middleIndex);
-            if (index >= MainWindow.CurrentFolder.SubFiles.Count) continue;
+            var index = _mainWindow.CurrentFolderIndex + (i - middleIndex);
+            if (index >= _mainWindow.CurrentFolder.SubFiles.Count) continue;
             
             if (!ThumbnailCache.ContainsKey(index)) continue;
             image.Source = ThumbnailCache[index];
         }
     }
 
-    public static void ClearPreviews(StackPanel previewImageContainer)
+    public void ClearPreviews(StackPanel previewImageContainer)
     {
         var previewCount = previewImageContainer.Children.Count;
         for (var i = 0; i < previewCount; i++)

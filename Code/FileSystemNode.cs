@@ -13,20 +13,24 @@ namespace MediFiler_V2
         public string Name { get; set; }
         public string Path { get; set; }
         public IStorageFile File { get; set; }
+        public bool IsFile { get; set; } = false;
         public int Depth { get; set; }
+        public FileSystemNode Parent { get; set; }
         public List<FileSystemNode> SubFiles { get; set; } = new();
         public List<FileSystemNode> SubFolders { get; set; } = new();
         
-        public FileSystemNode(IStorageItem storageItem, int depth)
+        public FileSystemNode(IStorageItem storageItem, int depth, FileSystemNode parent = null)
         {
             Name = storageItem.Name;
             Path = storageItem.Path;
             Depth = depth;
+            Parent = parent;
 
             // If root node is a file, pretend it's a folder with only this as a file
             if (depth == 0 && storageItem is StorageFile)
             {
-                SubFiles.Add(new FileSystemNode(storageItem, Depth + 1));
+                IsFile = true;
+                SubFiles.Add(new FileSystemNode(storageItem, Depth + 1, this));
             }
             
             // Return if this is a file (leaf)
@@ -40,11 +44,11 @@ namespace MediFiler_V2
             {
                 if (item.IsOfType(StorageItemTypes.File))
                 {
-                    SubFiles.Add(new FileSystemNode(item, depth + 1));
+                    SubFiles.Add(new FileSystemNode(item, depth + 1, this));
                 }
                 if (item.IsOfType(StorageItemTypes.Folder))
                 {
-                    SubFolders.Add(new FileSystemNode(item, depth + 1));
+                    SubFolders.Add(new FileSystemNode(item, depth + 1, this));
                 }
             });
             

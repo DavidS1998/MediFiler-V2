@@ -1,9 +1,6 @@
 using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
-using Windows.Storage;
-using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -20,69 +17,49 @@ namespace MediFiler_V2.Code
     /// </summary>
     public sealed partial class MainWindow
     {
+        // UI access
+        public TextBlock AppTitleTextBlock1 { get => AppTitleTextBlock; set => AppTitleTextBlock = value; }
+        public TextBlock InfoTextBlock1 { get => InfoTextBlock; set => InfoTextBlock = value; }
+        
+        // Constants
+        public const int PreloadDistance = 21;
+
+        // Helper classes
+        private MetadataHandler _metadataHandler;
+        private FileThumbnail _fileThumbnail;
+        private FileImage _fileImage;
+        
         // TODO: Stop using global variables
         private int _latestLoadedImage = -1;
-        
-        public static FileSystemNode CurrentFolder;
-        public static int CurrentFolderIndex;
+        public FileSystemNode CurrentFolder;
+        public int CurrentFolderIndex;
         
         // Initialize window
         public MainWindow()
         {
             InitializeComponent();
+            _metadataHandler = new MetadataHandler(this);
+            _fileThumbnail = new FileThumbnail(this, PreloadDistance);
+            _fileImage = new FileImage(this);
+            
             // Hide default title bar.
             ExtendsContentIntoTitleBar = true;
             SetTitleBar(AppTitleBar);
             Activated += MainWindow_Activated;
+            
             // Set thumbnail preview count on startup
-            FileThumbnail.CreatePreviews(FileThumbnail.PreloadDistance, PreviewImageContainer);
+            _fileThumbnail.CreatePreviews(PreloadDistance, PreviewImageContainer);
         }
 
         // Load file
         public void Load()
         {
-            // Nothing to load
             if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0) return;
             var currentFile = CurrentFolder.SubFiles[CurrentFolderIndex];
-            ShowMetadata(currentFile);
-            FileThumbnail.ClearPreviews(PreviewImageContainer);
-            FileThumbnail.PreloadThumbnails(CurrentFolderIndex, CurrentFolder, PreviewImageContainer);
+            _metadataHandler.ShowMetadata(currentFile);
+            _fileThumbnail.ClearPreviews(PreviewImageContainer);
+            _fileThumbnail.PreloadThumbnails(CurrentFolderIndex, CurrentFolder, PreviewImageContainer);
             DisplayCurrentFile(currentFile);
-        }
-
-        // Gets secondary data from the current file
-        private async void ShowMetadata(FileSystemNode fileSystem)
-        {
-            // Current position and name
-            var titleText = "";
-            titleText += "(" + (CurrentFolderIndex + 1) + "/" + (CurrentFolder.SubFiles.Count) + ") ";
-            titleText += fileSystem.Name;
-            
-            AppTitleTextBlock.Text = titleText;
-            
-            // Get file size given path to a file
-            var metadataText = "";
-            
-            ulong size;
-            try
-            {
-                var file = await fileSystem.File.GetBasicPropertiesAsync();
-                size = file.Size;
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine("ERROR: " + e);
-                size = 0;
-            }
-            var sizeString = FileSizeHelper.GetReadableFileSize(size);
-            metadataText += sizeString + " - ";
-
-            var path = fileSystem.Path;
-            var name = fileSystem.Name;
-            var pathWithoutName = path.Substring(0, path.Length - name.Length);
-            metadataText += pathWithoutName;
-            
-            InfoTextBlock.Text = metadataText;
         }
         
 
@@ -113,7 +90,7 @@ namespace MediFiler_V2.Code
         {
             var sentInIndex = CurrentFolderIndex; // File change check
             var sentInFolder = CurrentFolder.Path; // Context change check
-            var bitmap = await FileImage.LoadImage(fileSystem, (int)FileHolder.ActualHeight);
+            var bitmap = await _fileImage.LoadImage(fileSystem, (int)FileHolder.ActualHeight);
             // Throw away result if current file changed; Invalid images don't overwrite thumbnails
             if (sentInIndex != CurrentFolderIndex || sentInFolder != CurrentFolder.Path || bitmap == null) return;
             FileViewer.Source = bitmap;
@@ -124,10 +101,12 @@ namespace MediFiler_V2.Code
         private async void DisplayThumbnail(FileSystemNode fileSystem)
         {
             var sentInIndex = CurrentFolderIndex; // File change check
-            await FileThumbnail.SaveThumbnailToCache(fileSystem.Path, sentInIndex);
+            await _fileThumbnail.SaveThumbnailToCache(fileSystem.Path, sentInIndex);
             // Don't overwrite full images; Don't show if file changed
-            if (_latestLoadedImage == CurrentFolderIndex || sentInIndex != CurrentFolderIndex) return;
-            FileViewer.Source = FileThumbnail.ThumbnailCache[sentInIndex];
+            if (_latestLoadedImage == CurrentFolderIndex || 
+                sentInIndex != CurrentFolderIndex ||
+                !_fileThumbnail.ThumbnailCache.ContainsKey(sentInIndex)) return;
+            FileViewer.Source = _fileThumbnail.ThumbnailCache[sentInIndex];
         }
         
         
@@ -160,10 +139,11 @@ namespace MediFiler_V2.Code
         private void Clear()
         {
             _latestLoadedImage = -1;
-            FileThumbnail.ThumbnailCache.Clear();
+            _fileThumbnail.ThumbnailCache.Clear();
             AppTitleTextBlock.Text = "MediFiler";
             FileViewer.Source = null;
-            FileThumbnail.ClearPreviews(PreviewImageContainer);
+            _fileThumbnail.ClearPreviews(PreviewImageContainer);
+            _metadataHandler.ClearMetadata();
         }
 
         
