@@ -1,11 +1,14 @@
 using System;
 using System.Diagnostics;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.System;
+using Windows.UI.Core;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using BitmapImage = Microsoft.UI.Xaml.Media.Imaging.BitmapImage;
+using WindowActivatedEventArgs = Microsoft.UI.Xaml.WindowActivatedEventArgs;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -23,12 +26,11 @@ namespace MediFiler_V2.Code
         public StackPanel PreviewImageContainer1 { get => PreviewImageContainer; set => PreviewImageContainer = value; }
         public Grid FileHolder1 { get => FileHolder; set => FileHolder = value; }
         public Image FileViewer1 { get => FileViewer; set => FileViewer = value; }
+        public TreeView FileTreeView1 { get => FileTreeView; set => FileTreeView = value; }
 
         public MainWindowModel _model;
         
-        // TODO: Move most methods to a Model class
-
-        // Initialize window
+        /// Initialize window
         public MainWindow()
         {
             InitializeComponent();
@@ -45,7 +47,7 @@ namespace MediFiler_V2.Code
         // // // UI EVENTS // // //
         
         
-        // Scroll between files
+        /// Scroll between files
         public void MouseWheelScrollHandler(object sender, PointerRoutedEventArgs e)
         {
             var delta = e.GetCurrentPoint(FileViewer).Properties.MouseWheelDelta;
@@ -58,7 +60,7 @@ namespace MediFiler_V2.Code
         }
         
 
-        // Handler for the folder list
+        /// Handler for the folder list
         private void FolderListClick(RoutedEventArgs e, bool leftClick)
         {
             if (((FrameworkElement)e.OriginalSource).DataContext is not FileSystemNode respectiveNode) return;
@@ -80,19 +82,19 @@ namespace MediFiler_V2.Code
             FolderListClick(e, false);
         }
 
-        // Hover on preview bar
+        /// Hover on preview bar
         private void PreviewEnter(object sender, PointerRoutedEventArgs e)
         {
             ShowPreviews.Begin();
         }
         
-        // Leave preview bar
+        /// Leave preview bar
         private void PreviewLeave(object sender, PointerRoutedEventArgs e)
         {
             HidePreviews.Begin();
         }
         
-        // Click on preview bar
+        /// Click on preview bar
         private void PreviewBar_OnPointerReleased(object sender, PointerRoutedEventArgs e)
         {
             var parent = ((FrameworkElement)e.OriginalSource).Parent;
@@ -128,7 +130,7 @@ namespace MediFiler_V2.Code
         // // // WINDOW EVENTS // // //
         
 
-        // Runs when the window changes focus
+        /// Runs when the window changes focus
         private void MainWindow_Activated(object sender, WindowActivatedEventArgs args)
         {
             if (args.WindowActivationState == WindowActivationState.Deactivated)
@@ -149,7 +151,7 @@ namespace MediFiler_V2.Code
                 ((BitmapImage)FileViewer.Source).DecodePixelHeight = (int)FileHolder.ActualHeight;
         }
         
-        // Runs when file(s) have been dropped on the main window
+        /// Runs when file(s) have been dropped on the main window
         private async void Window_OnDrop(object sender, DragEventArgs e)
         {
             // Only accept files and folders
@@ -172,10 +174,44 @@ namespace MediFiler_V2.Code
             _model.SwitchFolder(_model.CurrentFolder);
         }
 
-        // Shows what drag operations are allowed
+        /// Shows what drag operations are allowed
         private void Window_OnDragOver(object sender, DragEventArgs e)
         {
             e.AcceptedOperation = DataPackageOperation.Copy;
+        }
+
+        
+        // // // BUTTONS // // //
+        
+        
+        // Refresh button
+        private void RefreshButton_OnPointerReleased(object sender, TappedRoutedEventArgs e)
+        {
+            _model.Refresh();
+        }        
+        
+        // Refresh all button
+        private void RefreshAllButton_OnPointerReleased(object sender, TappedRoutedEventArgs e)
+        {
+            _model.FullRefresh();
+        }
+        
+        
+        // // // KEYBOARD SHORTCUTS // // //
+        
+        
+        // F5 - Refresh
+        private void Refresh_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+        {
+            _model.Refresh();
+            args.Handled = true;
+        }
+        
+        // Shift + F5 - Full refresh
+        private void FullRefresh_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+        {
+            _model.FullRefresh();
+            args.Handled = true;
         }
     }
 }

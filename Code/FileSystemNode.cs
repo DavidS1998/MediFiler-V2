@@ -66,5 +66,46 @@ namespace MediFiler_V2
         {
             return string.Format("({0}/{2}) - {1}", fileCount, name, childFileCount);
         }
+
+        // Reloads all files within this folder node
+        public void LocalRefresh()
+        {
+            if (IsFile) return;
+            
+            // Get rid of SubFiles and load them anew
+            SubFiles.Clear();
+            var folder = StorageFolder.GetFolderFromPathAsync(Path).AsTask().Result;
+            var files = folder.GetFilesAsync().AsTask().Result;
+            
+            // Make a node for each file
+            Parallel.ForEach(files, file =>
+            {
+                SubFiles.Add(new FileSystemNode(file, Depth + 1, this));
+            });
+            
+            // Sort result
+            SubFiles = SubFiles.OrderBy(x => x.Name).ToList();
+            FileCount = SubFiles.Count;
+        }
+
+        // Reloads all files within this folder node and all subfolders
+        public void CascadingRefresh()
+        {
+            // TODO: Implement
+        }
+        
+        public bool FolderStillExists()
+        {
+            if (IsFile) return true;
+            try
+            {
+                _ = StorageFolder.GetFolderFromPathAsync(Path).AsTask().Result;
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
     }
 }

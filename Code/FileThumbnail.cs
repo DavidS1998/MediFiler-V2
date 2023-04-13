@@ -26,16 +26,15 @@ public class FileThumbnail
         PreloadDistance = preloadDistance;
     }
     
-    // Saves thumbnail to the dictionary with the index as key
+    /// Saves thumbnail to the dictionary with the index as key
     public async Task SaveThumbnailToCache(string path, int index)
     {
         if (ThumbnailCache.ContainsKey(index)) return;
-
-        var file = await StorageFile.GetFileFromPathAsync(path);
         StorageItemThumbnail thumbnail;
         
         try
         {
+            var file = await StorageFile.GetFileFromPathAsync(path);
             thumbnail = await file.GetThumbnailAsync(ThumbnailMode.SingleItem);
             if (thumbnail == null)
             {
@@ -57,7 +56,7 @@ public class FileThumbnail
         ThumbnailCache.TryAdd(index, bitmap);
     }
     
-    // Caches several adjacent file thumbnails
+    /// Caches several adjacent file thumbnails into the dictionary
     public async void PreloadThumbnails(int currentPositionInFolder, FileSystemNode currentFolder, StackPanel previewImageContainer)
     {
         var tasks = new List<Task>();
@@ -79,7 +78,7 @@ public class FileThumbnail
     // // // PREVIEW BAR // // //
     
     
-    // Initialize image preview container
+    /// Initialize image preview container
     public void CreatePreviews(int previewCount, StackPanel previewImageContainer)
     {
         // Use PreloadDistance to determine how many Borders to create
@@ -102,7 +101,7 @@ public class FileThumbnail
         middleBorder.BorderThickness = new Thickness(3);
     }
         
-    // Fill preview images with thumbnails, putting the current image in the middle
+    /// Fill preview images with thumbnails, putting the current image in the middle
     private void FillPreviews(StackPanel previewImageContainer)
     {
         // Check if ThumbnailCache at index exists
@@ -139,7 +138,8 @@ public class FileThumbnail
         }
     }
 
-    public void ClearPreviews(StackPanel previewImageContainer)
+    /// Clear all cached thumbnails
+    public void ClearPreviewCache(StackPanel previewImageContainer)
     {
         var previewCount = previewImageContainer.Children.Count;
         for (var i = 0; i < previewCount; i++)

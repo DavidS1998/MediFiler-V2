@@ -1,4 +1,7 @@
-﻿using Microsoft.UI.Xaml.Input;
+﻿using System;
+using System.Linq;
+using Windows.Storage;
+using Microsoft.UI.Xaml.Input;
 
 namespace MediFiler_V2.Code;
 
@@ -17,7 +20,7 @@ public class MainWindowModel
     
     // TODO: Stop using global variables
     private int _latestLoadedImage = -1;
-    public FileSystemNode CurrentFolder;
+    public FileSystemNode CurrentFolder ;
     public int CurrentFolderIndex;
     
     public MainWindowModel(MainWindow window)
@@ -32,22 +35,30 @@ public class MainWindowModel
         _fileThumbnail.CreatePreviews(PreloadDistance, _mainWindow.PreviewImageContainer1);
     }
     
-    // Load file
+    /// Load file
     public void Load()
     {
         if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0) return;
-        var currentFile = CurrentFolder.SubFiles[CurrentFolderIndex];
-        _metadataHandler.ShowMetadata(currentFile);
-        _fileThumbnail.ClearPreviews(_mainWindow.PreviewImageContainer1);
-        _fileThumbnail.PreloadThumbnails(CurrentFolderIndex, CurrentFolder, _mainWindow.PreviewImageContainer1);
-        DisplayCurrentFile(currentFile);
+        try
+        {
+            var currentFile = CurrentFolder.SubFiles[CurrentFolderIndex];
+            _metadataHandler.ShowMetadata(currentFile);
+            _fileThumbnail.ClearPreviewCache(_mainWindow.PreviewImageContainer1);
+            _fileThumbnail.PreloadThumbnails(CurrentFolderIndex, CurrentFolder, _mainWindow.PreviewImageContainer1);
+            DisplayCurrentFile(currentFile);
+        }
+        catch (Exception)
+        {
+            // If file cannot be found, refresh context and try again
+            Refresh();
+        }
     }
     
     
     // // // FILE DISPLAY  // // //
 
 
-    // Decides how each file type should be shown
+    /// Decides how each file type should be shown
     public void DisplayCurrentFile(FileSystemNode fileSystem)
     {
         DisplayThumbnail(fileSystem);
@@ -66,7 +77,7 @@ public class MainWindowModel
         }
     }
     
-    // Displays an image file in FileViewer. Also works with GIFs
+    /// Displays an image file in FileViewer. Also works with GIFs
     public async void DisplayImage(FileSystemNode fileSystem)
     {
         var sentInIndex = CurrentFolderIndex; // File change check
@@ -78,7 +89,7 @@ public class MainWindowModel
         _latestLoadedImage = sentInIndex; // Stops thumbnail from overwriting image
     }
     
-    // Creates BitMap from File Explorer thumbnail and sets it as FileViewer source
+    /// Creates BitMap from File Explorer thumbnail and sets it as FileViewer source
     public async void DisplayThumbnail(FileSystemNode fileSystem)
     {
         var sentInIndex = CurrentFolderIndex; // File change check
@@ -92,28 +103,61 @@ public class MainWindowModel
     
     
     // // // NAVIGATION // // //
-    
 
 
-
-    // For loading a different folder context
+    /// For loading a different folder context
     public void SwitchFolder(FileSystemNode newFolder, int position = 0)
     {
         CurrentFolder = newFolder;
+        
+        try
+        {
+            // TODO: UNSURE IF THIS SHOULUD BE DEFAULT BEHAVIOR - MAYBE ONLY IF FOLDER IS EMPTY
+            // Slows down loading of folders with many files
+            CurrentFolder.LocalRefresh();
+        }
+        catch (Exception)
+        {
+            // Folder does not exist
+            FullRefresh();
+        }
+        
         // Set position if within bounds
-        CurrentFolderIndex = position < 0 ? 0 : (position > newFolder.SubFiles.Count ? 0 : position);
+        CurrentFolderIndex = position < 0 ? 0 : (position >= newFolder.SubFiles.Count ? (newFolder.FileCount - 1) : position);
         Clear();
         Load();
     }
 
-    // Clear all loaded content
+    /// Clear all loaded content
     public void Clear()
     {
         _latestLoadedImage = -1;
         _fileThumbnail.ThumbnailCache.Clear();
         _mainWindow.AppTitleTextBlock1.Text = "MediFiler";
         _mainWindow.FileViewer1.Source = null;
-        _fileThumbnail.ClearPreviews(_mainWindow.PreviewImageContainer1);
+        _fileThumbnail.ClearPreviewCache(_mainWindow.PreviewImageContainer1);
         _metadataHandler.ClearMetadata();
+    }
+
+    /// Refreshes the current folder and reloads all items within it
+    public void Refresh()
+    {
+        if (!CurrentFolder.FolderStillExists())
+        {
+            // Folder does not exist, rebuild entire context
+            TreeHandler.RebuildTree(_mainWindow.FileTreeView1);
+            //SwitchFolder(TreeHandler.LoadRootNode(0));
+            return;
+        }
+        CurrentFolder.LocalRefresh();
+        TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1);
+        SwitchFolder(CurrentFolder, CurrentFolderIndex);
+    }
+
+    /// Rebuilds the entire context from scratch, may be slow
+    public void FullRefresh()
+    {
+        TreeHandler.RebuildTree(_mainWindow.FileTreeView1);
+        Refresh();
     }
 }

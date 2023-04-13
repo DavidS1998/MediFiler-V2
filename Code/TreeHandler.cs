@@ -9,11 +9,14 @@ namespace MediFiler_V2;
 
 public static class TreeHandler
 {
-    private static readonly List<FileSystemNode> RootNodes = new(); // Top folders
-    private static readonly List<FileSystemNode> FullFolderList = new(); // Used for the folder list view
+    // TODO: Use helper functions instead of global variables
+    public static readonly List<FileSystemNode> RootNodes = new(); // Top folders
+    public static readonly List<FileSystemNode> FullFolderList = new(); // Used for the folder list view
+    private static IReadOnlyList<IStorageItem> rootFiles;
 
     public static async Task BuildTree(IReadOnlyList<IStorageItem> filesAndFolders, TreeView fileTreeView)
     {
+        rootFiles = filesAndFolders;
         ClearTree(fileTreeView);
         
         // Performance measuring
@@ -32,14 +35,14 @@ public static class TreeHandler
                 AddFolderToTree(node);
             }
         });
-        CreateTree(fileTreeView);
+        AssignTreeToUserInterface(fileTreeView);
         
         // Print performance data
         stopwatch.Stop();
         Debug.WriteLine("Tree generated in " + stopwatch.ElapsedMilliseconds + "ms");
     }
     
-    // Recursively extracts folder data from nodes
+    /// Recursively extracts folder data from nodes
     public static void AddFolderToTree(FileSystemNode systemNode)
     {
         FullFolderList.Add(systemNode);
@@ -49,24 +52,47 @@ public static class TreeHandler
         }
     }
 
+    /// Rebuilds the tree from the root files
+    public static async void RebuildTree(TreeView fileTreeView)
+    {
+        FullFolderList.Clear();
+        await BuildTree(rootFiles, fileTreeView);
+    }
+
 
     // // // Helper functions // // //
     
     
-    public static void ClearTree(TreeView fileTreeView)
+    private static void ClearTree(TreeView fileTreeView)
     {
         fileTreeView.ItemsSource = null;
         RootNodes.Clear();
         FullFolderList.Clear();
     }
 
-    public static void CreateTree(TreeView fileTreeView)
+    public static void AssignTreeToUserInterface(TreeView fileTreeView)
     {
+        fileTreeView.ItemsSource = null;
         fileTreeView.ItemsSource = FullFolderList;
     }
     
     public static FileSystemNode LoadRootNode(int index)
     {
         return RootNodes[index];
+    }
+
+    public static FileSystemNode FindNode(string Path)
+    {
+        foreach (var node in FullFolderList)
+        {
+            if (node.Path == Path) return node;
+        }
+        return RootNodes[0];
+    }
+
+    public static FileSystemNode GetCurrentFolder()
+    {
+        // TODO: Implement - To be used instead of the global variable
+        return null;
     }
 }

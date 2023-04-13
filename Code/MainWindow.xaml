@@ -39,8 +39,21 @@
             
             <CommandBar HorizontalAlignment="Center" 
                 Background="Transparent" IsOpen="False" DefaultLabelPosition="Collapsed">
-                <AppBarButton Icon="Refresh" Label="Edit" Width="32"/>
-                <AppBarButton Icon="Add" Label="Add" Width="32"/>
+                
+                <AppBarButton Icon="Refresh" Label="Refresh" Width="32" Tapped="RefreshButton_OnPointerReleased">
+                    <AppBarButton.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="F5" 
+                                             Invoked="Refresh_OnInvoked"></KeyboardAccelerator>
+                    </AppBarButton.KeyboardAccelerators>
+                </AppBarButton>
+                <AppBarButton Icon="Rotate" Label="Rebuild" Width="32" Tapped="RefreshAllButton_OnPointerReleased">
+                    <AppBarButton.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="F5" Modifiers="Shift"
+                                             Invoked="FullRefresh_OnInvoked"></KeyboardAccelerator>
+                    </AppBarButton.KeyboardAccelerators>
+                    
+                </AppBarButton>
+                    <!--<AppBarButton Icon="Add" Label="Add" Width="32"/>
                 <AppBarButton Icon="Share" Label="Share" Width="32"/>
                 <CommandBar.SecondaryCommands>
                     <AppBarButton Icon="Setting" Label="Include subfolder content"/>
@@ -49,7 +62,7 @@
                             <KeyboardAccelerator Key="Shift" />
                         </AppBarButton.KeyboardAccelerators>
                     </AppBarButton>
-                </CommandBar.SecondaryCommands>
+                </CommandBar.SecondaryCommands>-->
             </CommandBar>
             
         </Grid>
@@ -70,7 +83,7 @@
                 
                 <Image Name="FileViewer" Stretch="Uniform"/>
 
-                <!--Sorting panel-->
+                <!--Sorting side panel-->
                 <Grid>
                     <TreeView
                         Name="FileTreeView" Background="Transparent" HorizontalAlignment="Left" Width="500"

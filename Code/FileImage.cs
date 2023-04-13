@@ -9,7 +9,7 @@ namespace MediFiler_V2.Code;
 
 public class FileImage
 {
-    // Load image from file
+    /// Load image from file
     public async Task<BitmapImage> LoadImage(FileSystemNode fileSystem, int size)
     {
         var bitmap = new BitmapImage();

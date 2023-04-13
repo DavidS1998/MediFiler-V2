@@ -11,7 +11,7 @@ namespace MediFiler_V2
 {
     class IndentConverter : IValueConverter
     {
-        private const int Indent = 10;
+        private const int Indent = 15;
 
         public object Convert(object value, Type targetType, object parameter, string language)
         {

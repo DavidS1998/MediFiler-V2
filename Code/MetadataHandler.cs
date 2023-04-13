@@ -19,7 +19,7 @@ public class MetadataHandler
         this.mainWindowModel = mainWindowModel;
     }
     
-    // Gets secondary data from the current file
+    /// Gets secondary data from the current file
     public void ShowMetadata(FileSystemNode fileSystem)
     {
         SetTitleText(fileSystem);
@@ -67,17 +67,26 @@ public class MetadataHandler
 
     private async Task<string> GetImageMetadata(string filePath)
     {
-        // Get resolution from stream loaded from filePath
-        var loadedFile = await StorageFile.GetFileFromPathAsync(filePath);
-        using var stream = await loadedFile.OpenAsync(FileAccessMode.Read);
+        try
+        {
+            // Get resolution from stream loaded from filePath
+            var loadedFile = await StorageFile.GetFileFromPathAsync(filePath);
+            using var stream = await loadedFile.OpenAsync(FileAccessMode.Read);
         
-        var decoder = await BitmapDecoder.CreateAsync(stream);
-        var resolution = decoder.PixelWidth + "×" + decoder.PixelHeight;
-        stream.Dispose();
-        return resolution;
+            var decoder = await BitmapDecoder.CreateAsync(stream);
+            var resolution = decoder.PixelWidth + "×" + decoder.PixelHeight;
+            stream.Dispose();
+            return resolution;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            mainWindow._model.Refresh();
+            return "INVALID";
+        }
     }
     
-    // Colors the path before the root folder in the metadata text block
+    /// Colors the path before the root folder in the metadata text block
     private void ColorMetadataText(FileSystemNode node)
     {
         var topNode = node;
