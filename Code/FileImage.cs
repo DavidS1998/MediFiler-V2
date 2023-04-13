@@ -9,13 +9,6 @@ namespace MediFiler_V2.Code;
 
 public class FileImage
 {
-    MainWindow _mainWindow;
-    
-    public FileImage(MainWindow mainWindow)
-    {
-        _mainWindow = mainWindow;
-    }
-    
     // Load image from file
     public async Task<BitmapImage> LoadImage(FileSystemNode fileSystem, int size)
     {

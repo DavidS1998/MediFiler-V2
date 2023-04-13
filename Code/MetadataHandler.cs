@@ -11,10 +11,12 @@ namespace MediFiler_V2.Code;
 public class MetadataHandler
 {
     MainWindow mainWindow;
+    MainWindowModel mainWindowModel;
     
-    public MetadataHandler(MainWindow mainWindow)
+    public MetadataHandler(MainWindow mainWindow, MainWindowModel mainWindowModel)
     {
         this.mainWindow = mainWindow;
+        this.mainWindowModel = mainWindowModel;
     }
     
     // Gets secondary data from the current file
@@ -28,7 +30,7 @@ public class MetadataHandler
     {
         // Current position and name
         var titleText = "";
-        titleText += "(" + (mainWindow.CurrentFolderIndex + 1) + "/" + (mainWindow.CurrentFolder.SubFiles.Count) + ") ";
+        titleText += "(" + (mainWindowModel.CurrentFolderIndex + 1) + "/" + (mainWindowModel.CurrentFolder.SubFiles.Count) + ") ";
         titleText += fileSystem.Name;
         
         mainWindow.AppTitleTextBlock1.Text = titleText;

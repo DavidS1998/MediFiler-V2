@@ -17,12 +17,12 @@ public class FileThumbnail
     // TODO: Use helper functions for the dictionary
     public Dictionary<int, BitmapImage> ThumbnailCache = new();
 
-    MainWindow _mainWindow;
+    MainWindowModel _model;
     int PreloadDistance;
     
-    public FileThumbnail(MainWindow mainWindow, int preloadDistance)
+    public FileThumbnail(MainWindowModel mainWindow, int preloadDistance)
     {
-        _mainWindow = mainWindow;
+        _model = mainWindow;
         PreloadDistance = preloadDistance;
     }
     
@@ -106,20 +106,20 @@ public class FileThumbnail
     private void FillPreviews(StackPanel previewImageContainer)
     {
         // Check if ThumbnailCache at index exists
-        if (!ThumbnailCache.ContainsKey(_mainWindow.CurrentFolderIndex)) return;
+        if (!ThumbnailCache.ContainsKey(_model.CurrentFolderIndex)) return;
             
         var previewCount = previewImageContainer.Children.Count;
         var middleIndex = previewCount / 2;
         var middleBorder = (Border) previewImageContainer.Children[middleIndex];
         var middleImage = (Image) middleBorder.Child;
-        middleImage.Source = ThumbnailCache[_mainWindow.CurrentFolderIndex];
+        middleImage.Source = ThumbnailCache[_model.CurrentFolderIndex];
             
         // Fill previews to the left
         for (var i = middleIndex - 1; i >= 0; i--)
         {
             var border = (Border) previewImageContainer.Children[i];
             var image = (Image) border.Child;
-            var index = _mainWindow.CurrentFolderIndex - (middleIndex - i);
+            var index = _model.CurrentFolderIndex - (middleIndex - i);
             if (index < 0) continue;
 
             if (!ThumbnailCache.ContainsKey(index)) continue;
@@ -131,8 +131,8 @@ public class FileThumbnail
         {
             var border = (Border) previewImageContainer.Children[i];
             var image = (Image) border.Child;
-            var index = _mainWindow.CurrentFolderIndex + (i - middleIndex);
-            if (index >= _mainWindow.CurrentFolder.SubFiles.Count) continue;
+            var index = _model.CurrentFolderIndex + (i - middleIndex);
+            if (index >= _model.CurrentFolder.SubFiles.Count) continue;
             
             if (!ThumbnailCache.ContainsKey(index)) continue;
             image.Source = ThumbnailCache[index];
