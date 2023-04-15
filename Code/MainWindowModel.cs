@@ -167,23 +167,36 @@ public class MainWindowModel
     
     // // // FILE OPERATIONS // // //
 
-    public async void MoveFile()
+    
+    public async void MoveFile(FileSystemNode destination)
     {
+        // Error check
+        if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0) return;
         
+        CurrentFolder.SubFiles[CurrentFolderIndex].Move(destination);
+        TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1);
+        Refresh();
     }
     
     /// Deletes the currently selected file
     public async void DeleteFile()
     {
+        // Error check
+        if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0) return;
+        
         if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0) return;
         var currentFile = CurrentFolder.SubFiles[CurrentFolderIndex];
         currentFile.Delete();
+        TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1);
         Refresh();
     }
 
     /// Renames the currently selected file
     public async void RenameFile()
     {
+        // Error check
+        if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0) return;
+        
         // Get the file extension as a string
         var fileExtension = CurrentFolder.SubFiles[CurrentFolderIndex].Name.Split('.').Last();
         

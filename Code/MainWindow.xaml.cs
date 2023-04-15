@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.Storage;
 using Windows.System;
 using Windows.UI.Core;
 using Microsoft.UI.Xaml;
@@ -58,18 +60,21 @@ namespace MediFiler_V2.Code
             _model.CurrentFolderIndex += increment;
             _model.Load();
         }
-        
+
 
         /// Handler for the folder list
         private void FolderListClick(RoutedEventArgs e, bool leftClick)
         {
             if (((FrameworkElement)e.OriginalSource).DataContext is not FileSystemNode respectiveNode) return;
-            
+
             if (leftClick)
             {
                 _model.SwitchFolder(respectiveNode);
             }
-            // TODO: Handle left and right click differently
+            else
+            {
+                _model.MoveFile(respectiveNode);
+            }
         }
 
         private void FolderListLeftClick(object sender, TappedRoutedEventArgs e)
@@ -117,6 +122,7 @@ namespace MediFiler_V2.Code
         
         private void FileAction_RightClick(object sender, RightTappedRoutedEventArgs e)
         {
+            return;
             var path = _model.CurrentFolder.SubFiles[_model.CurrentFolderIndex].Path;
             
             // TODO: Change action based on file type

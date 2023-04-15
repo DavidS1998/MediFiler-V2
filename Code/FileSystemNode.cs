@@ -40,7 +40,7 @@ namespace MediFiler_V2
             // Return if this is a file (leaf)
             if (!storageItem.IsOfType(StorageItemTypes.Folder))
             {
-                File = storageItem as IStorageFile; 
+                File = storageItem as IStorageFile;
                 IsFile = true;
                 return;
             }
@@ -107,7 +107,31 @@ namespace MediFiler_V2
         {
             if (!IsFile) return;
             
-            File.MoveAsync(destination.Folder, Name, NameCollisionOption.GenerateUniqueName).AsTask().Wait();
+            // Check if file already exists in destination
+            var newPath = destination.Path + "\\" + Name;
+            var extension = File.FileType;
+            var nameWithoutExtension = Name.Substring(0, Name.Length - extension.Length);
+            for (int i = 1; System.IO.File.Exists(newPath); i++)
+            {
+                newPath = destination.Path + "\\" + nameWithoutExtension + " (" + i + ")" + extension;
+            }
+            // Can't use File.MoveAsync because IStorageFiles created from Drag and Drop are set to ReadOnly (blame microsoft)
+            System.IO.File.Move(Path, newPath, false);
+
+            // Remove from old parent
+            Parent.SubFiles.Remove(this);
+            Parent.FileCount--;
+            
+            // Update properties
+            this.Parent = destination;
+            this.Path = File.Path;
+            this.Name = File.Name;
+            this.Depth = destination.Depth + 1;
+
+            // Add to new parent
+            destination.SubFiles.Add(this);
+            destination.FileCount++;
+            destination.SubFiles = destination.SubFiles.OrderBy(x => x.Name).ToList();
         }
         
         public void Rename(string newName)
