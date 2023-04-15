@@ -38,7 +38,7 @@ public class MainWindowModel
         // Set thumbnail preview count on startup
         _fileThumbnail.CreatePreviews(PreloadDistance, _mainWindow.PreviewImageContainer1);
     }
-    
+
     /// Load file
     public void Load()
     {
@@ -47,6 +47,7 @@ public class MainWindowModel
             _mainWindow.RefreshButton1.IsEnabled = false;
             _mainWindow.RebuildButton1.IsEnabled = false;
             _mainWindow.RenameButton1.IsEnabled = false;
+            _mainWindow.DeleteButton1.IsEnabled = false;
             return;
         };
         try
@@ -60,6 +61,7 @@ public class MainWindowModel
             _mainWindow.RefreshButton1.IsEnabled = true;
             _mainWindow.RebuildButton1.IsEnabled = true;
             _mainWindow.RenameButton1.IsEnabled = true;
+            _mainWindow.DeleteButton1.IsEnabled = true;
         }
         catch (Exception)
         {
@@ -123,7 +125,7 @@ public class MainWindowModel
     /// For loading a different folder context
     public void SwitchFolder(FileSystemNode newFolder, int position = 0)
     {
-        var sameFolder = CurrentFolder == newFolder;
+        var sameFolder = CurrentFolder == newFolder && CurrentFolder != null;
         CurrentFolder = newFolder;
         
         try
@@ -160,6 +162,7 @@ public class MainWindowModel
         if (sameFolder) return;
         Debug.WriteLine("Undo queue cleared");
         ClearUndoQueue();
+        EmptyTrash();
     }
 
     /// Refreshes the current folder and reloads all items within it
@@ -197,21 +200,37 @@ public class MainWindowModel
         Push(CurrentFolder.SubFiles[CurrentFolderIndex].CreateMemento(UndoAction.Move));
         
         CurrentFolder.SubFiles[CurrentFolderIndex].Move(destination);
-        TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1);
         Refresh();
     }
     
-    /// Deletes the currently selected file
-    public void DeleteFile()
+    /// Deletes by moving to a trash folder, and recycling it only when switching folders
+    public async void DeleteFile()
     {
         // Error check
         if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0) return;
+
+        IStorageFolder baseDirectory = await StorageFolder.GetFolderFromPathAsync(AppDomain.CurrentDomain.BaseDirectory);
+        var trashFolder = await baseDirectory.CreateFolderAsync("Trash", CreationCollisionOption.OpenIfExists);
+        var trashFolderNode = new FileSystemNode(trashFolder, 0);
         
-        if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0) return;
-        var currentFile = CurrentFolder.SubFiles[CurrentFolderIndex];
-        currentFile.Delete();
-        TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1);
+        // Undo queue
+        Push(CurrentFolder.SubFiles[CurrentFolderIndex].CreateMemento(UndoAction.Move));
+        
+        CurrentFolder.SubFiles[CurrentFolderIndex].Move(trashFolderNode);
         Refresh();
+    }
+
+    /// Empty Trash - Runs when switching folders
+    public async void EmptyTrash()
+    {
+        var baseDirectory = await StorageFolder.GetFolderFromPathAsync(AppDomain.CurrentDomain.BaseDirectory);
+        var trashFolder = await baseDirectory.CreateFolderAsync("Trash", CreationCollisionOption.OpenIfExists);
+        
+        // For each file in the trash folder, delete it while awaiting
+        foreach (var file in await trashFolder.GetFilesAsync())
+        {
+            await file.DeleteAsync();
+        }
     }
 
     /// Renames the currently selected file
@@ -267,6 +286,7 @@ public class MainWindowModel
         Refresh();
     }
     
+    
     // TODO: Refactor into own class
     // // // UNDO QUEUE // // //
     
@@ -278,7 +298,7 @@ public class MainWindowModel
     {
         if (UndoQueue.Count <= 0) _mainWindow.UndoButton1.IsEnabled = true;
         UndoQueue.Push(memento);
-        Debug.WriteLine("Pushing " + memento.Action + " of " + memento.Name + " queue");
+        Debug.WriteLine("Pushing " + memento.Action + " of " + memento.Name);
     }
     
     public void ClearUndoQueue()
@@ -306,11 +326,8 @@ public class MainWindowModel
                 memento.Node.Rename(memento.Name);
                 break;
             case UndoAction.Move:
-                memento.Node.Move(memento.Parent);
                 TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1);
-                break;
-            case UndoAction.Delete:
-                //memento.File.Move(node);
+                memento.Node.Move(memento.Parent);
                 break;
         }
         

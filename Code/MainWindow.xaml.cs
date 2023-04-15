@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Windows.ApplicationModel.DataTransfer;
@@ -7,6 +8,7 @@ using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.System;
 using Windows.UI.Core;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -36,6 +38,7 @@ namespace MediFiler_V2.Code
         public AppBarButton RebuildButton1 { get => RebuildButton; set => RebuildButton = value; }
         public AppBarButton RenameButton1 { get => RenameButton; set => RenameButton = value; }
         public AppBarButton UndoButton1 { get => UndoButton; set => UndoButton = value; }
+        public AppBarButton DeleteButton1 { get => DeleteButton; set => DeleteButton = value; }
 
         public MainWindowModel _model;
 
@@ -226,6 +229,7 @@ namespace MediFiler_V2.Code
 
             _model.SwitchFolder(_model.CurrentFolder);
         }
+        
 
         
         // // // BUTTONS // // //
@@ -259,6 +263,12 @@ namespace MediFiler_V2.Code
         private void UndoButton_OnPointerReleased(object sender, TappedRoutedEventArgs e)
         {
             _model.Undo();
+        }  
+        
+        // Undo button
+        private void DeleteButton_OnPointerReleased(object sender, TappedRoutedEventArgs e)
+        {
+            _model.DeleteFile();
         }
         
         
@@ -290,6 +300,13 @@ namespace MediFiler_V2.Code
         private void Undo_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
         {
             _model.Undo();
+            args.Handled = true;
+        }      
+        
+        // Delete - Delete file
+        private void Delete_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+        {
+            _model.DeleteFile();
             args.Handled = true;
         }
     }

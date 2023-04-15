@@ -59,6 +59,12 @@
                                              Invoked="Rename_OnInvoked"></KeyboardAccelerator>
                     </AppBarButton.KeyboardAccelerators>
                 </AppBarButton>
+                <AppBarButton Icon="Delete" Label="Delete" Width="32" IsEnabled="False" Name="DeleteButton" Tapped="DeleteButton_OnPointerReleased">
+                    <AppBarButton.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="Delete"
+                                             Invoked="Delete_OnInvoked"></KeyboardAccelerator>
+                    </AppBarButton.KeyboardAccelerators>
+                </AppBarButton>
                 <AppBarButton Icon="Undo" Label="Undo" Width="32" IsEnabled="False" Name="UndoButton" Tapped="UndoButton_OnPointerReleased">
                     <AppBarButton.KeyboardAccelerators>
                         <KeyboardAccelerator Key="Z" Modifiers="Control"

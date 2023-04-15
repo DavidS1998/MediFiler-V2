@@ -115,6 +115,9 @@ namespace MediFiler_V2
             {
                 newPath = destination.Path + "\\" + nameWithoutExtension + " (" + i + ")" + extension;
             }
+            
+            Debug.WriteLine("Moving " + Path + " to " + newPath + "");
+            
             // Can't use File.MoveAsync because IStorageFiles created from Drag and Drop are set to ReadOnly (blame microsoft)
             System.IO.File.Move(Path, newPath, false);
 
@@ -124,8 +127,7 @@ namespace MediFiler_V2
             
             // Update properties
             this.Parent = destination;
-            this.Path = File.Path;
-            this.Name = File.Name;
+            this.Path = destination.Path + "\\" + Name;
             this.Depth = destination.Depth + 1;
 
             // Add to new parent
@@ -148,7 +150,7 @@ namespace MediFiler_V2
         {
             if (!IsFile) return;
             // Move file to recycle bin
-            File.DeleteAsync(StorageDeleteOption.Default).AsTask().Wait();
+            File.DeleteAsync(StorageDeleteOption.Default);
             // TODO: Recover file from recycle bin using Shell32
         }
 

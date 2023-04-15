@@ -3,8 +3,7 @@
 public enum UndoAction
 {
     Move,
-    Rename,
-    Delete
+    Rename
 }
 
 public class NodeMemento
