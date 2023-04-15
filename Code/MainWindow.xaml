@@ -83,10 +83,12 @@
 
             <!--Default image view-->
             
-            <Grid Background="Black" Name="FileHolder" PointerWheelChanged="MouseWheelScrollHandler"
+            <Grid Background="Black" PointerWheelChanged="MouseWheelScrollHandler"
                   SizeChanged="ImageViewer_SizeChanged" RightTapped="FileAction_RightClick">
                 
-                <Image Name="FileViewer" Stretch="Uniform"/>
+                <Grid Name="FileHolder">
+                    <Image Name="FileViewer" Stretch="Uniform"/>
+                </Grid>
 
                 <!--Sorting side panel-->
                 <Grid>

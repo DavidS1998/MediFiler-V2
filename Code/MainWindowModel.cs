@@ -171,8 +171,8 @@ public class MainWindowModel
     public async void MoveFile(FileSystemNode destination)
     {
         // Error check
-        if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0) return;
-        
+        if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0 || destination.Path == CurrentFolder.Path) return;
+
         CurrentFolder.SubFiles[CurrentFolderIndex].Move(destination);
         TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1);
         Refresh();

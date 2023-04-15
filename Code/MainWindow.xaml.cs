@@ -122,7 +122,9 @@ namespace MediFiler_V2.Code
         
         private void FileAction_RightClick(object sender, RightTappedRoutedEventArgs e)
         {
-            return;
+            // Only run if the clicked element is FileHolder or FileViewer
+            if (e.OriginalSource.GetType() != typeof(Grid) && e.OriginalSource.GetType() != typeof(Image)) return;
+
             var path = _model.CurrentFolder.SubFiles[_model.CurrentFolderIndex].Path;
             
             // TODO: Change action based on file type
