@@ -40,22 +40,29 @@
             <CommandBar HorizontalAlignment="Center" 
                 Background="Transparent" IsOpen="False" DefaultLabelPosition="Collapsed">
                 
-                <AppBarButton Icon="Refresh" Label="Refresh" Width="32" Tapped="RefreshButton_OnPointerReleased">
+                <AppBarButton Icon="Add" Label="Add" IsEnabled="True" Width="32" Name="AddButton" Tapped="AddButton_OnPointerReleased"/>
+                    <AppBarButton Icon="Refresh" Label="Refresh" IsEnabled="False" Width="32" Name="RefreshButton" Tapped="RefreshButton_OnPointerReleased">
                     <AppBarButton.KeyboardAccelerators>
                         <KeyboardAccelerator Key="F5" 
                                              Invoked="Refresh_OnInvoked"></KeyboardAccelerator>
                     </AppBarButton.KeyboardAccelerators>
                 </AppBarButton>
-                <AppBarButton Icon="Rotate" Label="Rebuild" Width="32" Tapped="RefreshAllButton_OnPointerReleased">
+                <AppBarButton Icon="Rotate" Label="Reload" IsEnabled="False" Width="32" Name="RebuildButton" Tapped="RefreshAllButton_OnPointerReleased">
                     <AppBarButton.KeyboardAccelerators>
                         <KeyboardAccelerator Key="F5" Modifiers="Shift"
                                              Invoked="FullRefresh_OnInvoked"></KeyboardAccelerator>
                     </AppBarButton.KeyboardAccelerators>
                 </AppBarButton>
-                <AppBarButton Icon="Rename" Label="Rename" Width="32" Tapped="RenameButton_OnPointerReleased">
+                <AppBarButton Icon="Rename" Label="Rename" IsEnabled="False" Width="32" Name="RenameButton" Tapped="RenameButton_OnPointerReleased">
                     <AppBarButton.KeyboardAccelerators>
                         <KeyboardAccelerator Key="F2"
                                              Invoked="Rename_OnInvoked"></KeyboardAccelerator>
+                    </AppBarButton.KeyboardAccelerators>
+                </AppBarButton>
+                <AppBarButton Icon="Undo" Label="Undo" Width="32" IsEnabled="False" Name="UndoButton" Tapped="UndoButton_OnPointerReleased">
+                    <AppBarButton.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="Z" Modifiers="Control"
+                                             Invoked="Undo_OnInvoked"></KeyboardAccelerator>
                     </AppBarButton.KeyboardAccelerators>
                 </AppBarButton>
                     <!--<AppBarButton Icon="Add" Label="Add" Width="32"/>
@@ -86,12 +93,12 @@
             <Grid Background="Black" PointerWheelChanged="MouseWheelScrollHandler"
                   SizeChanged="ImageViewer_SizeChanged" RightTapped="FileAction_RightClick">
                 
-                <Grid Name="FileHolder">
+                <Grid Name="FileHolder" Background="Black">
                     <Image Name="FileViewer" Stretch="Uniform"/>
                 </Grid>
 
                 <!--Sorting side panel-->
-                <Grid>
+                <Grid Name="SortPanel">
                     <TreeView
                         Name="FileTreeView" Background="Transparent" HorizontalAlignment="Left" Width="500"
                         VerticalAlignment="Stretch" CanDrag="False" CanDragItems="False" CanReorderItems="False"

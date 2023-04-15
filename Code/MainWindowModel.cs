@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -17,10 +18,10 @@ public class MainWindowModel
     private MetadataHandler _metadataHandler;
     private FileThumbnail _fileThumbnail;
     private FileImage _fileImage;
-    
+
     // Constants
     public const int PreloadDistance = 21;
-    
+
     // TODO: Stop using global variables
     private int _latestLoadedImage = -1;
     public FileSystemNode CurrentFolder ;
@@ -41,7 +42,13 @@ public class MainWindowModel
     /// Load file
     public void Load()
     {
-        if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0) return;
+        if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0)
+        {
+            _mainWindow.RefreshButton1.IsEnabled = false;
+            _mainWindow.RebuildButton1.IsEnabled = false;
+            _mainWindow.RenameButton1.IsEnabled = false;
+            return;
+        };
         try
         {
             var currentFile = CurrentFolder.SubFiles[CurrentFolderIndex];
@@ -49,10 +56,15 @@ public class MainWindowModel
             _fileThumbnail.ClearPreviewCache(_mainWindow.PreviewImageContainer1);
             _fileThumbnail.PreloadThumbnails(CurrentFolderIndex, CurrentFolder, _mainWindow.PreviewImageContainer1);
             DisplayCurrentFile(currentFile);
+            
+            _mainWindow.RefreshButton1.IsEnabled = true;
+            _mainWindow.RebuildButton1.IsEnabled = true;
+            _mainWindow.RenameButton1.IsEnabled = true;
         }
         catch (Exception)
         {
             // If file cannot be found, refresh context and try again
+            Debug.WriteLine("File not found when loading");
             Refresh();
         }
     }
@@ -111,6 +123,7 @@ public class MainWindowModel
     /// For loading a different folder context
     public void SwitchFolder(FileSystemNode newFolder, int position = 0)
     {
+        var sameFolder = CurrentFolder == newFolder;
         CurrentFolder = newFolder;
         
         try
@@ -127,19 +140,26 @@ public class MainWindowModel
         
         // Set position if within bounds
         CurrentFolderIndex = position < 0 ? 0 : (position >= newFolder.SubFiles.Count ? (newFolder.FileCount - 1) : position);
-        Clear();
+        Clear(sameFolder);
         Load();
     }
-
+    
     /// Clear all loaded content
-    public void Clear()
+    public void Clear(bool sameFolder)
     {
+        Debug.WriteLine(sameFolder ? "Same folder" : "Different folder");
+        
         _latestLoadedImage = -1;
         _fileThumbnail.ThumbnailCache.Clear();
         _mainWindow.AppTitleTextBlock1.Text = "MediFiler";
         _mainWindow.FileViewer1.Source = null;
         _fileThumbnail.ClearPreviewCache(_mainWindow.PreviewImageContainer1);
         _metadataHandler.ClearMetadata();
+
+        // Only run on real folder switch
+        if (sameFolder) return;
+        Debug.WriteLine("Undo queue cleared");
+        ClearUndoQueue();
     }
 
     /// Refreshes the current folder and reloads all items within it
@@ -168,18 +188,21 @@ public class MainWindowModel
     // // // FILE OPERATIONS // // //
 
     
-    public async void MoveFile(FileSystemNode destination)
+    public void MoveFile(FileSystemNode destination)
     {
         // Error check
         if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0 || destination.Path == CurrentFolder.Path) return;
 
+        // Undo queue
+        Push(CurrentFolder.SubFiles[CurrentFolderIndex].CreateMemento(UndoAction.Move));
+        
         CurrentFolder.SubFiles[CurrentFolderIndex].Move(destination);
         TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1);
         Refresh();
     }
     
     /// Deletes the currently selected file
-    public async void DeleteFile()
+    public void DeleteFile()
     {
         // Error check
         if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0) return;
@@ -236,7 +259,61 @@ public class MainWindowModel
             await errorDialog.ShowAsync();
             return;
         }
+        
+        // Undo queue
+        Push(CurrentFolder.SubFiles[CurrentFolderIndex].CreateMemento(UndoAction.Rename));
+        
         CurrentFolder.SubFiles[CurrentFolderIndex].Rename(newName + "." + fileExtension);
+        Refresh();
+    }
+    
+    // TODO: Refactor into own class
+    // // // UNDO QUEUE // // //
+    
+    
+    // Undo queue - for undoing delete, rename, and move operations
+    public Stack<NodeMemento> UndoQueue = new();
+    
+    public void Push(NodeMemento memento)
+    {
+        if (UndoQueue.Count <= 0) _mainWindow.UndoButton1.IsEnabled = true;
+        UndoQueue.Push(memento);
+        Debug.WriteLine("Pushing " + memento.Action + " of " + memento.Name + " queue");
+    }
+    
+    public void ClearUndoQueue()
+    {
+        UndoQueue.Clear();
+        _mainWindow.UndoButton1.IsEnabled = false;
+    }
+
+    /// Undo the last operation
+    public void Undo()
+    {
+        if (UndoQueue.Count <= 0)
+        {
+            Debug.WriteLine("UNDO STACK EMPTY");
+            return;
+        };
+        
+        var memento = UndoQueue.Pop();
+        if (UndoQueue.Count <= 0) _mainWindow.UndoButton1.IsEnabled = false;
+        
+        Debug.WriteLine("Undoing " + memento.Action + " of " + memento.Node.Name);
+        switch (memento.Action)
+        {
+            case UndoAction.Rename:
+                memento.Node.Rename(memento.Name);
+                break;
+            case UndoAction.Move:
+                memento.Node.Move(memento.Parent);
+                TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1);
+                break;
+            case UndoAction.Delete:
+                //memento.File.Move(node);
+                break;
+        }
+        
         Refresh();
     }
 }

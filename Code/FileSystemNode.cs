@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage;
+using MediFiler_V2.Code;
 
 namespace MediFiler_V2
 {
@@ -33,7 +33,7 @@ namespace MediFiler_V2
             // If root node is a file, pretend it's a folder with only this as a file
             if (depth == 0 && storageItem is StorageFile)
             {
-                IsFile = true;
+                // TODO: Figure this out - For combining loose files into one pretend folder
                 SubFiles.Add(new FileSystemNode(storageItem, Depth + 1, this));
             }
             
@@ -165,6 +165,12 @@ namespace MediFiler_V2
             {
                 return false;
             }
+        }
+        
+        // Create mmento
+        public NodeMemento CreateMemento(UndoAction action)
+        {
+            return new NodeMemento(action, Name, Path, Parent, this);
         }
     }
 }
