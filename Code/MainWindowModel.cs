@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Windows.Storage;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 
 namespace MediFiler_V2.Code;
@@ -158,6 +161,69 @@ public class MainWindowModel
     public void FullRefresh()
     {
         TreeHandler.RebuildTree(_mainWindow.FileTreeView1);
+        Refresh();
+    }
+    
+    
+    // // // FILE OPERATIONS // // //
+
+    public async void MoveFile()
+    {
+        
+    }
+    
+    /// Deletes the currently selected file
+    public async void DeleteFile()
+    {
+        if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0) return;
+        var currentFile = CurrentFolder.SubFiles[CurrentFolderIndex];
+        currentFile.Delete();
+        Refresh();
+    }
+
+    /// Renames the currently selected file
+    public async void RenameFile()
+    {
+        // Get the file extension as a string
+        var fileExtension = CurrentFolder.SubFiles[CurrentFolderIndex].Name.Split('.').Last();
+        
+        // Create a ContentDialog box with a text input field
+        var dialog = new ContentDialog
+        {
+            Title = "Rename File",
+            Content = new TextBox
+            {
+                // Text is the current file name without the extension
+                Text = CurrentFolder.SubFiles[CurrentFolderIndex].Name.Replace("." + fileExtension, ""),
+                AcceptsReturn = false
+            },
+            PrimaryButtonText = "Rename",
+            SecondaryButtonText = "Cancel",
+            XamlRoot = _mainWindow.Content.XamlRoot,
+            DefaultButton = ContentDialogButton.Primary
+        };
+        var result = await dialog.ShowAsync();
+
+        if (result != ContentDialogResult.Primary) return;
+
+        var newName = ((TextBox)dialog.Content).Text;
+        
+        // Only allow valid File names
+        var invalidCharsRegex = new Regex("[\\\\/:*?\"<>|]");
+        if (string.IsNullOrWhiteSpace(newName) || invalidCharsRegex.IsMatch(newName))
+        {
+            var errorDialog = new ContentDialog
+            {
+                Title = "Invalid File Name",
+                Content = "File names cannot contain following characters: \\ / : * ? \" < > |",
+                PrimaryButtonText = "OK",
+                XamlRoot = _mainWindow.Content.XamlRoot,
+                DefaultButton = ContentDialogButton.Primary
+            };
+            await errorDialog.ShowAsync();
+            return;
+        }
+        CurrentFolder.SubFiles[CurrentFolderIndex].Rename(newName + "." + fileExtension);
         Refresh();
     }
 }

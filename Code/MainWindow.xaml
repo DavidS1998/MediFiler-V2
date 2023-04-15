@@ -51,7 +51,12 @@
                         <KeyboardAccelerator Key="F5" Modifiers="Shift"
                                              Invoked="FullRefresh_OnInvoked"></KeyboardAccelerator>
                     </AppBarButton.KeyboardAccelerators>
-                    
+                </AppBarButton>
+                <AppBarButton Icon="Rename" Label="Rename" Width="32" Tapped="RenameButton_OnPointerReleased">
+                    <AppBarButton.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="F2"
+                                             Invoked="Rename_OnInvoked"></KeyboardAccelerator>
+                    </AppBarButton.KeyboardAccelerators>
                 </AppBarButton>
                     <!--<AppBarButton Icon="Add" Label="Add" Width="32"/>
                 <AppBarButton Icon="Share" Label="Share" Width="32"/>

@@ -12,7 +12,6 @@ namespace MediFiler_V2
     {
         public string Name { get; set; }
         public string Path { get; set; }
-        public IStorageFile File { get; set; }
         public bool IsFile { get; set; } = false;
         public int Depth { get; set; }
         public FileSystemNode Parent { get; set; }
@@ -20,6 +19,9 @@ namespace MediFiler_V2
         public List<FileSystemNode> SubFolders { get; set; } = new();
         public int FileCount { get; set; }
         public int ChildFileCount { get { return FileCount + SubFolders.Sum(f => f.ChildFileCount); } }
+        
+        public IStorageFile File { get; set; }
+        public IStorageFolder Folder { get; set; }
 
         public FileSystemNode(IStorageItem storageItem, int depth, FileSystemNode parent = null)
         {
@@ -36,7 +38,13 @@ namespace MediFiler_V2
             }
             
             // Return if this is a file (leaf)
-            if (!storageItem.IsOfType(StorageItemTypes.Folder)) {File = storageItem as IStorageFile; return;}
+            if (!storageItem.IsOfType(StorageItemTypes.Folder))
+            {
+                File = storageItem as IStorageFile; 
+                IsFile = true;
+                return;
+            }
+            Folder = storageItem as IStorageFolder;
             
             var folder = (StorageFolder) storageItem;
             var filesAndFolders = folder.GetItemsAsync().AsTask().Result;
@@ -91,9 +99,36 @@ namespace MediFiler_V2
         // Reloads all files within this folder node and all subfolders
         public void CascadingRefresh()
         {
-            // TODO: Implement
+            // TODO: Implement - For use with SubFolder viewing
         }
         
+        // Move this node to another node
+        public void Move(FileSystemNode destination)
+        {
+            if (!IsFile) return;
+            
+            File.MoveAsync(destination.Folder, Name, NameCollisionOption.GenerateUniqueName).AsTask().Wait();
+        }
+        
+        public void Rename(string newName)
+        {
+            if (!IsFile) return;
+            File.RenameAsync(newName, NameCollisionOption.GenerateUniqueName).AsTask().Wait();
+            Name = newName;
+            Path = File.Path;
+
+            // TODO: Folder renaming
+        }
+
+        public void Delete()
+        {
+            if (!IsFile) return;
+            // Move file to recycle bin
+            File.DeleteAsync(StorageDeleteOption.Default).AsTask().Wait();
+            // TODO: Recover file from recycle bin using Shell32
+        }
+
+        // Checks if this folder node has been deleted
         public bool FolderStillExists()
         {
             if (IsFile) return true;

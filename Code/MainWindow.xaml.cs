@@ -194,6 +194,12 @@ namespace MediFiler_V2.Code
         private void RefreshAllButton_OnPointerReleased(object sender, TappedRoutedEventArgs e)
         {
             _model.FullRefresh();
+        }        
+        
+        // Refresh all button
+        private void RenameButton_OnPointerReleased(object sender, TappedRoutedEventArgs e)
+        {
+            _model.RenameFile();
         }
         
         
@@ -205,12 +211,19 @@ namespace MediFiler_V2.Code
         {
             _model.Refresh();
             args.Handled = true;
-        }
+        } 
         
         // Shift + F5 - Full refresh
         private void FullRefresh_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
         {
             _model.FullRefresh();
+            args.Handled = true;
+        }
+        
+        // F2 - Rename
+        private void Rename_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+        {
+            _model.RenameFile();
             args.Handled = true;
         }
     }
