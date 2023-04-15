@@ -145,15 +145,7 @@ namespace MediFiler_V2
 
             // TODO: Folder renaming
         }
-
-        public void Delete()
-        {
-            if (!IsFile) return;
-            // Move file to recycle bin
-            File.DeleteAsync(StorageDeleteOption.Default);
-            // TODO: Recover file from recycle bin using Shell32
-        }
-
+        
         // Checks if this folder node has been deleted
         public bool FolderStillExists()
         {

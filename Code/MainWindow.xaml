@@ -41,6 +41,7 @@
                 Background="Transparent" IsOpen="False" DefaultLabelPosition="Collapsed">
                 
                 <AppBarButton Icon="Add" Label="Add" IsEnabled="True" Width="32" Name="AddButton" Tapped="AddButton_OnPointerReleased"/>
+                
                     <AppBarButton Icon="Refresh" Label="Refresh" IsEnabled="False" Width="32" Name="RefreshButton" Tapped="RefreshButton_OnPointerReleased">
                     <AppBarButton.KeyboardAccelerators>
                         <KeyboardAccelerator Key="F5" 

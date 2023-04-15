@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.Intrinsics.X86;
 using System.Text.RegularExpressions;
 using Windows.Storage;
 using Microsoft.UI.Xaml.Controls;
@@ -44,8 +45,6 @@ public class MainWindowModel
     {
         if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0)
         {
-            _mainWindow.RefreshButton1.IsEnabled = false;
-            _mainWindow.RebuildButton1.IsEnabled = false;
             _mainWindow.RenameButton1.IsEnabled = false;
             _mainWindow.DeleteButton1.IsEnabled = false;
             return;
@@ -58,8 +57,6 @@ public class MainWindowModel
             _fileThumbnail.PreloadThumbnails(CurrentFolderIndex, CurrentFolder, _mainWindow.PreviewImageContainer1);
             DisplayCurrentFile(currentFile);
             
-            _mainWindow.RefreshButton1.IsEnabled = true;
-            _mainWindow.RebuildButton1.IsEnabled = true;
             _mainWindow.RenameButton1.IsEnabled = true;
             _mainWindow.DeleteButton1.IsEnabled = true;
         }
@@ -170,9 +167,7 @@ public class MainWindowModel
     {
         if (!CurrentFolder.FolderStillExists())
         {
-            // Folder does not exist, rebuild entire context
-            TreeHandler.RebuildTree(_mainWindow.FileTreeView1);
-            //SwitchFolder(TreeHandler.LoadRootNode(0));
+            // Folder does not exist, load empty context
             return;
         }
         CurrentFolder.LocalRefresh();
@@ -196,11 +191,20 @@ public class MainWindowModel
         // Error check
         if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0 || destination.Path == CurrentFolder.Path) return;
 
-        // Undo queue
-        Push(CurrentFolder.SubFiles[CurrentFolderIndex].CreateMemento(UndoAction.Move));
+        try
+        {
+            // Undo queue
+            Push(CurrentFolder.SubFiles[CurrentFolderIndex].CreateMemento(UndoAction.Move));
+            CurrentFolder.SubFiles[CurrentFolderIndex].Move(destination);
+            Refresh();
+        }
+        catch (Exception e)
+        {
+            UndoQueue.Pop();
+            Refresh();
+            Console.WriteLine(e);
+        }
         
-        CurrentFolder.SubFiles[CurrentFolderIndex].Move(destination);
-        Refresh();
     }
     
     /// Deletes by moving to a trash folder, and recycling it only when switching folders

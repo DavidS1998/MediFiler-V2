@@ -59,7 +59,7 @@ public class MetadataHandler
                 break;
             case FileTypeHelper.FileCategory.VIDEO:
                 var duration = await GetVideoMetadata(fileSystem.Path);
-                metadataText += " - [" + duration + "]";
+                metadataText += " - " + duration + "";
                 break;
         }
 
@@ -101,11 +101,19 @@ public class MetadataHandler
             var loadedFile = await StorageFile.GetFileFromPathAsync(filePath);
             var decoder = await loadedFile.Properties.GetVideoPropertiesAsync();
             var duration = decoder.Duration;
+            var resolution = decoder.Height;
+            var resolutionString = resolution + "p";
+            
+            if (resolution == 0)
+            {
+                resolutionString = "UNKNOWN";
+            }
+            
             var durationString = duration.ToString(@"hh\:mm\:ss");
             // Remove zeros from durationString
             durationString = durationString.TrimStart('0');
             durationString = durationString.TrimStart(':');
-            return durationString;
+            return "[" + resolutionString + "] - [" + durationString + "]";
         }
         catch (Exception e)
         {

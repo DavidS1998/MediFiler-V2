@@ -228,6 +228,9 @@ namespace MediFiler_V2.Code
             _model.CurrentFolder = TreeHandler.LoadRootNode(0);
 
             _model.SwitchFolder(_model.CurrentFolder);
+            
+            RebuildButton.IsEnabled = true;
+            RefreshButton.IsEnabled = true;
         }
         
 
