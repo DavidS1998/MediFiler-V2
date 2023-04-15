@@ -5,7 +5,10 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Windows.Storage;
+using Windows.UI;
 using MediFiler_V2.Code;
+using Microsoft.UI;
+using Microsoft.UI.Xaml.Media;
 
 namespace MediFiler_V2
 {
@@ -20,6 +23,7 @@ namespace MediFiler_V2
         public List<FileSystemNode> SubFolders { get; set; } = new();
         public int FileCount { get; set; }
         public int ChildFileCount { get { return FileCount + SubFolders.Sum(f => f.ChildFileCount); } }
+        public Color FolderColor { get; set; } // = Color.FromArgb(255, 128, 255, 255);
         
         public IStorageFile File { get; set; }
         public IStorageFolder Folder { get; set; }
@@ -45,6 +49,7 @@ namespace MediFiler_V2
                 IsFile = true;
                 return;
             }
+            // FOLDER CONFIRMED
             Folder = storageItem as IStorageFolder;
             
             var folder = (StorageFolder) storageItem;
@@ -70,11 +75,45 @@ namespace MediFiler_V2
             // Supplementary information
             FileCount = SubFiles.Count;
         }
-        
+
         public string GetFormattedText(int fileCount, string name, int childFileCount)
         {
             return string.Format("({0}/{2}) - {1}", fileCount, name, childFileCount);
         }
+        
+        // Color of the folder in the tree view
+        public Brush GetColor()
+        {
+            var color = ConditionalColoring();
+            var brush = new SolidColorBrush(color);
+
+            return brush;
+        }
+        
+        public Color ConditionalColoring()
+        {
+            // TODO: Move to a settings file (JSON?)
+            return Name switch
+            {
+                // Meta filtering
+                _ when Name.Contains("[CREATOR]") => Color.FromArgb(255, 255, 128, 128),
+                _ when Name.Contains("[SORT]") => Color.FromArgb(255, 128, 128, 255),
+                _ when Name.Contains("[META]") => Color.FromArgb(255, 255, 255, 128),
+                _ when Name.Contains("[SET]") => Color.FromArgb(255, 255,113,206),
+                // Star filtering
+                _ when Name.Contains("++++++") => Color.FromArgb(255, 255, 69, 0),
+                _ when Name.Contains("+++++") => Color.FromArgb(255, 159, 49, 222),
+                _ when Name.Contains("++++") => Color.FromArgb(255, 230, 30, 88),
+                _ when Name.Contains("+++") => Color.FromArgb(255, 19, 200, 226),
+                _ when Name.Contains("++") => Color.FromArgb(255, 243, 243, 1),
+                _ when Name.Contains("+") => Color.FromArgb(255, 50, 255, 50),
+                _ when FileCount == 0 => Color.FromArgb(128, 255, 255, 255),
+                _ when FileCount >= 100 => Color.FromArgb(255, 255, 0, 0),
+                _ => Color.FromArgb(255, 255, 255, 255)
+            };
+        }
+        
+        
 
         // Reloads all files within this folder node
         public void LocalRefresh()

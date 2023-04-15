@@ -109,7 +109,7 @@
                     <TreeView
                         Name="FileTreeView" Background="Transparent" HorizontalAlignment="Left" Width="500"
                         VerticalAlignment="Stretch" CanDrag="False" CanDragItems="False" CanReorderItems="False"
-                        SelectionMode="None">
+                        SelectionMode="None" Margin="0,0,0,150">
                         <TreeView.Resources>
                             <local:IndentConverter x:Key="IndentConverter"></local:IndentConverter>
                         </TreeView.Resources>
@@ -118,7 +118,8 @@
                                 <TreeViewItem
                                     Tapped="FolderListLeftClick" RightTapped="FolderListRightClick" CanDrag="False">
                                     <Grid Margin="{Binding Depth, Converter={StaticResource IndentConverter}}">
-                                        <TextBlock Text="{x:Bind GetFormattedText(FileCount, Name, ChildFileCount)}"/>
+                                        <TextBlock Foreground="{x:Bind GetColor()}" 
+                                                   Text="{x:Bind GetFormattedText(FileCount, Name, ChildFileCount)}"/>
                                     </Grid>
                                 </TreeViewItem>
                             </DataTemplate>
