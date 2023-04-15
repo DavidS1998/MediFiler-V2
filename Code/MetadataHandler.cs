@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
@@ -36,6 +37,9 @@ public class MetadataHandler
         mainWindow.AppTitleTextBlock1.Text = titleText;
     }
     
+    // TODO: Refactor, make coloring specific parts of info text easier
+    // TODO: 0s in time metadata should be greyed out
+    
     private async void SetInfoText(FileSystemNode fileSystem)
     {
         var metadataText = "";
@@ -52,6 +56,10 @@ public class MetadataHandler
             case FileTypeHelper.FileCategory.IMAGE:
                 var resolution = await GetImageMetadata(fileSystem.Path);
                 metadataText += " - [" + resolution + "]";
+                break;
+            case FileTypeHelper.FileCategory.VIDEO:
+                var duration = await GetVideoMetadata(fileSystem.Path);
+                metadataText += " - [" + duration + "]";
                 break;
         }
 
@@ -80,8 +88,28 @@ public class MetadataHandler
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
-            mainWindow._model.Refresh();
+            Console.WriteLine("Metadata error: " + e);
+            return "INVALID";
+        }
+    }
+
+    private async Task<string> GetVideoMetadata(string filePath)
+    {
+        try
+        {
+            // Get video length
+            var loadedFile = await StorageFile.GetFileFromPathAsync(filePath);
+            var decoder = await loadedFile.Properties.GetVideoPropertiesAsync();
+            var duration = decoder.Duration;
+            var durationString = duration.ToString(@"hh\:mm\:ss");
+            // Remove zeros from durationString
+            durationString = durationString.TrimStart('0');
+            durationString = durationString.TrimStart(':');
+            return durationString;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Metadata error: " + e);
             return "INVALID";
         }
     }
@@ -106,6 +134,7 @@ public class MetadataHandler
             var lastBackslashIndex = pathWithoutLastBackslash.LastIndexOf('\\');
             pathWithoutLastBackslash = pathWithoutLastBackslash.Substring(0, lastBackslashIndex + 1);
         }
+        
         var text = mainWindow.InfoTextBlock1.Text;
         var index = text.IndexOf(pathWithoutLastBackslash, StringComparison.Ordinal);
         if (index == -1) return;

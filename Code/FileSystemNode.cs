@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Windows.Storage;
 using MediFiler_V2.Code;
@@ -91,8 +92,7 @@ namespace MediFiler_V2
                 SubFiles.Add(new FileSystemNode(file, Depth + 1, this));
             });
             
-            // Sort result
-            SubFiles = SubFiles.OrderBy(x => x.Name).ToList();
+            SubFiles = SubFiles.OrderBy(x => x.Name, new SortLiterally()).ToList();
             FileCount = SubFiles.Count;
         }
 
@@ -101,7 +101,7 @@ namespace MediFiler_V2
         {
             // TODO: Implement - For use with SubFolder viewing
         }
-        
+
         // Move this node to another node
         public void Move(FileSystemNode destination)
         {
@@ -131,7 +131,7 @@ namespace MediFiler_V2
             // Add to new parent
             destination.SubFiles.Add(this);
             destination.FileCount++;
-            destination.SubFiles = destination.SubFiles.OrderBy(x => x.Name).ToList();
+            destination.SubFiles = destination.SubFiles = SubFiles.OrderBy(x => x.Name, new SortLiterally()).ToList();
         }
         
         public void Rename(string newName)
@@ -171,6 +171,17 @@ namespace MediFiler_V2
         public NodeMemento CreateMemento(UndoAction action)
         {
             return new NodeMemento(action, Name, Path, Parent, this);
+        }
+        
+        // Literal sort (1, 2, 10)
+        public class SortLiterally : IComparer<string> {
+
+            [DllImport("shlwapi.dll", CharSet=CharSet.Unicode, ExactSpelling=true)]
+            static extern int StrCmpLogicalW(String x, String y);
+
+            public int Compare(string x, string y) {
+                return StrCmpLogicalW(x, y);
+            }
         }
     }
 }
