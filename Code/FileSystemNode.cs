@@ -23,7 +23,7 @@ namespace MediFiler_V2
         public List<FileSystemNode> SubFolders { get; set; } = new();
         public int FileCount { get; set; }
         public int ChildFileCount { get { return FileCount + SubFolders.Sum(f => f.ChildFileCount); } }
-        public Color FolderColor { get; set; } // = Color.FromArgb(255, 128, 255, 255);
+        public Brush FolderColor { get; set; }
         
         public IStorageFile File { get; set; }
         public IStorageFolder Folder { get; set; }
@@ -89,7 +89,7 @@ namespace MediFiler_V2
 
             return brush;
         }
-        
+
         public Color ConditionalColoring()
         {
             // TODO: Move to a settings file (JSON?)
@@ -111,6 +111,11 @@ namespace MediFiler_V2
                 _ when FileCount >= 100 => Color.FromArgb(255, 255, 0, 0),
                 _ => Color.FromArgb(255, 255, 255, 255)
             };
+        }
+
+        public Color ActiveFolderBackgroundColor()
+        {
+            return Color.FromArgb(100, 255, 255, 255);
         }
         
         

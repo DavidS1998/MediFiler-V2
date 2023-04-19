@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:sys="using:System"
+    xmlns:code="using:MediFiler_V2.Code"
     mc:Ignorable="d">
 
 
@@ -87,83 +88,154 @@
         </Grid>
 
         <!--Navigation rail and content views-->
-        <NavigationView Grid.Row="2" Grid.Column="0"
+        <NavigationView Grid.Row="2" Grid.Column="0" Name="SideNav"
                         IsBackButtonVisible="Collapsed"
                         IsSettingsVisible="True"
-                        PaneDisplayMode="LeftCompact">
+                        PaneDisplayMode="LeftCompact"
+                        SelectionChanged="SideNav_OnSelectionChanged">
             <NavigationView.MenuItems>
-                <NavigationViewItem Content="Sorting View" Icon="Play" Tag="SortView"/>
+                <NavigationViewItem Content="Home" Icon="Home" Tag="Home"/>
+                <NavigationViewItem Content="Sort" Icon="Sort" Tag="Sort"/>
             </NavigationView.MenuItems>
-
-            <!--Default image view-->
             
-            <Grid Background="Black" PointerWheelChanged="MouseWheelScrollHandler"
-                  SizeChanged="ImageViewer_SizeChanged" RightTapped="FileAction_RightClick">
-                
-                <Grid Name="FileHolder" Background="Black">
-                    <Image Name="FileViewer" Stretch="Uniform"/>
-                </Grid>
-
-                <!--Sorting side panel-->
-                <Grid Name="SortPanel">
-                    <TreeView
-                        Name="FileTreeView" Background="Transparent" HorizontalAlignment="Left" Width="500"
-                        VerticalAlignment="Stretch" CanDrag="False" CanDragItems="False" CanReorderItems="False"
-                        SelectionMode="None" Margin="0,0,0,150">
-                        <TreeView.Resources>
-                            <local:IndentConverter x:Key="IndentConverter"></local:IndentConverter>
-                        </TreeView.Resources>
-                        <TreeView.ItemTemplate>
-                            <DataTemplate x:DataType="local:FileSystemNode">
-                                <TreeViewItem
-                                    Tapped="FolderListLeftClick" RightTapped="FolderListRightClick" CanDrag="False">
-                                    <Grid Margin="{Binding Depth, Converter={StaticResource IndentConverter}}">
-                                        <TextBlock Foreground="{x:Bind GetColor()}" 
-                                                   Text="{x:Bind GetFormattedText(FileCount, Name, ChildFileCount)}"/>
-                                    </Grid>
-                                </TreeViewItem>
-                            </DataTemplate>
-                        </TreeView.ItemTemplate>
-                    </TreeView>
-                </Grid>
-
-                <!-- Preview bottom bar -->
-                <Grid Height="150" Width="Auto" VerticalAlignment="Bottom" Background="#000000FF"
-                      HorizontalAlignment="Stretch" PointerReleased="PreviewBar_OnPointerReleased"
-                      PointerEntered="PreviewEnter" PointerExited="PreviewLeave">
-                    <Grid x:Name="PreviewBar" Height="150" VerticalAlignment="Bottom" Opacity="0.3">
-                        <Grid.Background>
-                            <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0" Opacity="0.75">
-                                <GradientStop Color="#7F000000" Offset="1" />
-                                <GradientStop Color="#00000000" />
-                            </LinearGradientBrush>
-                        </Grid.Background>
-
-                        <Grid.RenderTransform>
-                            <TranslateTransform x:Name="MoveHelper" Y="135" />
-                        </Grid.RenderTransform>
-
-                        <StackPanel Name="PreviewImageContainer" Orientation="Horizontal" HorizontalAlignment="Center">
-                            <!-- Location for thumbnail image elements -->
-                        </StackPanel>
-
-                        <Grid.Resources>
-                            <Storyboard x:Name="ShowPreviews">
-                                <DoubleAnimation Storyboard.TargetName="MoveHelper" Storyboard.TargetProperty="Y" To="0"
-                                                 Duration="0:0:0.1" />
-                                <DoubleAnimation Storyboard.TargetName="PreviewBar"
-                                                 Storyboard.TargetProperty="Grid.Opacity" To="1" Duration="0:0:0.1" />
-                            </Storyboard>
-                            <Storyboard x:Name="HidePreviews">
-                                <DoubleAnimation Storyboard.TargetName="MoveHelper" Storyboard.TargetProperty="Y" To="135"
-                                                 Duration="0:0:0.1" />
-                                <DoubleAnimation Storyboard.TargetName="PreviewBar"
-                                                 Storyboard.TargetProperty="Grid.Opacity" To="0.3" Duration="0:0:0.1" />
-                            </Storyboard>
-                        </Grid.Resources>
+            <Grid>
+                <!--Home view-->
+                <Grid Visibility="Visible" Name="HomeView" Background="Black">
+                    
+                    <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                        
+                    <!--Most recent folders-->
+                    <Grid Grid.Column="0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="32"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
+                        
+                        <TextBlock Text="Recent" Margin="8,8,0,0" Grid.Row="0"/>
+                        
+                        <TreeView Grid.Row="1" Name="RecentFoldersView">
+                            <TreeView.ItemTemplate>
+                                <DataTemplate x:DataType="code:QuickFolder">
+                                    <TreeViewItem
+                                        CanDrag="False" Tapped="QuickFolderClick">
+                                        <Grid>
+                                            <TextBlock Text="{x:Bind RecentFormatting()}"
+                                                       ToolTipService.ToolTip="{x:Bind Path}"
+                                                       Margin="4,0,0,0"/>
+                                        </Grid>
+                                    </TreeViewItem>
+                                </DataTemplate>
+                            </TreeView.ItemTemplate>
+                        </TreeView>
                     </Grid>
+                    
+                    <!--Most opened folders-->
+                    <Grid Grid.Column="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="32"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
+                        
+                        <TextBlock Text="Frequent" Margin="8,8,0,0" Grid.Row="0"/>
+                        
+                        <TreeView Grid.Row="1" Name="MostOpenedFoldersView">
+                            <TreeView.ItemTemplate>
+                                <DataTemplate x:DataType="code:QuickFolder">
+                                    <TreeViewItem
+                                        CanDrag="False" Tapped="QuickFolderClick">
+                                        <Grid>
+                                            <TextBlock Text="{x:Bind TimesOpenedFormatting()}"
+                                                       ToolTipService.ToolTip="{x:Bind Path}"
+                                                       Margin="4,0,0,0"/>
+                                        </Grid>
+                                    </TreeViewItem>
+                                </DataTemplate>
+                            </TreeView.ItemTemplate>
+                        </TreeView>
+                    </Grid>
+                    
+                    <!--Favorite folders-->
+                    
+                    </Grid>
+                    
                 </Grid>
+
+                <!--Sort view-->
                 
+                <Grid Visibility="Collapsed" Name="SortView" Background="Black" PointerWheelChanged="MouseWheelScrollHandler"
+                      SizeChanged="ImageViewer_SizeChanged" RightTapped="FileAction_RightClick">
+                    
+                    <Grid Name="FileHolder" Background="Black">
+                        <Image Name="FileViewer" Stretch="Uniform"/>
+                    </Grid>
+
+                    <!--Sorting side panel-->
+                    <Grid Name="SortPanel">
+                        <TreeView
+                            Name="FileTreeView" Background="Transparent" HorizontalAlignment="Left" Width="500"
+                            VerticalAlignment="Stretch" CanDrag="False" CanDragItems="False" CanReorderItems="False"
+                            SelectionMode="None" Margin="0,0,0,150">
+                            <TreeView.Resources>
+                                <local:IndentConverter x:Key="IndentConverter"></local:IndentConverter>
+                            </TreeView.Resources>
+                            <TreeView.ItemTemplate>
+                                <DataTemplate x:DataType="local:FileSystemNode">
+                                    <TreeViewItem
+                                        Tapped="FolderListLeftClick" RightTapped="FolderListRightClick" CanDrag="False">
+                                        <Grid Margin="{Binding Depth, Converter={StaticResource IndentConverter}}">
+                                            <TextBlock Foreground="{x:Bind GetColor()}"
+                                                       Margin="-30,0,0,0"
+                                                       Text="{x:Bind GetFormattedText(FileCount, Name, ChildFileCount)}"/>
+                                        </Grid>
+                                    </TreeViewItem>
+                                </DataTemplate>
+                            </TreeView.ItemTemplate>
+                        </TreeView>
+                    </Grid>
+
+                    <!-- Preview bottom bar -->
+                    <Grid Height="150" Width="Auto" VerticalAlignment="Bottom" Background="#000000FF"
+                          HorizontalAlignment="Stretch" PointerReleased="PreviewBar_OnPointerReleased"
+                          PointerEntered="PreviewEnter" PointerExited="PreviewLeave">
+                        <Grid x:Name="PreviewBar" Height="150" VerticalAlignment="Bottom" Opacity="0.3">
+                            <Grid.Background>
+                                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0" Opacity="0.75">
+                                    <GradientStop Color="#7F000000" Offset="1" />
+                                    <GradientStop Color="#00000000" />
+                                </LinearGradientBrush>
+                            </Grid.Background>
+
+                            <Grid.RenderTransform>
+                                <TranslateTransform x:Name="MoveHelper" Y="135" />
+                            </Grid.RenderTransform>
+
+                            <StackPanel Name="PreviewImageContainer" Orientation="Horizontal" HorizontalAlignment="Center">
+                                <!-- Location for thumbnail image elements -->
+                            </StackPanel>
+
+                            <Grid.Resources>
+                                <Storyboard x:Name="ShowPreviews">
+                                    <DoubleAnimation Storyboard.TargetName="MoveHelper" Storyboard.TargetProperty="Y" To="0"
+                                                     Duration="0:0:0.1" />
+                                    <DoubleAnimation Storyboard.TargetName="PreviewBar"
+                                                     Storyboard.TargetProperty="Grid.Opacity" To="1" Duration="0:0:0.1" />
+                                </Storyboard>
+                                <Storyboard x:Name="HidePreviews">
+                                    <DoubleAnimation Storyboard.TargetName="MoveHelper" Storyboard.TargetProperty="Y" To="135"
+                                                     Duration="0:0:0.1" />
+                                    <DoubleAnimation Storyboard.TargetName="PreviewBar"
+                                                     Storyboard.TargetProperty="Grid.Opacity" To="0.3" Duration="0:0:0.1" />
+                                </Storyboard>
+                            </Grid.Resources>
+                        </Grid>
+                    </Grid>
+                    
+                </Grid>
             </Grid>
         </NavigationView>
     </Grid>

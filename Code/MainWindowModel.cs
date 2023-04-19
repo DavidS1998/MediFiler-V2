@@ -165,6 +165,8 @@ public class MainWindowModel
     /// Refreshes the current folder and reloads all items within it
     public void Refresh()
     {
+        _mainWindow.UpdateHomeFolders();
+        
         if (!CurrentFolder.FolderStillExists())
         {
             // Folder does not exist, load empty context
