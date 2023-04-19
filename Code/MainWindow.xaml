@@ -180,19 +180,19 @@
                             Name="FileTreeView" Background="Transparent" HorizontalAlignment="Left" Width="500"
                             VerticalAlignment="Stretch" CanDrag="False" CanDragItems="False" CanReorderItems="False"
                             SelectionMode="None" Margin="0,0,0,150">
-                            <TreeView.Resources>
-                                <local:IndentConverter x:Key="IndentConverter"></local:IndentConverter>
-                            </TreeView.Resources>
                             <TreeView.ItemTemplate>
                                 <DataTemplate x:DataType="local:FileSystemNode">
                                     <TreeViewItem
                                         ItemsSource="{x:Bind SubFolders}"
-                                        IsExpanded="{x:Bind IsExpanded}"
+                                        IsExpanded="{x:Bind ConditionalExpand()}"
                                         CanDrag="False">
                                         <Grid>
                                             <TextBlock Foreground="{x:Bind GetColor()}"
                                                        Tapped="FolderListLeftClick" RightTapped="FolderListRightClick" 
                                                        Margin="0,0,0,0"
+                                                       FontSize="12"
+                                                       VerticalAlignment="Center"
+                                                       FontStretch="UltraCondensed"
                                                        Text="{x:Bind GetFormattedText(FileCount, Name, ChildFileCount), Mode=OneWay}"/>
                                         </Grid>
                                     </TreeViewItem>

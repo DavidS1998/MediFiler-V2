@@ -45,6 +45,12 @@
   <ItemGroup>
     <Folder Include="Assets\NewFolder\" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Remove="Assets\RobotoCondensed-Regular.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Fonts\RobotoCondensed-Regular.ttf" />
+  </ItemGroup>
 
   <!-- 
     Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution 

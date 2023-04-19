@@ -142,6 +142,19 @@ namespace MediFiler_V2
             return SubFolders.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         }
         
+        public bool ConditionalExpand()
+        {
+            return Name switch
+            {
+                _ when Name.Contains("[CREATOR]") => false,
+                _ when Name.Contains("[SORT]") => false,
+                _ when Name.Contains("[META]") => false,
+                _ when Name.Contains("[SET]") => false,
+                _ when Name.Contains("[Theme]") => false,
+                _ => true
+            };
+        }
+        
         
 
         // Reloads all files within this folder node
