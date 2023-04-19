@@ -186,11 +186,14 @@
                             <TreeView.ItemTemplate>
                                 <DataTemplate x:DataType="local:FileSystemNode">
                                     <TreeViewItem
-                                        Tapped="FolderListLeftClick" RightTapped="FolderListRightClick" CanDrag="False">
-                                        <Grid Margin="{Binding Depth, Converter={StaticResource IndentConverter}}">
+                                        ItemsSource="{x:Bind SubFolders}"
+                                        IsExpanded="{x:Bind IsExpanded}"
+                                        CanDrag="False">
+                                        <Grid>
                                             <TextBlock Foreground="{x:Bind GetColor()}"
-                                                       Margin="-30,0,0,0"
-                                                       Text="{x:Bind GetFormattedText(FileCount, Name, ChildFileCount)}"/>
+                                                       Tapped="FolderListLeftClick" RightTapped="FolderListRightClick" 
+                                                       Margin="0,0,0,0"
+                                                       Text="{x:Bind GetFormattedText(FileCount, Name, ChildFileCount), Mode=OneWay}"/>
                                         </Grid>
                                     </TreeViewItem>
                                 </DataTemplate>

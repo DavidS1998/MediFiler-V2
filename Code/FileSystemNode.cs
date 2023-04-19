@@ -1,18 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.UI;
 using MediFiler_V2.Code;
 using Microsoft.UI;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
 
 namespace MediFiler_V2
 {
-    public class FileSystemNode
+    public class FileSystemNode : INotifyPropertyChanged
     {
         public string Name { get; set; }
         public string Path { get; set; }
@@ -21,9 +24,25 @@ namespace MediFiler_V2
         public FileSystemNode Parent { get; set; }
         public List<FileSystemNode> SubFiles { get; set; } = new();
         public List<FileSystemNode> SubFolders { get; set; } = new();
-        public int FileCount { get; set; }
+        private int _fileCount;
+        public int FileCount { 
+            get { return _fileCount; } 
+            set { _fileCount = value; OnPropertyChanged(nameof(FileCount)); } }
         public int ChildFileCount { get { return FileCount + SubFolders.Sum(f => f.ChildFileCount); } }
         public Brush FolderColor { get; set; }
+        
+        private static bool _isExpanded = true;
+
+        public bool IsExpanded
+        {
+            get { return _isExpanded; }
+            set
+            {
+                if (_isExpanded == value) return;
+                _isExpanded = value;
+                OnPropertyChanged(nameof(IsExpanded));
+            }
+        }
         
         public IStorageFile File { get; set; }
         public IStorageFolder Folder { get; set; }
@@ -118,6 +137,11 @@ namespace MediFiler_V2
             return Color.FromArgb(100, 255, 255, 255);
         }
         
+        public Visibility HasSubFolders()
+        {
+            return SubFolders.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+        
         
 
         // Reloads all files within this folder node
@@ -205,7 +229,7 @@ namespace MediFiler_V2
             }
         }
         
-        // Create mmento
+        // Create memento
         public NodeMemento CreateMemento(UndoAction action)
         {
             return new NodeMemento(action, Name, Path, Parent, this);
@@ -220,6 +244,14 @@ namespace MediFiler_V2
             public int Compare(string x, string y) {
                 return StrCmpLogicalW(x, y);
             }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void OnPropertyChanged(string propertyName)
+        {
+            Debug.WriteLine("Property changed: " + propertyName + "");
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

@@ -173,7 +173,7 @@ public class MainWindowModel
             return;
         }
         CurrentFolder.LocalRefresh();
-        TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1);
+        //TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1);
         SwitchFolder(CurrentFolder, CurrentFolderIndex);
     }
 

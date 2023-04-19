@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Microsoft.UI.Xaml.Controls;
@@ -73,7 +74,8 @@ public static class TreeHandler
     public static void AssignTreeToUserInterface(TreeView fileTreeView)
     {
         fileTreeView.ItemsSource = null;
-        fileTreeView.ItemsSource = FullFolderList;
+        fileTreeView.ItemsSource = RootNodes;
+        //fileTreeView.ItemsSource = FullFolderList;
     }
     
     public static FileSystemNode LoadRootNode(int index)
