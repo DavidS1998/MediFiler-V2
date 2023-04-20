@@ -50,6 +50,8 @@ public class MainWindowModel
         {
             _mainWindow.RenameButton1.IsEnabled = false;
             _mainWindow.DeleteButton1.IsEnabled = false;
+            _mainWindow.PlusButton1.IsEnabled = false;
+            _mainWindow.MinusButton1.IsEnabled = false;
             return;
         };
 
@@ -72,6 +74,8 @@ public class MainWindowModel
             
             _mainWindow.RenameButton1.IsEnabled = true;
             _mainWindow.DeleteButton1.IsEnabled = true;
+            _mainWindow.PlusButton1.IsEnabled = true;
+            _mainWindow.MinusButton1.IsEnabled = true;
         }
         catch (Exception)
         {
@@ -90,14 +94,13 @@ public class MainWindowModel
         _mainWindow.AppTitleBar1.Background = brush;
     }
 
+    
     // // // FILE DISPLAY  // // //
 
 
     /// Decides how each file type should be shown
     public void DisplayCurrentFile(FileSystemNode fileSystem)
     {
-        
-        
         switch (FileTypeHelper.GetFileCategory(fileSystem.Path))
         {
             case FileTypeHelper.FileCategory.IMAGE:
@@ -196,7 +199,7 @@ public class MainWindowModel
 
 
     /// For loading a different folder context
-    public void SwitchFolder(FileSystemNode newFolder, int position = 0)
+    public void SwitchFolder(FileSystemNode newFolder, int position = 0, bool reorder = true)
     {
         var sameFolder = CurrentFolder == newFolder && CurrentFolder != null;
         CurrentFolder = newFolder;
@@ -205,7 +208,8 @@ public class MainWindowModel
         {
             // TODO: UNSURE IF THIS SHOULUD BE DEFAULT BEHAVIOR - MAYBE ONLY IF FOLDER IS EMPTY
             // Slows down loading of folders with many files
-            CurrentFolder.LocalRefresh();
+            
+            if (reorder) { CurrentFolder.LocalRefresh(); }
         }
         catch (Exception)
         {
@@ -222,8 +226,6 @@ public class MainWindowModel
     /// Clear all loaded content
     public void Clear(bool sameFolder)
     {
-        Debug.WriteLine(sameFolder ? "Same folder" : "Different folder");
-        
         _latestLoadedImage = -1;
         _fileThumbnail.ThumbnailCache.Clear();
         _mainWindow.AppTitleTextBlock1.Text = "MediFiler";
@@ -232,6 +234,7 @@ public class MainWindowModel
         _metadataHandler.ClearMetadata();
 
         // Only run on real folder switch
+        Debug.WriteLine(sameFolder ? "Same folder" : "Different folder");
         if (sameFolder) return;
         Debug.WriteLine("Undo queue cleared");
         ClearUndoQueue();
@@ -239,7 +242,7 @@ public class MainWindowModel
     }
 
     /// Refreshes the current folder and reloads all items within it
-    public void Refresh()
+    public void Refresh(bool reorder = true)
     {
         _mainWindow.UpdateHomeFolders();
         
@@ -248,9 +251,16 @@ public class MainWindowModel
             // Folder does not exist, load empty context
             return;
         }
-        CurrentFolder.LocalRefresh();
+
         //TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1);
-        SwitchFolder(CurrentFolder, CurrentFolderIndex);
+        if (reorder)
+        {
+            SwitchFolder(CurrentFolder, CurrentFolderIndex);
+        }
+        else
+        {
+            SwitchFolder(CurrentFolder, CurrentFolderIndex, false);
+        }
     }
 
     /// Rebuilds the entire context from scratch, may be slow
@@ -316,7 +326,7 @@ public class MainWindowModel
     }
 
     /// Renames the currently selected file
-    public async void RenameFile()
+    public async void RenameDialog()
     {
         // Error check
         if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0) return;
@@ -345,6 +355,14 @@ public class MainWindowModel
 
         var newName = ((TextBox)dialog.Content).Text;
         
+        RenameFile(newName);
+    }
+    
+    public async void RenameFile(string newName)
+    {
+        // Get the file extension as a string
+        var fileExtension = CurrentFolder.SubFiles[CurrentFolderIndex].Name.Split('.').Last();
+        
         // Only allow valid File names
         var invalidCharsRegex = new Regex("[\\\\/:*?\"<>|]");
         if (string.IsNullOrWhiteSpace(newName) || invalidCharsRegex.IsMatch(newName))
@@ -365,7 +383,37 @@ public class MainWindowModel
         Push(CurrentFolder.SubFiles[CurrentFolderIndex].CreateMemento(UndoAction.Rename));
         
         CurrentFolder.SubFiles[CurrentFolderIndex].Rename(newName + "." + fileExtension);
-        Refresh();
+        Refresh(false);
+    }
+    
+    // TODO: Separate into a plug-in? Setting?
+    // Add +
+    public void AddPlus()
+    {
+        // Error check
+        if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0) return;
+        
+        var fileExtension = CurrentFolder.SubFiles[CurrentFolderIndex].Name.Split('.').Last();
+        var currentName = CurrentFolder.SubFiles[CurrentFolderIndex].Name.Replace("." + fileExtension, "");
+        // Add a + to the start of the name
+        var newName = "+" + currentName;
+        RenameFile(newName);
+    }
+    
+    // Remove +
+    public void RemovePlus()
+    {
+        // Error check
+        if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0) return;
+        
+        var fileExtension = CurrentFolder.SubFiles[CurrentFolderIndex].Name.Split('.').Last();
+        var currentName = CurrentFolder.SubFiles[CurrentFolderIndex].Name.Replace("." + fileExtension, "");
+        // Check if the name starts with a +
+        if (!currentName.StartsWith("+")) return;
+
+        // Remove one + from the start of the name
+        var newName = currentName.Remove(0, 1);
+        RenameFile(newName);
     }
     
     

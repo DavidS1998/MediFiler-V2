@@ -30,7 +30,8 @@
                        Margin="28,0,0,0" />
         </Grid>
         <!--Info bar-->
-        <Grid Row="1" Height="48" VerticalAlignment="Top" Background="Transparent" Name="InfoBar" PointerExited="FullscreenChecker_OnPointerExited">
+        <Grid Row="1" Height="48" VerticalAlignment="Top" Background="Transparent" Name="InfoBar" 
+              PointerExited="FullscreenChecker_OnPointerExited" PointerWheelChanged="MouseWheelScrollHandler">
             <CommandBar Background="Transparent" DefaultLabelPosition="Collapsed" HorizontalAlignment="Left" Margin="8,0">
                 <AppBarButton Icon="UnPin" Label="Pin sorting menu" Tapped="Pin_OnPointerReleased"
                               IsEnabled="True" Name="PinButton"
@@ -97,6 +98,18 @@
             </CommandBar>
             
             <CommandBar Background="Transparent" DefaultLabelPosition="Collapsed" HorizontalAlignment="Right" Margin="8,0">
+                <AppBarButton Icon="Add" Label="+" IsEnabled="False" Width="32" Name="PlusButton" Tapped="PlusButton_OnPointerReleased">
+                    <AppBarButton.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="F7"
+                                             Invoked="Plus_OnInvoked"></KeyboardAccelerator>
+                    </AppBarButton.KeyboardAccelerators>
+                </AppBarButton>
+                <AppBarButton Icon="Remove" Label="-" IsEnabled="False" Width="32" Name="MinusButton" Tapped="MinusButton_OnPointerReleased">
+                    <AppBarButton.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="F6"
+                                             Invoked="Minus_OnInvoked"></KeyboardAccelerator>
+                    </AppBarButton.KeyboardAccelerators>
+                </AppBarButton>
                 <AppBarButton Icon="Fullscreen" Label="Pin sorting menu" Tapped="Fullscreen_OnPointerReleased"
                               IsEnabled="True" Name="FullscreenButton"
                               Width="32">

@@ -123,9 +123,9 @@ namespace MediFiler_V2
                 _ when Name.StartsWith("++++++") => Color.FromArgb(255, 255, 69, 0),
                 _ when Name.StartsWith("+++++") => Color.FromArgb(255, 159, 49, 222),
                 _ when Name.StartsWith("++++") => Color.FromArgb(255, 230, 30, 88),
-                _ when Name.StartsWith("+++") => Color.FromArgb(255, 19, 200, 226),
-                _ when Name.StartsWith("++") => Color.FromArgb(255, 243, 243, 1),
-                _ when Name.StartsWith("+") => Color.FromArgb(255, 50, 255, 50),
+                _ when Name.StartsWith("+++") => Color.FromArgb(255, 19, 150, 226),
+                _ when Name.StartsWith("++") => Color.FromArgb(255, 150, 150, 1),
+                _ when Name.StartsWith("+") => Color.FromArgb(255, 50, 150, 50),
                 _ when IsFile => Color.FromArgb(255, 0, 0, 0),
                 _ when FileCount == 0 => Color.FromArgb(128, 255, 255, 255),
                 _ when FileCount >= 100 => Color.FromArgb(255, 255, 0, 0),
@@ -162,6 +162,7 @@ namespace MediFiler_V2
         public void LocalRefresh()
         {
             if (IsFile) return;
+            Debug.WriteLine("Refreshed!");
             
             // Get rid of SubFiles and load them anew
             SubFiles.Clear();

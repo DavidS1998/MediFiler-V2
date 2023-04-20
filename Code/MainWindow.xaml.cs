@@ -46,6 +46,8 @@ namespace MediFiler_V2.Code
         public AppBarButton RenameButton1 { get => RenameButton; set => RenameButton = value; }
         public AppBarButton UndoButton1 { get => UndoButton; set => UndoButton = value; }
         public AppBarButton DeleteButton1 { get => DeleteButton; set => DeleteButton = value; }
+        public AppBarButton PlusButton1 { get => PlusButton; set => PlusButton = value; }
+        public AppBarButton MinusButton1 { get => MinusButton; set => MinusButton = value; }
 
         private AppWindow _appWindow;
         private readonly MainWindowModel _model;
@@ -472,7 +474,7 @@ namespace MediFiler_V2.Code
         
         // Refresh all button
         private void RenameButton_OnPointerReleased(object sender, TappedRoutedEventArgs e)
-        { _model.RenameFile(); }        
+        { _model.RenameDialog(); }        
         
         // Undo button
         private void UndoButton_OnPointerReleased(object sender, TappedRoutedEventArgs e)
@@ -497,6 +499,14 @@ namespace MediFiler_V2.Code
             ToggleFullscreen();
         }
         
+        // Plus button
+        private void PlusButton_OnPointerReleased(object sender, TappedRoutedEventArgs e)
+        { _model.AddPlus(); }
+        
+        // Minus button
+        private void MinusButton_OnPointerReleased(object sender, TappedRoutedEventArgs e)
+        { _model.RemovePlus(); }
+        
         
         // // // KEYBOARD SHORTCUTS // // //
         
@@ -511,7 +521,7 @@ namespace MediFiler_V2.Code
         
         // F2 - Rename
         private void Rename_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-        { _model.RenameFile(); args.Handled = true; }        
+        { _model.RenameDialog(); args.Handled = true; }        
         
         // CTRL + Z - Undo
         private void Undo_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
@@ -534,6 +544,20 @@ namespace MediFiler_V2.Code
         private void Fullscreen_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
         {
             ToggleFullscreen();
+            args.Handled = true;
+        }        
+        
+        // F6 - Plus
+        private void Plus_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+        {
+            _model.AddPlus();
+            args.Handled = true;
+        }
+        
+        // F7 - Minus
+        private void Minus_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+        {
+            _model.RemovePlus();
             args.Handled = true;
         }
 
