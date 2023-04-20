@@ -32,11 +32,23 @@
         </Grid>
         <!--Info bar-->
         <Grid Row="1" Height="48" VerticalAlignment="Top">
+            <CommandBar Background="Transparent" DefaultLabelPosition="Collapsed" HorizontalAlignment="Left" Margin="8,0">
+                <AppBarButton Icon="UnPin" Label="Pin sorting menu" Tapped="Pin_OnPointerReleased"
+                              IsEnabled="True" Name="PinButton"
+                              Width="32">
+                    <AppBarButton.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="F3" 
+                                             Invoked="Pin_OnInvoked"></KeyboardAccelerator>
+                    </AppBarButton.KeyboardAccelerators>
+                </AppBarButton>
+            </CommandBar>
+            
             <TextBlock x:Name="InfoTextBlock" Text="Nothing loaded!"
                        TextWrapping="NoWrap"
                        Style="{StaticResource CaptionTextBlockStyle}"
                        VerticalAlignment="Center"
-                       Margin="28,0,0,0" />
+                       HorizontalAlignment="Left"
+                       Margin="44,0,0,0" />
             
             <CommandBar HorizontalAlignment="Center" 
                 Background="Transparent" IsOpen="False" DefaultLabelPosition="Collapsed">
@@ -176,10 +188,29 @@
 
                     <!--Sorting side panel-->
                     <Grid Name="SortPanel">
+                        <Grid Name="SortBackground" Width="350" HorizontalAlignment="Left">
+                            <Grid.Background>
+                                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                    <LinearGradientBrush.RelativeTransform>
+                                        <TransformGroup>
+                                            <ScaleTransform CenterY="0.5" CenterX="0.5"/>
+                                            <SkewTransform CenterY="0.5" CenterX="0.5"/>
+                                            <RotateTransform Angle="-90" CenterY="0.5" CenterX="0.5"/>
+                                            <TranslateTransform/>
+                                        </TransformGroup>
+                                    </LinearGradientBrush.RelativeTransform>
+                                    <GradientStop Color="#E5000000"/>
+                                    <GradientStop Color="#99000000" Offset="0.7"/>
+                                    <GradientStop Color="#00000000" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Grid.Background>
+                        </Grid>
+                        
                         <TreeView
-                            Name="FileTreeView" Background="Transparent" HorizontalAlignment="Left" Width="500"
+                            Name="FileTreeView" Background="Transparent" HorizontalAlignment="Left" Width="350"
                             VerticalAlignment="Stretch" CanDrag="False" CanDragItems="False" CanReorderItems="False"
-                            SelectionMode="None" Margin="0,0,0,150">
+                            SelectionMode="None" Margin="0,0,0,150"
+                            PointerMoved="SortView_OnPointerMoved" PointerExited="SortView_OnPointerExited">
                             <TreeView.ItemTemplate>
                                 <DataTemplate x:DataType="local:FileSystemNode">
                                     <TreeViewItem
@@ -193,6 +224,7 @@
                                                        FontSize="12"
                                                        VerticalAlignment="Center"
                                                        FontStretch="UltraCondensed"
+                                                       ToolTipService.ToolTip="{x:Bind Name}"
                                                        Text="{x:Bind GetFormattedText(FileCount, Name, ChildFileCount), Mode=OneWay}"/>
                                         </Grid>
                                     </TreeViewItem>

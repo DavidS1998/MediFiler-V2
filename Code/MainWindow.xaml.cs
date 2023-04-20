@@ -45,6 +45,7 @@ namespace MediFiler_V2.Code
         public AppBarButton DeleteButton1 { get => DeleteButton; set => DeleteButton = value; }
 
         private readonly MainWindowModel _model;
+        private bool _sortPanelPinned = true;
 
         // // // INITIALIZATION // // //
 
@@ -210,6 +211,22 @@ namespace MediFiler_V2.Code
             if (FileViewer.Source != null)
                 ((BitmapImage)FileViewer.Source).DecodePixelHeight = (int)FileHolder.ActualHeight;
         }
+        
+        private void SortView_OnPointerMoved(object sender, PointerRoutedEventArgs e)
+        {
+            if (_sortPanelPinned) return;
+            SortPanel.Opacity = 1;
+        }
+
+        private void SortView_OnPointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            if (_sortPanelPinned) return;
+            SortPanel.Opacity = 0;
+        }
+        
+        
+        // // // LOADING // // //
+        
         
         // Loads a folder from an arbitrary context (such as drag and drop or the file picker)
         private async void LoadFolder(IReadOnlyList<IStorageItem> items)
@@ -404,7 +421,16 @@ namespace MediFiler_V2.Code
         
         // Undo button
         private void DeleteButton_OnPointerReleased(object sender, TappedRoutedEventArgs e)
-        { _model.DeleteFile(); }
+        { _model.DeleteFile(); }     
+        
+        // Pin button
+        private void Pin_OnPointerReleased(object sender, TappedRoutedEventArgs e)
+        { 
+            _sortPanelPinned = !_sortPanelPinned; 
+            SortPanel.Opacity = _sortPanelPinned ? 1 : 0;
+            PinButton.Icon = _sortPanelPinned ? new SymbolIcon(Symbol.UnPin) : new SymbolIcon(Symbol.Pin);
+            SortPanel.Opacity = 1; 
+        }
         
         
         // // // KEYBOARD SHORTCUTS // // //
@@ -429,5 +455,14 @@ namespace MediFiler_V2.Code
         // Delete - Delete file
         private void Delete_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
         { _model.DeleteFile(); args.Handled = true; }
+        
+        // Tab - Pin
+        private void Pin_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+        {
+            _sortPanelPinned = !_sortPanelPinned; 
+            SortPanel.Opacity = _sortPanelPinned ? 1 : 0; 
+            PinButton.Icon = _sortPanelPinned ? new SymbolIcon(Symbol.UnPin) : new SymbolIcon(Symbol.Pin);
+            args.Handled = true;
+        }
     }
 }
