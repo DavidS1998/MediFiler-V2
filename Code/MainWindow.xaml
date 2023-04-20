@@ -189,15 +189,21 @@
 
                 <!--Sort view-->
                 
-                <Grid Visibility="Collapsed" Name="SortView" Background="Black" PointerWheelChanged="MouseWheelScrollHandler"
+                <Grid Visibility="Collapsed" Name="SortView" Background="Black" 
+                      PointerWheelChanged="MouseWheelScrollHandler" 
                       SizeChanged="ImageViewer_SizeChanged" RightTapped="FileAction_RightClick">
                     
-                    <Grid Name="FileHolder" Background="Black">
-                        <Image Name="FileViewer" Stretch="Uniform"/>
+                    <Grid Name="FileHolder" Background="Black"
+                                  PointerMoved="FileHolder_OnPointerMoved"
+                                  PointerPressed="FileHolder_OnPointerPressed"
+                                  PointerReleased="FileHolder_OnPointerReleased">
+                        <Image Name="FileViewer" Stretch="Uniform">
+                            <Image.RenderTransform/>
+                        </Image>
                     </Grid>
 
                     <!--Sorting side panel-->
-                    <Grid Name="SortPanel">
+                    <Grid Name="SortPanel" Margin="-1,-1,0,0">
                         <Grid Name="SortBackground" Width="350" HorizontalAlignment="Left">
                             <Grid.Background>
                                 <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">

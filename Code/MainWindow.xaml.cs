@@ -4,14 +4,17 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.Foundation;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.System;
 using Windows.UI.Core;
 using Microsoft.UI;
+using Microsoft.UI.Input;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -75,6 +78,9 @@ namespace MediFiler_V2.Code
             
             ReadJsonFile();
             UpdateHomeFolders();
+            
+            _imageTransformGroup.Children.Add(_translateTransform);
+            _imageTransformGroup.Children.Add(_scaleTransform);
         }
         
         public void ToggleFullscreen()
@@ -105,7 +111,7 @@ namespace MediFiler_V2.Code
         
         
         // // // TOP NAVIGATION // // //
-        
+        #region TOP NAVIGATION
 
         public void OpenSortView()
         {
@@ -147,8 +153,9 @@ namespace MediFiler_V2.Code
             }
         }
 
-
+        #endregion
         // // // UI EVENTS // // //
+        #region UI Events
         
         
         /// Scroll between files
@@ -157,12 +164,17 @@ namespace MediFiler_V2.Code
             var delta = e.GetCurrentPoint(FileViewer).Properties.MouseWheelDelta;
             if (delta == 0 || _model.CurrentFolder == null) return;
             var increment = delta > 0 ? -1 : 1;
-            if (_model.CurrentFolderIndex + increment < 0 || _model.CurrentFolderIndex + increment >= _model.CurrentFolder.SubFiles.Count) return;
 
+            // Action mode
+            if (_model.FileActionInProgress)
+            { ScrollAction(increment, e); return; }
+
+            // Scroll through files in folder
+            if (_model.CurrentFolderIndex + increment < 0 ||
+                _model.CurrentFolderIndex + increment >= _model.CurrentFolder.SubFiles.Count) return;
             _model.CurrentFolderIndex += increment;
             _model.Load();
         }
-
 
         /// Handler for the folder list
         private void FolderListClick(RoutedEventArgs e, bool leftClick)
@@ -214,18 +226,13 @@ namespace MediFiler_V2.Code
         {
             // Only run if the clicked element has name FileHolder or FileViewer
             if (((FrameworkElement)e.OriginalSource).Name != "FileHolder" && ((FrameworkElement)e.OriginalSource).Name != "FileViewer") return;
-
-            var path = _model.CurrentFolder.SubFiles[_model.CurrentFolderIndex].Path;
-            
-            // TODO: Change action based on file type
-            ProcessStartInfo psi = new ProcessStartInfo();
-            psi.FileName = path;
-            psi.UseShellExecute = true;
-            Process.Start(psi);
+            _model.FileAction();
         }
         
 
+        #endregion
         // // // WINDOW EVENTS // // //
+        #region WINDOW EVENTS
         
 
         /// Runs when the window changes focus
@@ -277,7 +284,7 @@ namespace MediFiler_V2.Code
             ExtendsContentIntoTitleBar = false;
         }
         
-        
+        #endregion
         // // // LOADING // // //
         
         
@@ -379,7 +386,7 @@ namespace MediFiler_V2.Code
         // TODO: Refactor into own class
         // TODO: Add a favorites list
         // // // JSON // // //
-        
+        #region JSON
         
         private Dictionary<string, QuickFolder> QuickFolders = new();
         
@@ -448,7 +455,7 @@ namespace MediFiler_V2.Code
             }
         }
         
-        
+        #endregion
         // // // BUTTONS // // //
         
         
@@ -529,6 +536,161 @@ namespace MediFiler_V2.Code
         {
             ToggleFullscreen();
             args.Handled = true;
+        }
+
+        
+        // // // FILE MANIPULATION // // //
+        // TODO: Lots of bugs in this section
+
+
+        private void ScrollAction(int increment, PointerRoutedEventArgs e)
+        {
+            switch (FileTypeHelper.GetFileCategory(_model.CurrentFolder.SubFiles[_model.CurrentFolderIndex].Path))
+            {
+                case FileTypeHelper.FileCategory.IMAGE:
+                    var mousePosition = e.GetCurrentPoint(FileViewer).Position;
+                    // Check if position is on image
+                    if (mousePosition.X < 0 || mousePosition.X > FileViewer.ActualWidth ||
+                        mousePosition.Y < 0 || mousePosition.Y > FileViewer.ActualHeight) return;
+                    ZoomImage(increment, mousePosition);
+                    break;
+                case FileTypeHelper.FileCategory.VIDEO:
+                    break;
+                case FileTypeHelper.FileCategory.TEXT:
+                    break;
+                case FileTypeHelper.FileCategory.OTHER:
+                    break;
+            }
+        }
+        
+        private readonly TransformGroup _imageTransformGroup = new();
+        private readonly TranslateTransform _translateTransform = new();
+        private readonly ScaleTransform _scaleTransform = new();
+        
+        
+        // Zoom image on cursor
+        private void ZoomImage(int increment, Point mousePosition)
+        {
+            // Calculate the new scale based on the current scale and the mouse wheel delta
+            var scaleDelta = increment > 0 ? -0.1 : 0.1;
+            // Get the current scale transform inside the TransformGroup
+            var newScale = _scaleTransform.ScaleX + scaleDelta;
+
+            // Limit the zoom scale to a reasonable range
+            if (newScale is < 0.5 or > 10) { return; }
+
+            // Get the position of the mouse cursor relative to the image
+            var imageWidth = SortView.ActualWidth / 2;
+            var imageHeight = SortView.ActualHeight / 2;
+            var xRatio = mousePosition.X / imageWidth;
+            var yRatio = mousePosition.Y / imageHeight;
+
+            // Adjust the scale transform to zoom in on the mouse cursor
+            _scaleTransform.CenterX = imageWidth * xRatio;
+            _scaleTransform.CenterY = imageHeight * yRatio;
+            _scaleTransform.ScaleX = newScale;
+            _scaleTransform.ScaleY = newScale;
+
+
+            // Readjust the image size
+            if (FileViewer.Source == null) return;
+            ((BitmapImage)FileViewer.Source).DecodePixelHeight = (int)FileViewer.Height;
+        }
+
+        // Reset image
+        public void ResetImage()
+        {
+            _scaleTransform.ScaleX = 1;
+            _scaleTransform.ScaleY = 1;
+            
+            _translateTransform.X = 0;
+            _translateTransform.Y = 0;
+            
+            //FileHolder.RenderTransform = _imageTransformGroup;
+
+            if (FileViewer.Source != null)
+            {
+                ((BitmapImage)FileViewer.Source).DecodePixelHeight = (int)FileViewer.ActualHeight;
+            }
+        }
+        
+        
+        // Panning
+        private bool _isDragging;
+        private Point _startPosition;
+        private Point _previousPosition;
+
+        private Point _lastTransformPosition;
+
+        private Double _lastX;
+        // PAN
+        private void FileHolder_OnPointerMoved(object sender, PointerRoutedEventArgs e)
+        {
+            if (FileViewer.PointerCaptures == null || !_isDragging) return;
+
+            var currentMousePosition = e.GetCurrentPoint(null).Position;
+
+            
+            // Offsetting
+            var windowSize = new Point(SortPanel.ActualWidth, SortPanel.ActualHeight);
+            var windowOffsetY = MainContent.RowDefinitions[0].ActualHeight + MainContent.RowDefinitions[1].ActualHeight;
+            var windowOffsetX = 48;
+            if (_appWindow.Presenter.Kind == AppWindowPresenterKind.FullScreen)
+            { windowOffsetX = 0; }
+
+            var convertAbsoluteToRelative = new Point(
+                    currentMousePosition.X - windowSize.X / 2 - windowOffsetX, 
+                    currentMousePosition.Y - windowSize.Y / 2 - windowOffsetY);
+
+            var newImagePositionX = convertAbsoluteToRelative.X;
+            var newImagePositionY = convertAbsoluteToRelative.Y;
+
+            // TODO: Investigate a proper way to do this
+            
+            // Grabs from middle - Wrong
+            //_translateTransform.X = newImagePositionX;
+            //_translateTransform.Y = newImagePositionY;
+            
+            // Position relative to entire window - Wrong
+            _translateTransform.X = _previousPosition.X + convertAbsoluteToRelative.X;
+            _translateTransform.Y = _previousPosition.Y + convertAbsoluteToRelative.Y;
+            
+            // Too fast - Wrong
+            //_translateTransform.X = _lastTransformPosition.X;
+            //_translateTransform.Y = _lastTransformPosition.Y;
+            
+            FileViewer.RenderTransform = _imageTransformGroup;
+            
+            //
+            _lastTransformPosition = new Point(_translateTransform.X, _translateTransform.Y);
+            _previousPosition = convertAbsoluteToRelative;
+        }
+
+        
+        
+        
+        
+        
+        
+        private void FileHolder_OnPointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            if (!_model.FileActionInProgress) return;
+            if (!e.GetCurrentPoint(FileViewer).Properties.IsLeftButtonPressed) return;
+            
+            _isDragging = true;
+            _startPosition = e.GetCurrentPoint(null).Position;
+            //_startPosition = new Point(FileViewer.ActualWidth / 2, FileViewer.ActualHeight / 2);
+            FileViewer.CapturePointer(e.Pointer);
+            
+            //FileHolder.RenderTransform = _imageTransformGroup;
+        }
+
+        private void FileHolder_OnPointerReleased(object sender, PointerRoutedEventArgs e)
+        {
+            if (!_model.FileActionInProgress ||!_isDragging) return;
+
+            _isDragging = false;
+            FileViewer.ReleasePointerCapture(e.Pointer);
         }
     }
 }

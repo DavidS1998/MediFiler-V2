@@ -27,6 +27,7 @@ public class MainWindowModel
     private int _latestLoadedImage = -1;
     public FileSystemNode CurrentFolder ;
     public int CurrentFolderIndex;
+    public bool FileActionInProgress;
     
     public MainWindowModel(MainWindow window)
     {
@@ -49,6 +50,14 @@ public class MainWindowModel
             _mainWindow.DeleteButton1.IsEnabled = false;
             return;
         };
+
+        if (FileActionInProgress)
+        {
+            FileActionInProgress = false;
+            _mainWindow.ResetImage();
+            return;
+        }
+        
         try
         {
             var currentFile = CurrentFolder.SubFiles[CurrentFolderIndex];
@@ -113,6 +122,38 @@ public class MainWindowModel
             sentInIndex != CurrentFolderIndex ||
             !_fileThumbnail.ThumbnailCache.ContainsKey(sentInIndex)) return;
         _mainWindow.FileViewer1.Source = _fileThumbnail.ThumbnailCache[sentInIndex];
+    }
+
+    public void FileAction()
+    {
+        var currentFile = CurrentFolder.SubFiles[CurrentFolderIndex];
+        
+        switch (FileTypeHelper.GetFileCategory(currentFile.Path))
+        {
+            case FileTypeHelper.FileCategory.IMAGE:
+                ImageAction(currentFile);
+                break;
+            case FileTypeHelper.FileCategory.TEXT:
+            case FileTypeHelper.FileCategory.VIDEO:
+            case FileTypeHelper.FileCategory.OTHER:
+                // Open in default app
+                ProcessStartInfo psi = new ProcessStartInfo();
+                psi.FileName = currentFile.Path;
+                psi.UseShellExecute = true;
+                Process.Start(psi);
+                break;
+        }
+    }
+
+    public void ImageAction(FileSystemNode currentFile)
+    {
+        if (FileActionInProgress)
+        {
+            FileActionInProgress = !FileActionInProgress; 
+            _mainWindow.ResetImage();
+            return;
+        }
+        FileActionInProgress = true;
     }
     
     
