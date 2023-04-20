@@ -11,12 +11,15 @@ using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.System;
 using Windows.UI.Core;
+using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
+using WinRT.Interop;
 using BitmapImage = Microsoft.UI.Xaml.Media.Imaging.BitmapImage;
 using WindowActivatedEventArgs = Microsoft.UI.Xaml.WindowActivatedEventArgs;
 
@@ -44,11 +47,14 @@ namespace MediFiler_V2.Code
         public AppBarButton UndoButton1 { get => UndoButton; set => UndoButton = value; }
         public AppBarButton DeleteButton1 { get => DeleteButton; set => DeleteButton = value; }
 
+        private AppWindow _appWindow;
         private readonly MainWindowModel _model;
         private bool _sortPanelPinned = true;
 
+
         // // // INITIALIZATION // // //
 
+        
         /// Initialize window
         public MainWindow()
         {
@@ -59,11 +65,42 @@ namespace MediFiler_V2.Code
             SetTitleBar(AppTitleBar);
             Activated += MainWindow_Activated;
             
+            // Get window handle, for fullscreen
+            IntPtr hWnd = WindowNative.GetWindowHandle(this);
+            WindowId myWndId = Win32Interop.GetWindowIdFromWindow(hWnd);
+            _appWindow = AppWindow.GetFromWindowId(myWndId);
+            
             _model = new MainWindowModel(this);
             SetSelectedItem("Home");
             
             ReadJsonFile();
             UpdateHomeFolders();
+        }
+        
+        public void ToggleFullscreen()
+        {
+            if (_appWindow.Presenter.Kind == AppWindowPresenterKind.FullScreen)
+            {
+                // Restore window
+                _appWindow.SetPresenter(AppWindowPresenterKind.Default);
+                MainContent.RowDefinitions[0].Height = new GridLength(32);
+                MainContent.RowDefinitions[1].Height = new GridLength(48);
+                ExtendsContentIntoTitleBar = true;
+                SideNav.IsPaneVisible = true;
+                MoveHelper.Y = 135;
+                ((DoubleAnimation)HidePreviews.Children[0]).To = 135;
+            }
+            else
+            {
+                // Fullscreen window
+                _appWindow.SetPresenter(AppWindowPresenterKind.FullScreen);
+                MainContent.RowDefinitions[0].Height = new GridLength(0);
+                MainContent.RowDefinitions[1].Height = new GridLength(0);
+                ExtendsContentIntoTitleBar = false;
+                SideNav.IsPaneVisible = false;
+                MoveHelper.Y = 150;
+                ((DoubleAnimation)HidePreviews.Children[0]).To = 150;
+            }
         }
         
         
@@ -222,6 +259,22 @@ namespace MediFiler_V2.Code
         {
             if (_sortPanelPinned) return;
             SortPanel.Opacity = 0;
+        }
+        
+        private void FullscreenChecker_OnPointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            if (_appWindow.Presenter.Kind != AppWindowPresenterKind.FullScreen) return;
+            MainContent.RowDefinitions[0].Height = new GridLength(32);
+            MainContent.RowDefinitions[1].Height = new GridLength(48);
+            ExtendsContentIntoTitleBar = true;
+        }
+
+        private void FullscreenChecker_OnPointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            if (_appWindow.Presenter.Kind != AppWindowPresenterKind.FullScreen) return;
+            MainContent.RowDefinitions[0].Height = new GridLength(0);
+            MainContent.RowDefinitions[1].Height = new GridLength(0);
+            ExtendsContentIntoTitleBar = false;
         }
         
         
@@ -430,6 +483,12 @@ namespace MediFiler_V2.Code
             SortPanel.Opacity = _sortPanelPinned ? 1 : 0;
             PinButton.Icon = _sortPanelPinned ? new SymbolIcon(Symbol.UnPin) : new SymbolIcon(Symbol.Pin);
             SortPanel.Opacity = 1; 
+        }    
+        
+        // Fullscreen button
+        private void Fullscreen_OnPointerReleased(object sender, TappedRoutedEventArgs e)
+        { 
+            ToggleFullscreen();
         }
         
         
@@ -462,6 +521,13 @@ namespace MediFiler_V2.Code
             _sortPanelPinned = !_sortPanelPinned; 
             SortPanel.Opacity = _sortPanelPinned ? 1 : 0; 
             PinButton.Icon = _sortPanelPinned ? new SymbolIcon(Symbol.UnPin) : new SymbolIcon(Symbol.Pin);
+            args.Handled = true;
+        }        
+        
+        // F11 - Fullscreen
+        private void Fullscreen_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+        {
+            ToggleFullscreen();
             args.Handled = true;
         }
     }
