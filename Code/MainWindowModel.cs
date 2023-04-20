@@ -5,8 +5,10 @@ using System.Linq;
 using System.Runtime.Intrinsics.X86;
 using System.Text.RegularExpressions;
 using Windows.Storage;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 
 namespace MediFiler_V2.Code;
 
@@ -51,6 +53,7 @@ public class MainWindowModel
             return;
         };
 
+        // Reset file action when loading new file
         if (FileActionInProgress)
         {
             FileActionInProgress = false;
@@ -65,6 +68,7 @@ public class MainWindowModel
             _fileThumbnail.ClearPreviewCache(_mainWindow.PreviewImageContainer1);
             _fileThumbnail.PreloadThumbnails(CurrentFolderIndex, CurrentFolder, _mainWindow.PreviewImageContainer1);
             DisplayCurrentFile(currentFile);
+            SetAppBarColor(currentFile);
             
             _mainWindow.RenameButton1.IsEnabled = true;
             _mainWindow.DeleteButton1.IsEnabled = true;
@@ -77,25 +81,49 @@ public class MainWindowModel
         }
     }
     
-    
+    // AppBar color
+    public void SetAppBarColor(FileSystemNode fileSystem)
+    {
+        var color = fileSystem.ConditionalColoring();
+        // Color to brush
+        var brush = new SolidColorBrush(color);
+        _mainWindow.AppTitleBar1.Background = brush;
+    }
+
     // // // FILE DISPLAY  // // //
 
 
     /// Decides how each file type should be shown
     public void DisplayCurrentFile(FileSystemNode fileSystem)
     {
-        DisplayThumbnail(fileSystem);
+        
         
         switch (FileTypeHelper.GetFileCategory(fileSystem.Path))
         {
             case FileTypeHelper.FileCategory.IMAGE:
+                _mainWindow.TextHolder1.Visibility = Visibility.Collapsed;
+                _mainWindow.ImageViewer1.Visibility = Visibility.Visible;
+                _mainWindow.VideoHolder1.Visibility = Visibility.Collapsed;
+                DisplayThumbnail(fileSystem);
                 DisplayImage(fileSystem);
                 break;
             case FileTypeHelper.FileCategory.VIDEO:
+                _mainWindow.TextHolder1.Visibility = Visibility.Collapsed;
+                _mainWindow.ImageViewer1.Visibility = Visibility.Visible;
+                _mainWindow.VideoHolder1.Visibility = Visibility.Visible;
+                DisplayThumbnail(fileSystem);
                 break;
             case FileTypeHelper.FileCategory.TEXT:
+                _mainWindow.TextHolder1.Visibility = Visibility.Visible;
+                _mainWindow.ImageViewer1.Visibility = Visibility.Collapsed;
+                _mainWindow.VideoHolder1.Visibility = Visibility.Collapsed;
+                DisplayText(fileSystem);
                 break;
             case FileTypeHelper.FileCategory.OTHER:
+                _mainWindow.TextHolder1.Visibility = Visibility.Collapsed;
+                _mainWindow.ImageViewer1.Visibility = Visibility.Visible;
+                _mainWindow.VideoHolder1.Visibility = Visibility.Collapsed;
+                DisplayThumbnail(fileSystem);
                 break;
         }
     }
@@ -108,7 +136,7 @@ public class MainWindowModel
         var bitmap = await _fileImage.LoadImage(fileSystem, (int)_mainWindow.FileHolder1.ActualHeight);
         // Throw away result if current file changed; Invalid images don't overwrite thumbnails
         if (sentInIndex != CurrentFolderIndex || sentInFolder != CurrentFolder.Path || bitmap == null) return;
-        _mainWindow.FileViewer1.Source = bitmap;
+        _mainWindow.ImageViewer1.Source = bitmap;
         _latestLoadedImage = sentInIndex; // Stops thumbnail from overwriting image
     }
     
@@ -121,9 +149,16 @@ public class MainWindowModel
         if (_latestLoadedImage == CurrentFolderIndex || 
             sentInIndex != CurrentFolderIndex ||
             !_fileThumbnail.ThumbnailCache.ContainsKey(sentInIndex)) return;
-        _mainWindow.FileViewer1.Source = _fileThumbnail.ThumbnailCache[sentInIndex];
+        _mainWindow.ImageViewer1.Source = _fileThumbnail.ThumbnailCache[sentInIndex];
     }
 
+    public async void DisplayText(FileSystemNode fileSystem)
+    {
+        var text = await FileIO.ReadTextAsync(fileSystem.File);
+        _mainWindow.TextViewer1.Text = text;
+    }
+    
+    
     public void FileAction()
     {
         var currentFile = CurrentFolder.SubFiles[CurrentFolderIndex];
@@ -192,7 +227,7 @@ public class MainWindowModel
         _latestLoadedImage = -1;
         _fileThumbnail.ThumbnailCache.Clear();
         _mainWindow.AppTitleTextBlock1.Text = "MediFiler";
-        _mainWindow.FileViewer1.Source = null;
+        _mainWindow.ImageViewer1.Source = null;
         _fileThumbnail.ClearPreviewCache(_mainWindow.PreviewImageContainer1);
         _metadataHandler.ClearMetadata();
 

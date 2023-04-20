@@ -115,17 +115,18 @@ namespace MediFiler_V2
             return Name switch
             {
                 // Meta filtering
-                _ when Name.Contains("[CREATOR]") => Color.FromArgb(255, 255, 128, 128),
-                _ when Name.Contains("[SORT]") => Color.FromArgb(255, 128, 128, 255),
-                _ when Name.Contains("[META]") => Color.FromArgb(255, 255, 255, 128),
-                _ when Name.Contains("[SET]") => Color.FromArgb(255, 255,113,206),
+                _ when Name.StartsWith("[CREATOR]") => Color.FromArgb(255, 255, 128, 128),
+                _ when Name.StartsWith("[SORT]") => Color.FromArgb(255, 128, 128, 255),
+                _ when Name.StartsWith("[META]") => Color.FromArgb(255, 255, 255, 128),
+                _ when Name.StartsWith("[SET]") => Color.FromArgb(255, 255,113,206),
                 // Star filtering
-                _ when Name.Contains("++++++") => Color.FromArgb(255, 255, 69, 0),
-                _ when Name.Contains("+++++") => Color.FromArgb(255, 159, 49, 222),
-                _ when Name.Contains("++++") => Color.FromArgb(255, 230, 30, 88),
-                _ when Name.Contains("+++") => Color.FromArgb(255, 19, 200, 226),
-                _ when Name.Contains("++") => Color.FromArgb(255, 243, 243, 1),
-                _ when Name.Contains("+") => Color.FromArgb(255, 50, 255, 50),
+                _ when Name.StartsWith("++++++") => Color.FromArgb(255, 255, 69, 0),
+                _ when Name.StartsWith("+++++") => Color.FromArgb(255, 159, 49, 222),
+                _ when Name.StartsWith("++++") => Color.FromArgb(255, 230, 30, 88),
+                _ when Name.StartsWith("+++") => Color.FromArgb(255, 19, 200, 226),
+                _ when Name.StartsWith("++") => Color.FromArgb(255, 243, 243, 1),
+                _ when Name.StartsWith("+") => Color.FromArgb(255, 50, 255, 50),
+                _ when IsFile => Color.FromArgb(255, 0, 0, 0),
                 _ when FileCount == 0 => Color.FromArgb(128, 255, 255, 255),
                 _ when FileCount >= 100 => Color.FromArgb(255, 255, 0, 0),
                 _ => Color.FromArgb(255, 255, 255, 255)

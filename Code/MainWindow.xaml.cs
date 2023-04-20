@@ -1,24 +1,17 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Numerics;
-using System.Runtime.InteropServices;
 using System.Text.Json;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.Storage;
 using Windows.Storage.Pickers;
-using Windows.System;
-using Windows.UI.Core;
 using Microsoft.UI;
-using Microsoft.UI.Input;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
@@ -37,11 +30,15 @@ namespace MediFiler_V2.Code
     public sealed partial class MainWindow
     {
         // UI access
+        public Grid AppTitleBar1 { get => AppTitleBar; set => AppTitleBar = value; }
         public TextBlock AppTitleTextBlock1 { get => AppTitleTextBlock; set => AppTitleTextBlock = value; }
         public TextBlock InfoTextBlock1 { get => InfoTextBlock; set => InfoTextBlock = value; }
         public StackPanel PreviewImageContainer1 { get => PreviewImageContainer; set => PreviewImageContainer = value; }
         public Grid FileHolder1 { get => FileHolder; set => FileHolder = value; }
-        public Image FileViewer1 { get => FileViewer; set => FileViewer = value; }
+        public Image ImageViewer1 { get => ImageViewer; set => ImageViewer = value; }
+        public TextBlock TextViewer1 { get => TextViewer; set => TextViewer = value; }
+        public ScrollViewer TextHolder1 { get => TextHolder; set => TextHolder = value; }
+        public Grid VideoHolder1 { get => VideoHolder; set => VideoHolder = value; }
         public TreeView FileTreeView1 { get => FileTreeView; set => FileTreeView = value; }
         
         public AppBarButton RefreshButton1 { get => RefreshButton; set => RefreshButton = value; }
@@ -161,7 +158,7 @@ namespace MediFiler_V2.Code
         /// Scroll between files
         public void MouseWheelScrollHandler(object sender, PointerRoutedEventArgs e)
         {
-            var delta = e.GetCurrentPoint(FileViewer).Properties.MouseWheelDelta;
+            var delta = e.GetCurrentPoint(ImageViewer).Properties.MouseWheelDelta;
             if (delta == 0 || _model.CurrentFolder == null) return;
             var increment = delta > 0 ? -1 : 1;
 
@@ -225,7 +222,9 @@ namespace MediFiler_V2.Code
         private void FileAction_RightClick(object sender, RightTappedRoutedEventArgs e)
         {
             // Only run if the clicked element has name FileHolder or FileViewer
-            if (((FrameworkElement)e.OriginalSource).Name != "FileHolder" && ((FrameworkElement)e.OriginalSource).Name != "FileViewer") return;
+            if (((FrameworkElement)e.OriginalSource).Name != "FileHolder" && 
+                ((FrameworkElement)e.OriginalSource).Name != "ImageViewer" &&
+                ((FrameworkElement)e.OriginalSource).Name != "TextViewer") return;
             _model.FileAction();
         }
         
@@ -252,8 +251,8 @@ namespace MediFiler_V2.Code
 
         private void ImageViewer_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            if (FileViewer.Source != null)
-                ((BitmapImage)FileViewer.Source).DecodePixelHeight = (int)FileHolder.ActualHeight;
+            if (ImageViewer.Source != null)
+                ((BitmapImage)ImageViewer.Source).DecodePixelHeight = (int)FileHolder.ActualHeight;
         }
         
         private void SortView_OnPointerMoved(object sender, PointerRoutedEventArgs e)
@@ -294,11 +293,11 @@ namespace MediFiler_V2.Code
             // Show loading animation while building tree
             _model.CurrentFolder = null;
             _model.Clear(false);
-            FileViewer.Source = new BitmapImage(new Uri("ms-appx:///Assets/Loading.gif"));
-            FileViewer.Stretch = Stretch.None;
+            ImageViewer.Source = new BitmapImage(new Uri("ms-appx:///Assets/Loading.gif"));
+            ImageViewer.Stretch = Stretch.None;
             await TreeHandler.BuildTree(items, FileTreeView);
-            FileViewer.Source = null;
-            FileViewer.Stretch = Stretch.Uniform;
+            ImageViewer.Source = null;
+            ImageViewer.Stretch = Stretch.Uniform;
 
             // By default load the first dropped root
             _model.CurrentFolder = TreeHandler.LoadRootNode(0);
@@ -548,10 +547,10 @@ namespace MediFiler_V2.Code
             switch (FileTypeHelper.GetFileCategory(_model.CurrentFolder.SubFiles[_model.CurrentFolderIndex].Path))
             {
                 case FileTypeHelper.FileCategory.IMAGE:
-                    var mousePosition = e.GetCurrentPoint(FileViewer).Position;
+                    var mousePosition = e.GetCurrentPoint(ImageViewer).Position;
                     // Check if position is on image
-                    if (mousePosition.X < 0 || mousePosition.X > FileViewer.ActualWidth ||
-                        mousePosition.Y < 0 || mousePosition.Y > FileViewer.ActualHeight) return;
+                    if (mousePosition.X < 0 || mousePosition.X > ImageViewer.ActualWidth ||
+                        mousePosition.Y < 0 || mousePosition.Y > ImageViewer.ActualHeight) return;
                     ZoomImage(increment, mousePosition);
                     break;
                 case FileTypeHelper.FileCategory.VIDEO:
@@ -593,8 +592,8 @@ namespace MediFiler_V2.Code
 
 
             // Readjust the image size
-            if (FileViewer.Source == null) return;
-            ((BitmapImage)FileViewer.Source).DecodePixelHeight = (int)FileViewer.Height;
+            if (ImageViewer.Source == null) return;
+            ((BitmapImage)ImageViewer.Source).DecodePixelHeight = (int)ImageViewer.Height;
         }
 
         // Reset image
@@ -608,9 +607,9 @@ namespace MediFiler_V2.Code
             
             //FileHolder.RenderTransform = _imageTransformGroup;
 
-            if (FileViewer.Source != null)
+            if (ImageViewer.Source != null)
             {
-                ((BitmapImage)FileViewer.Source).DecodePixelHeight = (int)FileViewer.ActualHeight;
+                ((BitmapImage)ImageViewer.Source).DecodePixelHeight = (int)ImageViewer.ActualHeight;
             }
         }
         
@@ -622,11 +621,11 @@ namespace MediFiler_V2.Code
 
         private Point _lastTransformPosition;
 
-        private Double _lastX;
+        //private Double _lastX;
         // PAN
         private void FileHolder_OnPointerMoved(object sender, PointerRoutedEventArgs e)
         {
-            if (FileViewer.PointerCaptures == null || !_isDragging) return;
+            if (ImageViewer.PointerCaptures == null || !_isDragging) return;
 
             var currentMousePosition = e.GetCurrentPoint(null).Position;
 
@@ -659,7 +658,7 @@ namespace MediFiler_V2.Code
             //_translateTransform.X = _lastTransformPosition.X;
             //_translateTransform.Y = _lastTransformPosition.Y;
             
-            FileViewer.RenderTransform = _imageTransformGroup;
+            ImageViewer.RenderTransform = _imageTransformGroup;
             
             //
             _lastTransformPosition = new Point(_translateTransform.X, _translateTransform.Y);
@@ -675,12 +674,12 @@ namespace MediFiler_V2.Code
         private void FileHolder_OnPointerPressed(object sender, PointerRoutedEventArgs e)
         {
             if (!_model.FileActionInProgress) return;
-            if (!e.GetCurrentPoint(FileViewer).Properties.IsLeftButtonPressed) return;
+            if (!e.GetCurrentPoint(ImageViewer).Properties.IsLeftButtonPressed) return;
             
             _isDragging = true;
             _startPosition = e.GetCurrentPoint(null).Position;
             //_startPosition = new Point(FileViewer.ActualWidth / 2, FileViewer.ActualHeight / 2);
-            FileViewer.CapturePointer(e.Pointer);
+            ImageViewer.CapturePointer(e.Pointer);
             
             //FileHolder.RenderTransform = _imageTransformGroup;
         }
@@ -690,7 +689,7 @@ namespace MediFiler_V2.Code
             if (!_model.FileActionInProgress ||!_isDragging) return;
 
             _isDragging = false;
-            FileViewer.ReleasePointerCapture(e.Pointer);
+            ImageViewer.ReleasePointerCapture(e.Pointer);
         }
     }
 }

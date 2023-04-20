@@ -197,9 +197,19 @@
                                   PointerMoved="FileHolder_OnPointerMoved"
                                   PointerPressed="FileHolder_OnPointerPressed"
                                   PointerReleased="FileHolder_OnPointerReleased">
-                        <Image Name="FileViewer" Stretch="Uniform">
+                        <Image Name="ImageViewer" Stretch="Uniform">
                             <Image.RenderTransform/>
                         </Image>
+                        
+                        <ScrollViewer Name="TextHolder" Width="600" HorizontalAlignment="Center" Visibility="Collapsed">
+                            <TextBlock Name="TextViewer"
+                                       TextWrapping="Wrap"/>
+                        </ScrollViewer>
+                        
+                        <Grid Name="VideoHolder" Visibility="Collapsed" IsHitTestVisible="False">
+                            <Image Source="../Assets/PlayIcon.png" IsHitTestVisible="False"
+                                   Width="200" Height="200" HorizontalAlignment="Center" VerticalAlignment="Center"></Image>
+                        </Grid>
                     </Grid>
 
                     <!--Sorting side panel-->
