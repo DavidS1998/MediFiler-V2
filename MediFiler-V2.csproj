@@ -11,11 +11,89 @@
     <UseWinUI>true</UseWinUI>
     <EnableMsixTooling>true</EnableMsixTooling>
     <WindowsPackageType>None</WindowsPackageType>
+    <ApplicationIcon>Assets\Icon 2.ico</ApplicationIcon>
+    <Nullable>warnings</Nullable>
   </PropertyGroup>
   <ItemGroup>
     <Content Remove="Assets\Icon.ico" />
     <None Remove="appsettings.json" />
     <Content Include="appsettings.json" />
+    <None Remove="Upscalers\ncnn\models\realesr-animevideov3-x2.bin" />
+    <Content Include="Upscalers\ncnn\models\realesr-animevideov3-x2.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Upscalers\ncnn\models\realesr-animevideov3-x2.param" />
+    <Content Include="Upscalers\ncnn\models\realesr-animevideov3-x2.param">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Upscalers\ncnn\models\realesr-animevideov3-x3.bin" />
+    <Content Include="Upscalers\ncnn\models\realesr-animevideov3-x3.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Upscalers\ncnn\models\realesr-animevideov3-x3.param" />
+    <Content Include="Upscalers\ncnn\models\realesr-animevideov3-x3.param">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Upscalers\ncnn\models\realesr-animevideov3-x4.bin" />
+    <Content Include="Upscalers\ncnn\models\realesr-animevideov3-x4.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Upscalers\ncnn\models\realesr-animevideov3-x4.param" />
+    <Content Include="Upscalers\ncnn\models\realesr-animevideov3-x4.param">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Upscalers\ncnn\models\realesrgan-x4plus.bin" />
+    <Content Include="Upscalers\ncnn\models\realesrgan-x4plus.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Upscalers\ncnn\models\realesrgan-x4plus.param" />
+    <Content Include="Upscalers\ncnn\models\realesrgan-x4plus.param">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Upscalers\ncnn\models\realesrgan-x4plus-anime.bin" />
+    <Content Include="Upscalers\ncnn\models\realesrgan-x4plus-anime.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Upscalers\ncnn\models\realesrgan-x4plus-anime.param" />
+    <Content Include="Upscalers\ncnn\models\realesrgan-x4plus-anime.param">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Upscalers\ncnn\input.jpg" />
+    <Content Include="Upscalers\ncnn\input.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Upscalers\ncnn\input2.jpg" />
+    <Content Include="Upscalers\ncnn\input2.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Upscalers\ncnn\ncnn.bat" />
+    <Content Include="Upscalers\ncnn\ncnn.bat">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Upscalers\ncnn\ncnn.exe" />
+    <Content Include="Upscalers\ncnn\ncnn.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Upscalers\ncnn\onepiece_demo.mp4" />
+    <Content Include="Upscalers\ncnn\onepiece_demo.mp4">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Upscalers\ncnn\README_windows.md" />
+    <Content Include="Upscalers\ncnn\README_windows.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Upscalers\ncnn\realesrgan-ncnn-vulkan.exe" />
+    <Content Include="Upscalers\ncnn\realesrgan-ncnn-vulkan.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Upscalers\ncnn\vcomp140.dll" />
+    <Content Include="Upscalers\ncnn\vcomp140.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Upscalers\ncnn\vcomp140d.dll" />
+    <Content Include="Upscalers\ncnn\vcomp140d.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
@@ -37,6 +115,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Fonts\RobotoCondensed-Regular.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Upscalers" />
   </ItemGroup>
 
   <!-- 

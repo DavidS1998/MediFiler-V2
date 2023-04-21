@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Microsoft.UI;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Documents;
 using Microsoft.UI.Xaml.Media;
 
@@ -13,18 +14,39 @@ public class MetadataHandler
 {
     MainWindow mainWindow;
     MainWindowModel mainWindowModel;
-    
-    public MetadataHandler(MainWindow mainWindow, MainWindowModel mainWindowModel)
+    private Grid appbar;
+    public int vertical;
+    public int horizontal;
+
+    public MetadataHandler(MainWindow mainWindow, MainWindowModel mainWindowModel, Grid appbar)
     {
         this.mainWindow = mainWindow;
         this.mainWindowModel = mainWindowModel;
+        this.appbar = appbar;
     }
+    // TODO: Give a reference to this class from FileSystemNode, and do file system operations there
     
     /// Gets secondary data from the current file
-    public void ShowMetadata(FileSystemNode fileSystem)
+    public async void ShowMetadata(FileSystemNode fileSystem)
     {
+        vertical = 0;
         SetTitleText(fileSystem);
-        SetInfoText(fileSystem);
+        await SetInfoText(fileSystem);
+        
+        ResolutionWarning(fileSystem);
+    }
+    
+    //
+    public void ResolutionWarning(FileSystemNode fileSystem)
+    {
+        // TODO: Find a better place to do this
+        if (FileTypeHelper.GetFileCategory(fileSystem.Path) != FileTypeHelper.FileCategory.IMAGE
+            || vertical is not ((< 1300 or > 5000) and not 0) 
+            || fileSystem.Name.EndsWith(".gif")
+            || fileSystem.Name.EndsWith(".ico"))
+            return;
+        
+        appbar.Background = new SolidColorBrush(Colors.LightGray);
     }
 
     private void SetTitleText(FileSystemNode fileSystem)
@@ -40,7 +62,7 @@ public class MetadataHandler
     // TODO: Refactor, make coloring specific parts of info text easier
     // TODO: 0s in time metadata should be greyed out
     
-    private async void SetInfoText(FileSystemNode fileSystem)
+    private async Task SetInfoText(FileSystemNode fileSystem)
     {
         var metadataText = "";
 
@@ -83,6 +105,8 @@ public class MetadataHandler
         
             var decoder = await BitmapDecoder.CreateAsync(stream);
             var resolution = decoder.PixelWidth + "×" + decoder.PixelHeight;
+            horizontal = (int) decoder.PixelWidth;
+            vertical = (int) decoder.PixelHeight;
             stream.Dispose();
             return resolution;
         }

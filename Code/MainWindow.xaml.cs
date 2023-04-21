@@ -48,6 +48,8 @@ namespace MediFiler_V2.Code
         public AppBarButton DeleteButton1 { get => DeleteButton; set => DeleteButton = value; }
         public AppBarButton PlusButton1 { get => PlusButton; set => PlusButton = value; }
         public AppBarButton MinusButton1 { get => MinusButton; set => MinusButton = value; }
+        public AppBarButton OpenButton1 { get => OpenButton; set => OpenButton = value; }
+        public AppBarButton UpscaleButton1 { get => UpscaleButton; set => UpscaleButton = value; }
 
         private AppWindow _appWindow;
         private readonly MainWindowModel _model;
@@ -80,6 +82,7 @@ namespace MediFiler_V2.Code
             
             _imageTransformGroup.Children.Add(_translateTransform);
             _imageTransformGroup.Children.Add(_scaleTransform);
+            ImageViewer.RenderTransform = _imageTransformGroup;
         }
         
         public void ToggleFullscreen()
@@ -284,6 +287,7 @@ namespace MediFiler_V2.Code
             MainContent.RowDefinitions[1].Height = new GridLength(0);
             ExtendsContentIntoTitleBar = false;
         }
+        
         
         #endregion
         // // // LOADING // // //
@@ -507,7 +511,15 @@ namespace MediFiler_V2.Code
         private void MinusButton_OnPointerReleased(object sender, TappedRoutedEventArgs e)
         { _model.RemovePlus(); }
         
+        // Open in button
+        private void OpenButton_OnTapped(object sender, TappedRoutedEventArgs e)
+        { _model.OpenAction(); }    
         
+        // Upscale button
+        private void UpscaleButton_OnTapped(object sender, TappedRoutedEventArgs e)
+        { _model.Upscale(); }
+
+
         // // // KEYBOARD SHORTCUTS // // //
         
         
@@ -670,20 +682,18 @@ namespace MediFiler_V2.Code
 
             // TODO: Investigate a proper way to do this
             
-            // Grabs from middle - Wrong
-            //_translateTransform.X = newImagePositionX;
-            //_translateTransform.Y = newImagePositionY;
+            // Grabs from middle - Wrong, but most intuitive
+            _translateTransform.X = newImagePositionX;
+            _translateTransform.Y = newImagePositionY;
             
             // Position relative to entire window - Wrong
-            _translateTransform.X = _previousPosition.X + convertAbsoluteToRelative.X;
-            _translateTransform.Y = _previousPosition.Y + convertAbsoluteToRelative.Y;
+            //_translateTransform.X = _previousPosition.X + convertAbsoluteToRelative.X;
+            //_translateTransform.Y = _previousPosition.Y + convertAbsoluteToRelative.Y;
             
             // Too fast - Wrong
             //_translateTransform.X = _lastTransformPosition.X;
             //_translateTransform.Y = _lastTransformPosition.Y;
-            
-            ImageViewer.RenderTransform = _imageTransformGroup;
-            
+
             //
             _lastTransformPosition = new Point(_translateTransform.X, _translateTransform.Y);
             _previousPosition = convertAbsoluteToRelative;
@@ -705,7 +715,6 @@ namespace MediFiler_V2.Code
             //_startPosition = new Point(FileViewer.ActualWidth / 2, FileViewer.ActualHeight / 2);
             ImageViewer.CapturePointer(e.Pointer);
             
-            //FileHolder.RenderTransform = _imageTransformGroup;
         }
 
         private void FileHolder_OnPointerReleased(object sender, PointerRoutedEventArgs e)

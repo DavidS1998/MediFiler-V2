@@ -5,6 +5,8 @@ using System.Linq;
 using System.Runtime.Intrinsics.X86;
 using System.Text.RegularExpressions;
 using Windows.Storage;
+using Windows.System;
+using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -35,7 +37,7 @@ public class MainWindowModel
     {
         _mainWindow = window;
 
-        _metadataHandler = new MetadataHandler(_mainWindow, this);
+        _metadataHandler = new MetadataHandler(_mainWindow, this, _mainWindow.AppTitleBar1);
         _fileThumbnail = new FileThumbnail(this, PreloadDistance);
         _fileImage = new FileImage();
         
@@ -52,6 +54,8 @@ public class MainWindowModel
             _mainWindow.DeleteButton1.IsEnabled = false;
             _mainWindow.PlusButton1.IsEnabled = false;
             _mainWindow.MinusButton1.IsEnabled = false;
+            _mainWindow.OpenButton1.IsEnabled = false;
+            _mainWindow.UpscaleButton1.IsEnabled = false;
             return;
         };
 
@@ -66,16 +70,19 @@ public class MainWindowModel
         try
         {
             var currentFile = CurrentFolder.SubFiles[CurrentFolderIndex];
+            
+            SetAppBarColor(currentFile);
             _metadataHandler.ShowMetadata(currentFile);
             _fileThumbnail.ClearPreviewCache(_mainWindow.PreviewImageContainer1);
             _fileThumbnail.PreloadThumbnails(CurrentFolderIndex, CurrentFolder, _mainWindow.PreviewImageContainer1);
             DisplayCurrentFile(currentFile);
-            SetAppBarColor(currentFile);
             
             _mainWindow.RenameButton1.IsEnabled = true;
             _mainWindow.DeleteButton1.IsEnabled = true;
             _mainWindow.PlusButton1.IsEnabled = true;
             _mainWindow.MinusButton1.IsEnabled = true;
+            _mainWindow.OpenButton1.IsEnabled = true;
+            _mainWindow.UpscaleButton1.IsEnabled = true;
         }
         catch (Exception)
         {
@@ -174,12 +181,64 @@ public class MainWindowModel
             case FileTypeHelper.FileCategory.TEXT:
             case FileTypeHelper.FileCategory.VIDEO:
             case FileTypeHelper.FileCategory.OTHER:
-                // Open in default app
-                ProcessStartInfo psi = new ProcessStartInfo();
-                psi.FileName = currentFile.Path;
-                psi.UseShellExecute = true;
-                Process.Start(psi);
+                OpenDefaultAction(currentFile);
                 break;
+        }
+    }
+
+    public void OpenDefaultAction(FileSystemNode currentFile)
+    {
+        // Open in default app
+        ProcessStartInfo psi = new ProcessStartInfo();
+        psi.FileName = currentFile.Path;
+        psi.UseShellExecute = true;
+        Process.Start(psi);
+    }
+    
+    public async void OpenAction()
+    {
+        var currentFile = CurrentFolder.SubFiles[CurrentFolderIndex];
+        // Open in program picker
+        var options = new LauncherOptions();
+        options.DisplayApplicationPicker = true;
+        await Launcher.LaunchFileAsync(currentFile.File, options);
+    }
+
+    public async void Upscale()
+    {
+        try
+        {
+            var currentFile = CurrentFolder.SubFiles[CurrentFolderIndex];
+        
+            if (FileTypeHelper.GetFileCategory(currentFile.Path) != FileTypeHelper.FileCategory.IMAGE) return;
+
+            var baseDirectory = await StorageFolder.GetFolderFromPathAsync(AppDomain.CurrentDomain.BaseDirectory);
+            baseDirectory = await baseDirectory.TryGetItemAsync("Upscalers") as StorageFolder;
+            baseDirectory = await baseDirectory.TryGetItemAsync("ncnn") as StorageFolder;
+
+            var upscalerExe = await baseDirectory.TryGetItemAsync("ncnn.exe");
+            if (upscalerExe == null) return;
+        
+            var exe = (StorageFile) upscalerExe;
+
+            var pathWithoutFileName = currentFile.Path.Substring(0, currentFile.Path.LastIndexOf('\\') + 1);
+            var newName = currentFile.File.Name.Insert(currentFile.File.Name.LastIndexOf('.'), "[U]");
+            var argument = " -s 2 -f jpg -i " + currentFile.Path + " -o " + pathWithoutFileName + newName;
+
+            Debug.WriteLine(argument);
+
+            var upscaler = new Process();
+            upscaler.StartInfo.FileName = exe.Path;
+            upscaler.StartInfo.Arguments = argument;
+            upscaler.Start();
+            upscaler.WaitForExit();
+        
+            Refresh();
+            Debug.WriteLine("Upscale done");
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine(e);
         }
     }
 

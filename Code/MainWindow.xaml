@@ -85,16 +85,11 @@
                                              Invoked="Undo_OnInvoked"></KeyboardAccelerator>
                     </AppBarButton.KeyboardAccelerators>
                 </AppBarButton>
-                    <!--<AppBarButton Icon="Add" Label="Add" Width="32"/>
-                <AppBarButton Icon="Share" Label="Share" Width="32"/>
+
                 <CommandBar.SecondaryCommands>
-                    <AppBarButton Icon="Setting" Label="Include subfolder content"/>
-                    <AppBarButton Icon="Setting" Label="Include subfolder content">
-                        <AppBarButton.KeyboardAccelerators>
-                            <KeyboardAccelerator Key="Shift" />
-                        </AppBarButton.KeyboardAccelerators>
-                    </AppBarButton>
-                </CommandBar.SecondaryCommands>-->
+                    <AppBarButton Label="Open in..." Name="OpenButton" IsEnabled="False" Tapped="OpenButton_OnTapped"/>
+                    <AppBarButton Label="Upscale" Name="UpscaleButton" IsEnabled="False" Tapped="UpscaleButton_OnTapped"/>
+                </CommandBar.SecondaryCommands>
             </CommandBar>
             
             <CommandBar Background="Transparent" DefaultLabelPosition="Collapsed" HorizontalAlignment="Right" Margin="8,0">
@@ -255,10 +250,10 @@
                                     <TreeViewItem
                                         ItemsSource="{x:Bind SubFolders}"
                                         IsExpanded="{x:Bind ConditionalExpand()}"
+                                        Tapped="FolderListLeftClick" RightTapped="FolderListRightClick"
                                         CanDrag="False">
                                         <Grid>
                                             <TextBlock Foreground="{x:Bind GetColor()}"
-                                                       Tapped="FolderListLeftClick" RightTapped="FolderListRightClick" 
                                                        Margin="0,0,0,0"
                                                        FontSize="12"
                                                        VerticalAlignment="Center"

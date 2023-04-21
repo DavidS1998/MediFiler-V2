@@ -22,7 +22,7 @@ namespace MediFiler_V2
                     => FileCategory.IMAGE,
                 ".mp4" or ".webm" or ".wmw" or ".flv" or ".avi" or ".mov" or ".mkv" 
                     => FileCategory.VIDEO,
-                ".txt"
+                ".txt" or ".md"
                     => FileCategory.TEXT,
                 _ 
                     => FileCategory.OTHER,
