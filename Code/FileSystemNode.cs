@@ -31,18 +31,10 @@ namespace MediFiler_V2
         public int ChildFileCount { get { return FileCount + SubFolders.Sum(f => f.ChildFileCount); } }
         public Brush FolderColor { get; set; }
         
-        private static bool _isExpanded = true;
-
-        public bool IsExpanded
-        {
-            get { return _isExpanded; }
-            set
-            {
-                if (_isExpanded == value) return;
-                _isExpanded = value;
-                OnPropertyChanged(nameof(IsExpanded));
-            }
-        }
+        private static bool _isExpanded;
+        public bool IsExpanded { 
+            get { return _isExpanded; } 
+            set { _isExpanded = value; OnPropertyChanged(nameof(IsExpanded)); } }
         
         public IStorageFile File { get; set; }
         public IStorageFolder Folder { get; set; }
@@ -126,9 +118,14 @@ namespace MediFiler_V2
                 _ when Name.StartsWith("+++") => Color.FromArgb(255, 19, 150, 226),
                 _ when Name.StartsWith("++") => Color.FromArgb(255, 150, 150, 1),
                 _ when Name.StartsWith("+") => Color.FromArgb(255, 50, 150, 50),
-                _ when IsFile => Color.FromArgb(255, 0, 0, 0),
+                // Standard folder coloring
+                _ when IsFile => Color.FromArgb(0, 150, 150, 150),
                 _ when FileCount == 0 => Color.FromArgb(128, 255, 255, 255),
                 _ when FileCount >= 100 => Color.FromArgb(255, 255, 0, 0),
+                _ when Depth == 0 => Color.FromArgb(255, 255, 255, 255),
+                _ when Depth == 1 => Color.FromArgb(255, 255, 255, 255),
+                _ when Depth == 2 => Color.FromArgb(255, 200, 200, 200),
+                _ when Depth >= 3 => Color.FromArgb(255, 150, 150, 150),
                 _ => Color.FromArgb(255, 255, 255, 255)
             };
         }
@@ -152,6 +149,7 @@ namespace MediFiler_V2
                 _ when Name.Contains("[META]") => false,
                 _ when Name.Contains("[SET]") => false,
                 _ when Name.Contains("[Theme]") => false,
+                _ when Parent != null && Parent.Name.Contains("[CREATOR]") => false,
                 _ => true
             };
         }
@@ -265,7 +263,7 @@ namespace MediFiler_V2
 
         protected void OnPropertyChanged(string propertyName)
         {
-            Debug.WriteLine("Property changed: " + propertyName + "");
+            //Debug.WriteLine("Property changed: " + propertyName + "");
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }

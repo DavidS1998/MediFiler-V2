@@ -51,6 +51,7 @@ public static class TreeHandler
         {
             AddFolderToTree(subNode);
         }
+        //FullFolderList.OrderBy(x => x.Name, new FileSystemNode.SortLiterally()).ToList();
     }
 
     /// Rebuilds the tree from the root files

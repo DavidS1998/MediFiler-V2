@@ -56,6 +56,9 @@ public class MainWindowModel
             _mainWindow.MinusButton1.IsEnabled = false;
             _mainWindow.OpenButton1.IsEnabled = false;
             _mainWindow.UpscaleButton1.IsEnabled = false;
+            
+            var brush = new SolidColorBrush(Colors.Black);
+            _mainWindow.AppTitleBar1.Background = brush;
             return;
         };
 
@@ -226,7 +229,7 @@ public class MainWindowModel
 
             var pathWithoutFileName = currentFile.Path.Substring(0, currentFile.Path.LastIndexOf('\\') + 1);
             var newName = currentFile.File.Name.Insert(currentFile.File.Name.LastIndexOf('.'), "[U]");
-            var argument = " -s 2 -f jpg -i " + currentFile.Path + " -o " + pathWithoutFileName + newName;
+            var argument = " -s 2 -i \"" + currentFile.Path + "\" -o \"" + pathWithoutFileName + newName + "\"";
 
             Debug.WriteLine(argument);
 
@@ -297,7 +300,7 @@ public class MainWindowModel
         _metadataHandler.ClearMetadata();
 
         // Only run on real folder switch
-        Debug.WriteLine(sameFolder ? "Same folder" : "Different folder");
+        // Debug.WriteLine(sameFolder ? "Same folder" : "Different folder");
         if (sameFolder) return;
         Debug.WriteLine("Undo queue cleared");
         ClearUndoQueue();
@@ -519,7 +522,6 @@ public class MainWindowModel
                 memento.Node.Rename(memento.Name);
                 break;
             case UndoAction.Move:
-                TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1);
                 memento.Node.Move(memento.Parent);
                 break;
         }

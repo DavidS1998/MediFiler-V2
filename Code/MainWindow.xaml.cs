@@ -17,6 +17,7 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 using WinRT.Interop;
 using BitmapImage = Microsoft.UI.Xaml.Media.Imaging.BitmapImage;
+using Expander = ABI.Microsoft.UI.Xaml.Controls.Expander;
 using WindowActivatedEventArgs = Microsoft.UI.Xaml.WindowActivatedEventArgs;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -83,6 +84,24 @@ namespace MediFiler_V2.Code
             _imageTransformGroup.Children.Add(_translateTransform);
             _imageTransformGroup.Children.Add(_scaleTransform);
             ImageViewer.RenderTransform = _imageTransformGroup;
+            
+            //LoadSettings();
+        }
+
+        public void LoadSettings()
+        {
+            /*
+            // Check if local settings exist
+            var  localSettings = ApplicationData.Current.LocalSettings;
+
+            // Null check
+            if (localSettings.Values["SortPanelPinned"] == null)
+            {
+                localSettings.Values["SortPanelPinned"] = true;
+            }
+            _sortPanelPinned = localSettings.Values["SortPanelPinned"] is bool && (bool)localSettings.Values["SortPanelPinned"];
+            TogglePin();
+            */
         }
         
         public void ToggleFullscreen()
@@ -182,6 +201,7 @@ namespace MediFiler_V2.Code
         private void FolderListClick(RoutedEventArgs e, bool leftClick)
         {
             if (((FrameworkElement)e.OriginalSource).DataContext is not FileSystemNode respectiveNode) return;
+            if (((FrameworkElement)e.OriginalSource).Name == "ExpandCollapseChevron") return;
 
             if (leftClick)
             { _model.SwitchFolder(respectiveNode); }
@@ -286,6 +306,18 @@ namespace MediFiler_V2.Code
             MainContent.RowDefinitions[0].Height = new GridLength(0);
             MainContent.RowDefinitions[1].Height = new GridLength(0);
             ExtendsContentIntoTitleBar = false;
+        }
+        
+        // Pin
+        private void TogglePin()
+        {
+            _sortPanelPinned = !_sortPanelPinned; 
+            SortPanel.Opacity = _sortPanelPinned ? 1 : 0;
+            PinButton.Icon = _sortPanelPinned ? new SymbolIcon(Symbol.UnPin) : new SymbolIcon(Symbol.Pin);
+            
+            // Save _sortPanelPinned to settings
+            //ApplicationDataContainer  localSettings = ApplicationData.Current.LocalSettings;
+            //localSettings.Values["SortPanelPinned"] = _sortPanelPinned.ToString();
         }
         
         
@@ -416,6 +448,8 @@ namespace MediFiler_V2.Code
 
         private void AddQuickFolder(FileSystemNode node)
         {
+            if (node.IsFile) return;
+            
             // Opened before
             if (QuickFolders.ContainsKey(node.Path))
             {
@@ -492,18 +526,12 @@ namespace MediFiler_V2.Code
         
         // Pin button
         private void Pin_OnPointerReleased(object sender, TappedRoutedEventArgs e)
-        { 
-            _sortPanelPinned = !_sortPanelPinned; 
-            SortPanel.Opacity = _sortPanelPinned ? 1 : 0;
-            PinButton.Icon = _sortPanelPinned ? new SymbolIcon(Symbol.UnPin) : new SymbolIcon(Symbol.Pin);
-            SortPanel.Opacity = 1; 
+        { TogglePin();
         }    
         
         // Fullscreen button
         private void Fullscreen_OnPointerReleased(object sender, TappedRoutedEventArgs e)
-        { 
-            ToggleFullscreen();
-        }
+        { ToggleFullscreen(); }
         
         // Plus button
         private void PlusButton_OnPointerReleased(object sender, TappedRoutedEventArgs e)
@@ -547,12 +575,7 @@ namespace MediFiler_V2.Code
         
         // Tab - Pin
         private void Pin_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-        {
-            _sortPanelPinned = !_sortPanelPinned; 
-            SortPanel.Opacity = _sortPanelPinned ? 1 : 0; 
-            PinButton.Icon = _sortPanelPinned ? new SymbolIcon(Symbol.UnPin) : new SymbolIcon(Symbol.Pin);
-            args.Handled = true;
-        }        
+        { TogglePin(); args.Handled = true; }        
         
         // F11 - Fullscreen
         private void Fullscreen_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
