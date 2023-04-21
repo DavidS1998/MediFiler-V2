@@ -145,7 +145,7 @@
                     </Grid.ColumnDefinitions>
                         
                     <!--Most recent folders-->
-                    <Grid Grid.Column="0">
+                    <Grid Grid.Column="0" Padding="32">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="32"></RowDefinition>
                             <RowDefinition Height="*"></RowDefinition>
@@ -157,7 +157,7 @@
                             <TreeView.ItemTemplate>
                                 <DataTemplate x:DataType="code:QuickFolder">
                                     <TreeViewItem
-                                        CanDrag="False" Tapped="QuickFolderClick">
+                                        CanDrag="False" Tapped="QuickFolderClick" RightTapped="QuickFolder_OnRightTapped">
                                         <Grid>
                                             <TextBlock Text="{x:Bind RecentFormatting()}"
                                                        ToolTipService.ToolTip="{x:Bind Path}"
@@ -170,7 +170,7 @@
                     </Grid>
                     
                     <!--Most opened folders-->
-                    <Grid Grid.Column="1">
+                    <Grid Grid.Column="1" Padding="32">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="32"></RowDefinition>
                             <RowDefinition Height="*"></RowDefinition>
@@ -182,7 +182,7 @@
                             <TreeView.ItemTemplate>
                                 <DataTemplate x:DataType="code:QuickFolder">
                                     <TreeViewItem
-                                        CanDrag="False" Tapped="QuickFolderClick">
+                                        CanDrag="False" Tapped="QuickFolderClick" RightTapped="QuickFolder_OnRightTapped">
                                         <Grid>
                                             <TextBlock Text="{x:Bind TimesOpenedFormatting()}"
                                                        ToolTipService.ToolTip="{x:Bind Path}"
@@ -195,6 +195,29 @@
                     </Grid>
                     
                     <!--Favorite folders-->
+                    <Grid Grid.Column="2" Padding="32">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="32"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
+                        
+                        <TextBlock Text="Favorite" Margin="8,8,0,0" Grid.Row="0"/>
+                        
+                        <TreeView Grid.Row="1" Name="FavoriteFoldersView">
+                            <TreeView.ItemTemplate>
+                                <DataTemplate x:DataType="code:QuickFolder">
+                                    <TreeViewItem
+                                        CanDrag="False" Tapped="QuickFolderClick" RightTapped="QuickFolder_OnRightTapped">
+                                        <Grid>
+                                            <TextBlock Text="{x:Bind FavoriteFormatting()}"
+                                                       ToolTipService.ToolTip="{x:Bind Path}"
+                                                       Margin="4,0,0,0"/>
+                                        </Grid>
+                                    </TreeViewItem>
+                                </DataTemplate>
+                            </TreeView.ItemTemplate>
+                        </TreeView>
+                    </Grid>
                     
                     </Grid>
                     

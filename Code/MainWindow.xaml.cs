@@ -421,13 +421,36 @@ namespace MediFiler_V2.Code
             LoadFolder(new List<IStorageItem> {item});
         }
         
+        // Add/remove favorite
+        private void QuickFolder_OnRightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+            if (((FrameworkElement)e.OriginalSource).DataContext is not QuickFolder quickFolder) return;
+
+            if (FavoriteFolders.ContainsKey(quickFolder.Path))
+            {
+                FavoriteFolders.Remove(quickFolder.Path);
+            }
+            else
+            {
+                FavoriteFolders.TryAdd(quickFolder.Path, quickFolder);
+            }
+            UpdateJsonFile();
+            UpdateHomeFolders();
+        }
+        
         
         // TODO: Refactor into own class
         // TODO: Add a favorites list
         // // // JSON // // //
         #region JSON
-        
+
+        public class SettingsRoot
+        {
+            public Dictionary<string, QuickFolder> QuickFolders { get; set; }
+            public Dictionary<string, QuickFolder> FavoriteFolders { get; set; }
+        }
         private Dictionary<string, QuickFolder> QuickFolders = new();
+        private Dictionary<string, QuickFolder> FavoriteFolders = new();
         
         // Create QuickFolder from appsettings.json
         public void UpdateHomeFolders()
@@ -437,13 +460,16 @@ namespace MediFiler_V2.Code
             
             RecentFoldersView.ItemsSource = QuickFolders.Values.OrderByDescending(x => x.LastOpened);
             MostOpenedFoldersView.ItemsSource = QuickFolders.Values.OrderByDescending(x => x.TimesOpened);
+            FavoriteFoldersView.ItemsSource = FavoriteFolders.Values.OrderBy(x => x.Name);
         }
         
         private void ReadJsonFile()
         {
             // Deserialize JSON to QuickFolders list
             var json = File.ReadAllText("appsettings.json");
-            QuickFolders = JsonSerializer.Deserialize<Dictionary<string, QuickFolder>>(json);
+            var rootObject = JsonSerializer.Deserialize<SettingsRoot>(json);
+            if (rootObject != null) QuickFolders = rootObject.QuickFolders;
+            if (rootObject != null) FavoriteFolders = rootObject.FavoriteFolders;
         }
 
         private void AddQuickFolder(FileSystemNode node)
@@ -483,9 +509,14 @@ namespace MediFiler_V2.Code
 
         private void UpdateJsonFile()
         {
-            // Serialize QuickFolders list to JSON with Path as the key
-            var json = JsonSerializer.Serialize(QuickFolders);
-            
+            // Create a dictionary with a single key-value pair for QuickFolders
+            var dictionary = new Dictionary<string, Dictionary<string, QuickFolder>>();
+            dictionary.Add("QuickFolders", QuickFolders);
+            dictionary.Add("FavoriteFolders", FavoriteFolders);
+
+            // Serialize the dictionary to JSON
+            var json = JsonSerializer.Serialize(dictionary);
+
             // Serialize and write the prettified JSON to appsettings.json
             using (var stream = new FileStream("appsettings.json", FileMode.Create))
             {
@@ -495,6 +526,7 @@ namespace MediFiler_V2.Code
                 }
             }
         }
+
         
         #endregion
         // // // BUTTONS // // //
