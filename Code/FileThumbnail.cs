@@ -71,7 +71,14 @@ public class FileThumbnail
         }
         await Task.WhenAll(tasks);
         
+        
         FillPreviews(previewImageContainer);
+        
+        // Rapid folder switching may cause thumbnails from the wrong folder to be loaded
+        if (currentFolder == _model.CurrentFolder) return;
+        Debug.WriteLine("LOADED WRONG FOLDER, RETRYING");
+        ThumbnailCache.Clear();
+        PreloadThumbnails(currentPositionInFolder, _model.CurrentFolder, previewImageContainer);
     }
     
     

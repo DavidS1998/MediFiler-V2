@@ -313,7 +313,6 @@ namespace MediFiler_V2.Code
             RefreshButton.IsEnabled = true;
             
             AddQuickFolder(_model.CurrentFolder);
-            OpenSortView();
         }
         
         /// Runs when file(s) have been dropped on the main window
@@ -324,6 +323,7 @@ namespace MediFiler_V2.Code
             var items = await e.DataView.GetStorageItemsAsync();
             if (items.Count == 0) return;
 
+            OpenSortView();
             LoadFolder(items);
         }
 
@@ -355,6 +355,7 @@ namespace MediFiler_V2.Code
             var item = (IStorageItem)folder;
 
             // Load folder
+            OpenSortView();
             LoadFolder(new List<IStorageItem> {item});
         }
         
@@ -384,6 +385,7 @@ namespace MediFiler_V2.Code
             }
 
             // Load folder
+            OpenSortView();
             LoadFolder(new List<IStorageItem> {item});
         }
         
@@ -570,6 +572,13 @@ namespace MediFiler_V2.Code
         private void Minus_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
         {
             _model.RemovePlus();
+            args.Handled = true;
+        }
+        
+        // F8 - Upscale
+        private void Upscale_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+        {
+            _model.Upscale();
             args.Handled = true;
         }
 

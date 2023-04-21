@@ -213,8 +213,11 @@ public class MainWindowModel
             if (FileTypeHelper.GetFileCategory(currentFile.Path) != FileTypeHelper.FileCategory.IMAGE) return;
 
             var baseDirectory = await StorageFolder.GetFolderFromPathAsync(AppDomain.CurrentDomain.BaseDirectory);
+            if (baseDirectory == null) return;
             baseDirectory = await baseDirectory.TryGetItemAsync("Upscalers") as StorageFolder;
+            if (baseDirectory == null) return;
             baseDirectory = await baseDirectory.TryGetItemAsync("ncnn") as StorageFolder;
+            if (baseDirectory == null) return;
 
             var upscalerExe = await baseDirectory.TryGetItemAsync("ncnn.exe");
             if (upscalerExe == null) return;
@@ -232,7 +235,8 @@ public class MainWindowModel
             upscaler.StartInfo.Arguments = argument;
             upscaler.Start();
             upscaler.WaitForExit();
-        
+
+            CurrentFolderIndex++;
             Refresh();
             Debug.WriteLine("Upscale done");
         }

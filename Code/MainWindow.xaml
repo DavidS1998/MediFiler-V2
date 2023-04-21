@@ -88,7 +88,12 @@
 
                 <CommandBar.SecondaryCommands>
                     <AppBarButton Label="Open in..." Name="OpenButton" IsEnabled="False" Tapped="OpenButton_OnTapped"/>
-                    <AppBarButton Label="Upscale" Name="UpscaleButton" IsEnabled="False" Tapped="UpscaleButton_OnTapped"/>
+                    <AppBarButton Label="Upscale" Name="UpscaleButton" IsEnabled="False" Tapped="UpscaleButton_OnTapped">
+                        <AppBarButton.KeyboardAccelerators>
+                            <KeyboardAccelerator Key="F8"
+                                                 Invoked="Upscale_OnInvoked"></KeyboardAccelerator>
+                        </AppBarButton.KeyboardAccelerators>
+                    </AppBarButton>
                 </CommandBar.SecondaryCommands>
             </CommandBar>
             
