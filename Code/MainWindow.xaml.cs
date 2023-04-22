@@ -201,17 +201,24 @@ namespace MediFiler_V2.Code
         private void FolderListClick(RoutedEventArgs e, bool leftClick)
         {
             if (((FrameworkElement)e.OriginalSource).DataContext is not FileSystemNode respectiveNode) return;
-            if (((FrameworkElement)e.OriginalSource).Name == "ExpandCollapseChevron") return;
+            var originalName = ((FrameworkElement)e.OriginalSource).Name;
+            if (originalName == "ExpandCollapseChevron") return;
+            if (originalName == "RootGrid") return;
+            //Debug.WriteLine( ((FrameworkElement)e.OriginalSource).Name );
 
             if (leftClick)
             {
-                _model.CurrentFolder.IsCurrentFolder = false;
-                _model.SwitchFolder(respectiveNode); 
                 respectiveNode.IsCurrentFolder = true;
                 respectiveNode.IsExpanded = true;
+                _model.CurrentFolder.IsCurrentFolder = false;
+                _model.SwitchFolder(respectiveNode); 
             }
             else
-            { _model.MoveFile(respectiveNode); }
+            {
+                _model.MoveFile(respectiveNode);
+                _model.CurrentFolder.FolderColor = true;
+                respectiveNode.FolderColor = true; 
+            }
         }
 
         private void FolderListLeftClick(object sender, TappedRoutedEventArgs e)
@@ -257,6 +264,60 @@ namespace MediFiler_V2.Code
                 ((FrameworkElement)e.OriginalSource).Name != "TextViewer") return;
             _model.FileAction();
         }
+        
+                
+        // Toggle showing folder buttons
+        private void FolderItem_OnPointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            var treeViewItem = sender as TreeViewItem;
+            var dropDownButton = FindVisualChild<DropDownButton>(treeViewItem);
+            dropDownButton.Visibility = Visibility.Visible;
+        }
+
+        private void FolderItem_OnPointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            var treeViewItem = sender as TreeViewItem;
+            var dropDownButton = FindVisualChild<DropDownButton>(treeViewItem);
+            dropDownButton.Visibility = Visibility.Collapsed;
+        }
+
+        private T FindVisualChild<T>(DependencyObject obj) where T : DependencyObject
+        {
+            if (obj == null) return null;
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(obj); i++)
+            {
+                var child = VisualTreeHelper.GetChild(obj, i);
+                if (child != null && child is T) return (T)child;
+                else
+                {
+                    var result = FindVisualChild<T>(child);
+                    if (result != null) return result;
+                }
+            }
+            return null;
+        }
+
+        // New folder
+        private void NewFolder_OnPointerPressed(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
+        {
+            if (((FrameworkElement)tappedRoutedEventArgs.OriginalSource).DataContext is not FileSystemNode node) return;
+            _model.CreateFolderDialog(node);
+        }
+        
+        // Rename folder
+        private void RenameFolder_OnPointerPressed(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
+        {
+            if (((FrameworkElement)tappedRoutedEventArgs.OriginalSource).DataContext is not FileSystemNode node) return;
+            _model.RenameFolderDialog(node);
+        }
+        
+        // Delete folder
+        private void DeleteFolder_OnPointerPressed(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
+        {
+            if (((FrameworkElement)tappedRoutedEventArgs.OriginalSource).DataContext is not FileSystemNode node) return;
+            _model.DeleteFolderDialog(node);
+        }
+        
         
 
         #endregion
@@ -324,8 +385,8 @@ namespace MediFiler_V2.Code
             //ApplicationDataContainer  localSettings = ApplicationData.Current.LocalSettings;
             //localSettings.Values["SortPanelPinned"] = _sortPanelPinned.ToString();
         }
-        
-        
+
+
         #endregion
         // // // LOADING // // //
         

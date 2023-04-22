@@ -482,6 +482,132 @@ public class MainWindowModel
         RenameFile(newName);
     }
     
+    // // // FOLDER MANIPULATION // // //
+    
+    // Create new folder
+    public async void CreateFolderDialog(FileSystemNode node)
+    {
+        // Create a ContentDialog box with a text input field
+        var dialog = new ContentDialog
+        {
+            Title = "Create new folder",
+            Content = new TextBox
+            {
+                AcceptsReturn = false
+            },
+            PrimaryButtonText = "Create",
+            SecondaryButtonText = "Cancel",
+            XamlRoot = _mainWindow.Content.XamlRoot,
+            DefaultButton = ContentDialogButton.Primary
+        };
+        var result = await dialog.ShowAsync();
+
+        if (result != ContentDialogResult.Primary) return;
+
+        var folderName = ((TextBox)dialog.Content).Text;
+        
+        CreateFolder(folderName, node);
+    }
+    
+    private async void CreateFolder(string folderName, FileSystemNode node)
+    {
+        // Only allow valid File names
+        var invalidCharsRegex = new Regex("[\\\\/:*?\"<>|]");
+        if (string.IsNullOrWhiteSpace(folderName) || invalidCharsRegex.IsMatch(folderName))
+        {
+            var errorDialog = new ContentDialog
+            {
+                Title = "Invalid Folder Name",
+                Content = "Folder names cannot contain following characters: \\ / : * ? \" < > |",
+                PrimaryButtonText = "OK",
+                XamlRoot = _mainWindow.Content.XamlRoot,
+                DefaultButton = ContentDialogButton.Primary
+            };
+            await errorDialog.ShowAsync();
+            return;
+        }
+        
+        // Create the folder
+        var newFolder = await node.Folder.CreateFolderAsync(folderName);
+        // Add the folder to the current folder
+        node.SubFolders.Add(new FileSystemNode(newFolder, CurrentFolder.Depth + 1));
+        FullRefresh();
+    }
+    
+    // Delete folder
+    public async void DeleteFolderDialog(FileSystemNode node)
+    {
+        // Create a ContentDialog box with a text input field
+        var dialog = new ContentDialog
+        {
+            Title = "Delete Folder",
+            Content = "Are you sure you want to delete this folder to the recycling bin?",
+            PrimaryButtonText = "Delete",
+            SecondaryButtonText = "Cancel",
+            XamlRoot = _mainWindow.Content.XamlRoot,
+            DefaultButton = ContentDialogButton.Primary
+        };
+        var result = await dialog.ShowAsync();
+
+        if (result != ContentDialogResult.Primary) return;
+
+        DeleteFolder(node);
+    }
+
+    private async void DeleteFolder(FileSystemNode node)
+    {
+        await node.Folder.DeleteAsync(StorageDeleteOption.Default);
+        if (node == CurrentFolder) { SwitchFolder(TreeHandler.RootNodes[0]); }
+        FullRefresh();
+    }
+
+    public async void RenameFolderDialog(FileSystemNode node)
+    {
+        // Create a ContentDialog box with a text input field
+        var dialog = new ContentDialog
+        {
+            Title = "Rename Folder",
+            Content = new TextBox
+            {
+                AcceptsReturn = false
+            },
+            PrimaryButtonText = "Rename",
+            SecondaryButtonText = "Cancel",
+            XamlRoot = _mainWindow.Content.XamlRoot,
+            DefaultButton = ContentDialogButton.Primary
+        };
+        var result = await dialog.ShowAsync();
+
+        if (result != ContentDialogResult.Primary) return;
+
+        var newName = ((TextBox)dialog.Content).Text;
+        
+        RenameFolder(newName, node);
+    }
+    
+    private async void RenameFolder(string newName, FileSystemNode node)
+    {
+        // Only allow valid File names
+        var invalidCharsRegex = new Regex("[\\\\/:*?\"<>|]");
+        if (string.IsNullOrWhiteSpace(newName) || invalidCharsRegex.IsMatch(newName))
+        {
+            var errorDialog = new ContentDialog
+            {
+                Title = "Invalid Folder Name",
+                Content = "Folder names cannot contain following characters: \\ / : * ? \" < > |",
+                PrimaryButtonText = "OK",
+                XamlRoot = _mainWindow.Content.XamlRoot,
+                DefaultButton = ContentDialogButton.Primary
+            };
+            await errorDialog.ShowAsync();
+            return;
+        }
+        
+        // Rename the folder
+        await node.Folder.RenameAsync(newName);
+        FullRefresh();
+    }
+    
     
     // TODO: Refactor into own class
     // // // UNDO QUEUE // // //

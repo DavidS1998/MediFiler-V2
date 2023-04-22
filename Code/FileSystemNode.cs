@@ -29,7 +29,11 @@ namespace MediFiler_V2
             get { return _fileCount; } 
             set { _fileCount = value; OnPropertyChanged(nameof(FileCount)); } }
         public int ChildFileCount { get { return FileCount + SubFolders.Sum(f => f.ChildFileCount); } }
-        public Brush FolderColor { get; set; }
+        
+        private bool _folderColor;
+        public bool FolderColor { 
+            get { return _folderColor; } 
+            set { _folderColor = value; OnPropertyChanged(nameof(FolderColor)); } }
         
         private bool _isCurrentFolder;
         public bool IsCurrentFolder { 
@@ -98,7 +102,7 @@ namespace MediFiler_V2
         }
         
         // Color of the folder in the tree view
-        public Brush GetColor()
+        public Brush GetColor(bool folderColor)
         {
             var color = ConditionalColoring();
             var brush = new SolidColorBrush(color);
@@ -137,7 +141,6 @@ namespace MediFiler_V2
 
         public Brush ActiveFolderBackgroundColor(bool isCurrentFolder)
         {
-            Debug.WriteLine("ActiveFolderBackgroundColor");
             return isCurrentFolder ? 
                 new SolidColorBrush(Color.FromArgb(16, 255, 255, 255)) : 
                 new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));

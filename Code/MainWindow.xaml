@@ -276,14 +276,16 @@
                             <TreeView.ItemTemplate>
                                 <DataTemplate x:DataType="local:FileSystemNode">
                                     <TreeViewItem
+                                        Name="FolderItem"
                                         ItemsSource="{x:Bind SubFolders}"
                                         IsExpanded="{x:Bind ConditionalExpand(IsExpanded), Mode=OneWay}"
                                         CanDrag="False"
                                         Background="{x:Bind ActiveFolderBackgroundColor(IsCurrentFolder), Mode=OneWay}"
                                         Padding="0,-1" Margin="0,-1"
-                                        Tapped="FolderListLeftClick" RightTapped="FolderListRightClick">
-                                        <Grid Margin="0" Padding="0" IsHitTestVisible="False">
-                                            <TextBlock Foreground="{x:Bind GetColor()}"
+                                        Tapped="FolderListLeftClick" RightTapped="FolderListRightClick"
+                                        PointerExited="FolderItem_OnPointerExited" PointerEntered="FolderItem_OnPointerEntered">
+                                        <Grid Margin="0" Padding="0" Name="FolderGrid">
+                                            <TextBlock Foreground="{x:Bind GetColor(FolderColor), Mode=OneWay}"
                                                        Margin="0"
                                                        FontSize="12"
                                                        VerticalAlignment="Center"
@@ -291,6 +293,20 @@
                                                        IsHitTestVisible="False"
                                                        ToolTipService.ToolTip="{x:Bind Name}"
                                                        Text="{x:Bind GetFormattedText(FileCount, Name, ChildFileCount), Mode=OneWay}"/>
+                                            <DropDownButton 
+                                                Name="FolderDropDown"
+                                                Visibility="Collapsed"
+                                                Background="Black" 
+                                                HorizontalAlignment="Right" VerticalAlignment="Center" 
+                                                Height="18" Width="22" Margin="0,0,8,0">
+                                                <DropDownButton.Flyout>
+                                                    <MenuFlyout>
+                                                        <MenuFlyoutItem Text="New folder" Tapped="NewFolder_OnPointerPressed"/>
+                                                        <MenuFlyoutItem Text="Rename folder" Tapped="RenameFolder_OnPointerPressed"/>
+                                                        <MenuFlyoutItem Text="Delete folder" Tapped="DeleteFolder_OnPointerPressed"/>
+                                                    </MenuFlyout>
+                                                </DropDownButton.Flyout>
+                                            </DropDownButton>
                                         </Grid>
                                     </TreeViewItem>
                                 </DataTemplate>
