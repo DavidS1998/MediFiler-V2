@@ -78,32 +78,14 @@ namespace MediFiler_V2.Code
             _model = new MainWindowModel(this);
             SetSelectedItem("Home");
             
-            ReadJsonFile();
+            ReadJsonFile(); // Loads settings
             UpdateHomeFolders();
             
             _imageTransformGroup.Children.Add(_translateTransform);
             _imageTransformGroup.Children.Add(_scaleTransform);
             ImageViewer.RenderTransform = _imageTransformGroup;
-            
-            //LoadSettings();
         }
 
-        public void LoadSettings()
-        {
-            /*
-            // Check if local settings exist
-            var  localSettings = ApplicationData.Current.LocalSettings;
-
-            // Null check
-            if (localSettings.Values["SortPanelPinned"] == null)
-            {
-                localSettings.Values["SortPanelPinned"] = true;
-            }
-            _sortPanelPinned = localSettings.Values["SortPanelPinned"] is bool && (bool)localSettings.Values["SortPanelPinned"];
-            TogglePin();
-            */
-        }
-        
         public void ToggleFullscreen()
         {
             if (_appWindow.Presenter.Kind == AppWindowPresenterKind.FullScreen)
@@ -377,10 +359,10 @@ namespace MediFiler_V2.Code
         // Pin
         private void TogglePin()
         {
-            _sortPanelPinned = !_sortPanelPinned; 
             SortPanel.Opacity = _sortPanelPinned ? 1 : 0;
             PinButton.Icon = _sortPanelPinned ? new SymbolIcon(Symbol.UnPin) : new SymbolIcon(Symbol.Pin);
             
+            UpdateJsonFile();
             // Save _sortPanelPinned to settings
             //ApplicationDataContainer  localSettings = ApplicationData.Current.LocalSettings;
             //localSettings.Values["SortPanelPinned"] = _sortPanelPinned.ToString();
@@ -515,6 +497,7 @@ namespace MediFiler_V2.Code
         {
             public Dictionary<string, QuickFolder> QuickFolders { get; set; }
             public Dictionary<string, QuickFolder> FavoriteFolders { get; set; }
+            public bool SortPanelPinned { get; set; }
         }
         private Dictionary<string, QuickFolder> QuickFolders = new();
         private Dictionary<string, QuickFolder> FavoriteFolders = new();
@@ -537,6 +520,8 @@ namespace MediFiler_V2.Code
             var rootObject = JsonSerializer.Deserialize<SettingsRoot>(json);
             if (rootObject != null) QuickFolders = rootObject.QuickFolders;
             if (rootObject != null) FavoriteFolders = rootObject.FavoriteFolders;
+            if (rootObject != null) _sortPanelPinned = rootObject.SortPanelPinned;
+            TogglePin();
         }
 
         private void AddQuickFolder(FileSystemNode node)
@@ -577,22 +562,27 @@ namespace MediFiler_V2.Code
         private void UpdateJsonFile()
         {
             // Create a dictionary with a single key-value pair for QuickFolders
-            var dictionary = new Dictionary<string, Dictionary<string, QuickFolder>>();
-            dictionary.Add("QuickFolders", QuickFolders);
-            dictionary.Add("FavoriteFolders", FavoriteFolders);
+            var quickFolders = new Dictionary<string, QuickFolder>();
+            foreach (var folder in QuickFolders)
+            {
+                quickFolders.Add(folder.Key, folder.Value);
+            }
+
+            var dictionary = new Dictionary<string, object>
+            {
+                { "QuickFolders", quickFolders },
+                { "FavoriteFolders", FavoriteFolders },
+                { "SortPanelPinned", _sortPanelPinned }
+            };
 
             // Serialize the dictionary to JSON
-            var json = JsonSerializer.Serialize(dictionary);
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            var json = JsonSerializer.Serialize(dictionary, options);
 
             // Serialize and write the prettified JSON to appsettings.json
-            using (var stream = new FileStream("appsettings.json", FileMode.Create))
-            {
-                using (var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true }))
-                {
-                    JsonDocument.Parse(json).RootElement.WriteTo(writer);
-                }
-            }
+            File.WriteAllText("appsettings.json", json);
         }
+
 
         
         #endregion
@@ -625,7 +615,7 @@ namespace MediFiler_V2.Code
         
         // Pin button
         private void Pin_OnPointerReleased(object sender, TappedRoutedEventArgs e)
-        { TogglePin();
+        { _sortPanelPinned = !_sortPanelPinned; TogglePin();
         }    
         
         // Fullscreen button
@@ -674,35 +664,23 @@ namespace MediFiler_V2.Code
         
         // Tab - Pin
         private void Pin_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-        { TogglePin(); args.Handled = true; }        
+        { _sortPanelPinned = !_sortPanelPinned; TogglePin(); args.Handled = true; }        
         
         // F11 - Fullscreen
         private void Fullscreen_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-        {
-            ToggleFullscreen();
-            args.Handled = true;
-        }        
+        { ToggleFullscreen(); args.Handled = true; }        
         
         // F6 - Plus
         private void Plus_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-        {
-            _model.AddPlus();
-            args.Handled = true;
-        }
+        { _model.AddPlus(); args.Handled = true; }
         
         // F7 - Minus
         private void Minus_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-        {
-            _model.RemovePlus();
-            args.Handled = true;
-        }
+        { _model.RemovePlus(); args.Handled = true; }
         
         // F8 - Upscale
         private void Upscale_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-        {
-            _model.Upscale();
-            args.Handled = true;
-        }
+        { _model.Upscale(); args.Handled = true; }
 
         
         // // // FILE MANIPULATION // // //
