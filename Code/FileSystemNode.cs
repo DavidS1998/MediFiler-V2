@@ -31,6 +31,11 @@ namespace MediFiler_V2
         public int ChildFileCount { get { return FileCount + SubFolders.Sum(f => f.ChildFileCount); } }
         public Brush FolderColor { get; set; }
         
+        private bool _isCurrentFolder;
+        public bool IsCurrentFolder { 
+            get { return _isCurrentFolder; }
+            set { _isCurrentFolder = value; OnPropertyChanged(nameof(IsCurrentFolder)); } }
+        
         private static bool _isExpanded;
         public bool IsExpanded { 
             get { return _isExpanded; } 
@@ -120,7 +125,7 @@ namespace MediFiler_V2
                 _ when Name.StartsWith("+") => Color.FromArgb(255, 50, 150, 50),
                 // Standard folder coloring
                 _ when IsFile => Color.FromArgb(0, 150, 150, 150),
-                _ when FileCount == 0 => Color.FromArgb(128, 255, 255, 255),
+                _ when FileCount == 0 => Color.FromArgb(64, 255, 255, 255),
                 _ when FileCount >= 100 => Color.FromArgb(255, 255, 0, 0),
                 _ when Depth == 0 => Color.FromArgb(255, 255, 255, 255),
                 _ when Depth == 1 => Color.FromArgb(255, 255, 255, 255),
@@ -130,9 +135,18 @@ namespace MediFiler_V2
             };
         }
 
-        public Color ActiveFolderBackgroundColor()
+        public Brush ActiveFolderBackgroundColor(bool isCurrentFolder)
         {
-            return Color.FromArgb(100, 255, 255, 255);
+            Debug.WriteLine("ActiveFolderBackgroundColor");
+            return isCurrentFolder ? 
+                new SolidColorBrush(Color.FromArgb(16, 255, 255, 255)) : 
+                new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
+        }
+
+        public void ExpandWhenClicked(bool isExpanded)
+        {
+            if (!IsExpanded)
+                IsExpanded = !IsExpanded;
         }
         
         public Visibility HasSubFolders()
@@ -140,10 +154,12 @@ namespace MediFiler_V2
             return SubFolders.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         }
         
-        public bool ConditionalExpand()
+        public bool ConditionalExpand(bool isExpanded)
         {
+
             return Name switch
             {
+                _ when _isCurrentFolder => true,
                 _ when Name.Contains("[CREATOR]") => false,
                 _ when Name.Contains("[SORT]") => false,
                 _ when Name.Contains("[META]") => false,
@@ -153,8 +169,8 @@ namespace MediFiler_V2
                 _ => true
             };
         }
-        
-        
+
+
 
         // Reloads all files within this folder node
         public void LocalRefresh()

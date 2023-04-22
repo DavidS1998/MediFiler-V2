@@ -110,7 +110,7 @@
                                              Invoked="Minus_OnInvoked"></KeyboardAccelerator>
                     </AppBarButton.KeyboardAccelerators>
                 </AppBarButton>
-                <AppBarButton Icon="Fullscreen" Label="Pin sorting menu" Tapped="Fullscreen_OnPointerReleased"
+                <AppBarButton Icon="Fullscreen" Label="Toggle fullscreen" Tapped="Fullscreen_OnPointerReleased"
                               IsEnabled="True" Name="FullscreenButton"
                               Width="32">
                     <AppBarButton.KeyboardAccelerators>
@@ -277,8 +277,9 @@
                                 <DataTemplate x:DataType="local:FileSystemNode">
                                     <TreeViewItem
                                         ItemsSource="{x:Bind SubFolders}"
-                                        IsExpanded="{x:Bind ConditionalExpand(), Mode=OneWay}"
+                                        IsExpanded="{x:Bind ConditionalExpand(IsExpanded), Mode=OneWay}"
                                         CanDrag="False"
+                                        Background="{x:Bind ActiveFolderBackgroundColor(IsCurrentFolder), Mode=OneWay}"
                                         Padding="0,-1" Margin="0,-1"
                                         Tapped="FolderListLeftClick" RightTapped="FolderListRightClick">
                                         <Grid Margin="0" Padding="0" IsHitTestVisible="False">

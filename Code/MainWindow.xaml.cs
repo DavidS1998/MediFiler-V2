@@ -204,7 +204,12 @@ namespace MediFiler_V2.Code
             if (((FrameworkElement)e.OriginalSource).Name == "ExpandCollapseChevron") return;
 
             if (leftClick)
-            { _model.SwitchFolder(respectiveNode); }
+            {
+                _model.CurrentFolder.IsCurrentFolder = false;
+                _model.SwitchFolder(respectiveNode); 
+                respectiveNode.IsCurrentFolder = true;
+                respectiveNode.IsExpanded = true;
+            }
             else
             { _model.MoveFile(respectiveNode); }
         }
@@ -339,6 +344,7 @@ namespace MediFiler_V2.Code
 
             // By default load the first dropped root
             _model.CurrentFolder = TreeHandler.LoadRootNode(0);
+            _model.CurrentFolder.IsCurrentFolder = true;
             _model.SwitchFolder(_model.CurrentFolder);
             
             RebuildButton.IsEnabled = true;
