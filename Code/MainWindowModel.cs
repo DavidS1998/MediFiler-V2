@@ -569,6 +569,7 @@ public class MainWindowModel
             Title = "Rename Folder",
             Content = new TextBox
             {
+                Text = node.Folder.Name,
                 AcceptsReturn = false
             },
             PrimaryButtonText = "Rename",
@@ -581,6 +582,7 @@ public class MainWindowModel
         if (result != ContentDialogResult.Primary) return;
 
         var newName = ((TextBox)dialog.Content).Text;
+        if (newName == node.Folder.Name) return;
         
         RenameFolder(newName, node);
     }

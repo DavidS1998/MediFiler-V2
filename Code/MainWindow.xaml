@@ -250,7 +250,7 @@
 
                     <!--Sorting side panel-->
                     <Grid Name="SortPanel" Margin="-1,-1,0,0">
-                        <Grid Name="SortBackground" Width="350" HorizontalAlignment="Left">
+                        <Grid Name="SortBackground" Width="450" HorizontalAlignment="Left">
                             <Grid.Background>
                                 <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
                                     <LinearGradientBrush.RelativeTransform>
@@ -262,16 +262,48 @@
                                         </TransformGroup>
                                     </LinearGradientBrush.RelativeTransform>
                                     <GradientStop Color="#E5000000"/>
-                                    <GradientStop Color="#99000000" Offset="0.7"/>
+                                    <GradientStop Color="#99000000" Offset="0.8"/>
                                     <GradientStop Color="#00000000" Offset="1"/>
                                 </LinearGradientBrush>
                             </Grid.Background>
                         </Grid>
                         
+                        <!--FAVORITES-->
+                        <ListView
+                            Name="FavoriteView" Background="Transparent" HorizontalAlignment="Left" Width="76"
+                            VerticalAlignment="Stretch" CanDrag="False" CanDragItems="False" CanReorderItems="False"
+                            SelectionMode="None" Margin="-15,0,0,150"
+                            PointerMoved="SortView_OnPointerMoved" PointerExited="SortView_OnPointerExited">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="code:QuickFolder">
+                                    <Button Background="Transparent" 
+                                          VerticalAlignment="Center"
+                                          HorizontalAlignment="Stretch"
+                                          Height="40"
+                                          Margin="0,1"
+                                          Padding="0,8"
+                                          Tapped="Favorite_OnTapped"
+                                          RightTapped="Favorite_OnRightTapped">
+                                        <ToolTipService.ToolTip>
+                                            <TextBlock>
+                                                <Run Text="{x:Bind Name}" />
+                                                <LineBreak />
+                                                <Run Text="{x:Bind Path}" />
+                                            </TextBlock>
+                                        </ToolTipService.ToolTip>
+                                        <TextBlock
+                                                Text="{x:Bind GetInitials()}"
+                                                TextAlignment="Center"/>
+                                    </Button>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                        
+                        <!--ACTIVE FOLDER-->
                         <TreeView
                             Name="FileTreeView" Background="Transparent" HorizontalAlignment="Left" Width="350"
                             VerticalAlignment="Stretch" CanDrag="False" CanDragItems="False" CanReorderItems="False"
-                            SelectionMode="None" Margin="0,0,0,150"
+                            SelectionMode="None" Margin="60,0,0,150"
                             PointerMoved="SortView_OnPointerMoved" PointerExited="SortView_OnPointerExited">
                             <TreeView.ItemTemplate>
                                 <DataTemplate x:DataType="local:FileSystemNode">
@@ -283,6 +315,7 @@
                                         Background="{x:Bind ActiveFolderBackgroundColor(IsCurrentFolder), Mode=OneWay}"
                                         Padding="0,-1" Margin="0,-1"
                                         Tapped="FolderListLeftClick" RightTapped="FolderListRightClick"
+                                        ToolTipService.ToolTip="{x:Bind Name}"
                                         PointerExited="FolderItem_OnPointerExited" PointerEntered="FolderItem_OnPointerEntered">
                                         <Grid Margin="0" Padding="0" Name="FolderGrid">
                                             <TextBlock Foreground="{x:Bind GetColor(FolderColor), Mode=OneWay}"
@@ -291,7 +324,6 @@
                                                        VerticalAlignment="Center"
                                                        FontStretch="UltraCondensed"
                                                        IsHitTestVisible="False"
-                                                       ToolTipService.ToolTip="{x:Bind Name}"
                                                        Text="{x:Bind GetFormattedText(FileCount, Name, ChildFileCount), Mode=OneWay}"/>
                                             <DropDownButton 
                                                 Name="FolderDropDown"

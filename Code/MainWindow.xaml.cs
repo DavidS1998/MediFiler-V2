@@ -80,10 +80,15 @@ namespace MediFiler_V2.Code
             
             ReadJsonFile(); // Loads settings
             UpdateHomeFolders();
-            
+
             _imageTransformGroup.Children.Add(_translateTransform);
             _imageTransformGroup.Children.Add(_scaleTransform);
             ImageViewer.RenderTransform = _imageTransformGroup;
+        }
+
+        public void UpdateFavoriteList()
+        {
+            FavoriteView.ItemsSource = FavoriteFolders.Values.OrderBy(x => x.Name);
         }
 
         public void ToggleFullscreen()
@@ -425,8 +430,8 @@ namespace MediFiler_V2.Code
             };
 
             // System initializer for FolderPicker
-            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);     
-            WinRT.Interop.InitializeWithWindow.Initialize(openPicker, hwnd);
+            var hwnd = WindowNative.GetWindowHandle(this);     
+            InitializeWithWindow.Initialize(openPicker, hwnd);
             
             var folder = await openPicker.PickSingleFolderAsync();
 
@@ -457,12 +462,12 @@ namespace MediFiler_V2.Code
             if (!Directory.Exists(quickFolder.Path))
             {
                 var file = StorageFile.GetFileFromPathAsync(quickFolder.Path).GetAwaiter().GetResult();
-                item = (IStorageItem)file;
+                item = file;
             }
             else
             {
                 var folder = StorageFolder.GetFolderFromPathAsync(quickFolder.Path).GetAwaiter().GetResult();
-                item = (IStorageItem)folder;
+                item = folder;
             }
 
             // Load folder
@@ -511,6 +516,8 @@ namespace MediFiler_V2.Code
             RecentFoldersView.ItemsSource = QuickFolders.Values.OrderByDescending(x => x.LastOpened);
             MostOpenedFoldersView.ItemsSource = QuickFolders.Values.OrderByDescending(x => x.TimesOpened);
             FavoriteFoldersView.ItemsSource = FavoriteFolders.Values.OrderBy(x => x.Name);
+            
+            UpdateFavoriteList();
         }
         
         private void ReadJsonFile()
@@ -539,10 +546,9 @@ namespace MediFiler_V2.Code
             }
             
             // New QuickFolder
-            var quickFolder = new QuickFolder
+            var quickFolder = new QuickFolder(node.Name)
             {
                 Path = node.Path,
-                Name = node.Name,
                 LastOpened = DateTime.Now,
                 TimesOpened = 1
             };
@@ -615,8 +621,7 @@ namespace MediFiler_V2.Code
         
         // Pin button
         private void Pin_OnPointerReleased(object sender, TappedRoutedEventArgs e)
-        { _sortPanelPinned = !_sortPanelPinned; TogglePin();
-        }    
+        { _sortPanelPinned = !_sortPanelPinned; TogglePin(); }    
         
         // Fullscreen button
         private void Fullscreen_OnPointerReleased(object sender, TappedRoutedEventArgs e)
@@ -832,6 +837,26 @@ namespace MediFiler_V2.Code
 
             _isDragging = false;
             ImageViewer.ReleasePointerCapture(e.Pointer);
+        }
+        
+        // Open folder
+        private void Favorite_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            QuickFolderClick(sender, e);
+        }
+
+        // 
+        private void Favorite_OnRightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+            var quickFolder = (QuickFolder) ((FrameworkElement) sender).DataContext;
+            if (quickFolder == null) return;
+            
+            // Get storage item at path
+            IStorageFolder folder = StorageFolder.GetFolderFromPathAsync(quickFolder.Path).AsTask().Result;
+            if (folder == null) return;
+            
+            var node = new FileSystemNode(folder, 0);
+            _model.MoveFile(node);
         }
     }
 }
