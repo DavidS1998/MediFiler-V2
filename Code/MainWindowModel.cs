@@ -407,13 +407,13 @@ public class MainWindowModel
             Content = new TextBox
             {
                 // Text is the current file name without the extension
-                Text = CurrentFolder.SubFiles[CurrentFolderIndex].Name.Replace("." + fileExtension, ""),
-                AcceptsReturn = false
+                SelectedText = CurrentFolder.SubFiles[CurrentFolderIndex].Name.Replace("." + fileExtension, ""),
+                AcceptsReturn = false,
             },
             PrimaryButtonText = "Rename",
             SecondaryButtonText = "Cancel",
             XamlRoot = _mainWindow.Content.XamlRoot,
-            DefaultButton = ContentDialogButton.Primary
+            DefaultButton = ContentDialogButton.Primary,
         };
         var result = await dialog.ShowAsync();
 
@@ -569,7 +569,7 @@ public class MainWindowModel
             Title = "Rename Folder",
             Content = new TextBox
             {
-                Text = node.Folder.Name,
+                SelectedText = node.Folder.Name,
                 AcceptsReturn = false
             },
             PrimaryButtonText = "Rename",
