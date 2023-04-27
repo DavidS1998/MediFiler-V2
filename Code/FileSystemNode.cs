@@ -48,12 +48,14 @@ namespace MediFiler_V2
         public IStorageFile File { get; set; }
         public IStorageFolder Folder { get; set; }
 
-        public FileSystemNode(IStorageItem storageItem, int depth, FileSystemNode parent = null)
+        public FileSystemNode(IStorageItem storageItem, int depth, FileSystemNode parent = null, bool temp = false)
         {
             Name = storageItem.Name;
             Path = storageItem.Path;
             Depth = depth;
             Parent = parent;
+
+            if (temp) return;
 
             // If root node is a file, pretend it's a folder with only this as a file
             if (depth == 0 && storageItem is StorageFile)

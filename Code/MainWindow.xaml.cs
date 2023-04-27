@@ -855,7 +855,7 @@ namespace MediFiler_V2.Code
             IStorageFolder folder = StorageFolder.GetFolderFromPathAsync(quickFolder.Path).AsTask().Result;
             if (folder == null) return;
             
-            var node = new FileSystemNode(folder, 0);
+            var node = new FileSystemNode(folder, 0, null, true);
             _model.MoveFile(node);
         }
     }

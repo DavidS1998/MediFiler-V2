@@ -5,7 +5,6 @@
     xmlns:local="using:MediFiler_V2"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:sys="using:System"
     xmlns:code="using:MediFiler_V2.Code"
     mc:Ignorable="d">
 
