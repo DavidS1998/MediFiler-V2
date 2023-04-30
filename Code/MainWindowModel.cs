@@ -526,12 +526,20 @@ public class MainWindowModel
             await errorDialog.ShowAsync();
             return;
         }
-        
-        // Create the folder
-        var newFolder = await node.Folder.CreateFolderAsync(folderName);
-        // Add the folder to the current folder
-        node.SubFolders.Add(new FileSystemNode(newFolder, CurrentFolder.Depth + 1));
-        FullRefresh();
+
+        try
+        {
+            // Create the folder
+            var newFolder = await node.Folder.CreateFolderAsync(folderName);
+            // Add the folder to the current folder
+            node.SubFolders.Add(new FileSystemNode(newFolder, CurrentFolder.Depth + 1));
+            //FullRefresh();
+            TreeHandler.RebuildTree(_mainWindow.FileTreeView1);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Error creating folder: " + e);
+        }
     }
     
     // Delete folder
@@ -556,9 +564,18 @@ public class MainWindowModel
 
     private async void DeleteFolder(FileSystemNode node)
     {
-        await node.Folder.DeleteAsync(StorageDeleteOption.Default);
-        if (node == CurrentFolder) { SwitchFolder(TreeHandler.RootNodes[0]); }
-        FullRefresh();
+        try
+        {
+            await node.Folder.DeleteAsync(StorageDeleteOption.Default);
+            node.Parent.SubFolders.Remove(node);
+            TreeHandler.RebuildTree(_mainWindow.FileTreeView1);
+            //FullRefresh();
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine("Error deleting folder: " + e.Message);
+            SwitchFolder(TreeHandler.RootNodes[0]);
+        }
     }
 
     public async void RenameFolderDialog(FileSystemNode node)
@@ -606,8 +623,17 @@ public class MainWindowModel
         }
         
         // Rename the folder
-        await node.Folder.RenameAsync(newName);
-        FullRefresh();
+        try
+        {
+            await node.Folder.RenameAsync(newName);
+            node.Name = newName;
+            TreeHandler.RebuildTree(_mainWindow.FileTreeView1);
+            //FullRefresh();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Folder already exists: " + e);
+        }
     }
     
     
