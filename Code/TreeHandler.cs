@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.Storage;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Controls;
 
 namespace MediFiler_V2;
@@ -36,7 +37,8 @@ public static class TreeHandler
                 AddFolderToTree(node);
             }
         });
-        AssignTreeToUserInterface(fileTreeView);
+        fileTreeView.ItemsSource = null;
+        fileTreeView.ItemsSource = RootNodes;
         
         // Print performance data
         stopwatch.Stop();
@@ -71,11 +73,14 @@ public static class TreeHandler
         FullFolderList.Clear();
     }
 
-    public static void AssignTreeToUserInterface(TreeView fileTreeView)
+    public static void AssignTreeToUserInterface(TreeView fileTreeView, DispatcherQueue queue)
     {
-        fileTreeView.ItemsSource = null;
-        fileTreeView.ItemsSource = RootNodes;
-        //fileTreeView.ItemsSource = FullFolderList;
+        // Invoke fileTreeView update on the UI thread
+        queue.TryEnqueue(() =>
+        {
+            fileTreeView.ItemsSource = null;
+            fileTreeView.ItemsSource = RootNodes;
+        });
     }
     
     public static FileSystemNode LoadRootNode(int index)

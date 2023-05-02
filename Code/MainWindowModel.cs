@@ -507,7 +507,7 @@ public class MainWindowModel
 
         var folderName = ((TextBox)dialog.Content).Text;
         
-        CreateFolder(folderName, node);
+        await Task.Run(() => CreateFolder(folderName, node));
     }
     
     private async void CreateFolder(string folderName, FileSystemNode node)
@@ -532,7 +532,7 @@ public class MainWindowModel
         {
             var newFolder = await node.Folder.CreateFolderAsync(folderName);
             node.SubFolders.Add(new FileSystemNode(newFolder, CurrentFolder.Depth + 1, node));
-            TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1);
+            TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1, _mainWindow.dispatcherQueue);
             await Task.Delay(1);
             Debug.WriteLine("Finished");
         }
@@ -559,8 +559,10 @@ public class MainWindowModel
 
         if (result != ContentDialogResult.Primary) return;
         
-        DeleteFolder(node);
+        // Run DeleteFolder() on a separate thread using Task
+        await Task.Run(() => DeleteFolder(node));
     }
+
 
     private async void DeleteFolder(FileSystemNode node)
     {
@@ -568,7 +570,9 @@ public class MainWindowModel
         {
             node.Parent.SubFolders.Remove(node);
             TreeHandler.FullFolderList.Remove(node);
-            TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1);
+            TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1, _mainWindow.dispatcherQueue);
+            
+            #pragma warning disable 4014
             node.Folder.DeleteAsync(StorageDeleteOption.Default);
             await Task.Delay(1);
             Debug.WriteLine("Finished");
@@ -629,7 +633,7 @@ public class MainWindowModel
         {
             await node.Folder.RenameAsync(newName);
             node.Name = newName;
-            TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1);
+            TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1, _mainWindow.dispatcherQueue);
             //FullRefresh();
         }
         catch (Exception e)

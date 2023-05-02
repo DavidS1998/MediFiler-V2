@@ -9,6 +9,7 @@ using Windows.Foundation;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Microsoft.UI;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -55,16 +56,17 @@ namespace MediFiler_V2.Code
         private AppWindow _appWindow;
         private readonly MainWindowModel _model;
         private bool _sortPanelPinned = true;
-
+        
+        public DispatcherQueue dispatcherQueue;
 
         // // // INITIALIZATION // // //
-
         
         /// Initialize window
         public MainWindow()
         {
             InitializeComponent();
-            
+            dispatcherQueue = DispatcherQueue.GetForCurrentThread();
+
             // Hide default title bar.
             ExtendsContentIntoTitleBar = true;
             SetTitleBar(AppTitleBar);
