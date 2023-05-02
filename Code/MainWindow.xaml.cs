@@ -645,7 +645,7 @@ namespace MediFiler_V2.Code
         
         // Upscale button
         private void UpscaleButton_OnTapped(object sender, TappedRoutedEventArgs e)
-        { _model.Upscale(); }
+        { _model.Upscale(2); }
 
 
         // // // KEYBOARD SHORTCUTS // // //
@@ -689,7 +689,7 @@ namespace MediFiler_V2.Code
         
         // F8 - Upscale
         private void Upscale_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-        { _model.Upscale(); args.Handled = true; }
+        { _model.Upscale(2); args.Handled = true; }
 
         
         // // // FILE MANIPULATION // // //

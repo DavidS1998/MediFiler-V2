@@ -47,7 +47,7 @@
                        Style="{StaticResource CaptionTextBlockStyle}"
                        VerticalAlignment="Center"
                        HorizontalAlignment="Left"
-                       Margin="44,0,0,0" />
+                       Margin="44,0,0,0"></TextBlock>
             
             <CommandBar HorizontalAlignment="Center" 
                 Background="Transparent" IsOpen="False" DefaultLabelPosition="Collapsed">

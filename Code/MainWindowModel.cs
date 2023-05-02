@@ -208,7 +208,7 @@ public class MainWindowModel
         await Launcher.LaunchFileAsync(currentFile.File, options);
     }
 
-    public async void Upscale()
+    public async void Upscale(double factor)
     {
         try
         {
@@ -230,7 +230,7 @@ public class MainWindowModel
 
             var pathWithoutFileName = currentFile.Path.Substring(0, currentFile.Path.LastIndexOf('\\') + 1);
             var newName = currentFile.File.Name.Insert(currentFile.File.Name.LastIndexOf('.'), "[U]");
-            var argument = " -s 2 -i \"" + currentFile.Path + "\" -o \"" + pathWithoutFileName + newName + "\"";
+            var argument = " -s " + factor + " -i \"" + currentFile.Path + "\" -o \"" + pathWithoutFileName + newName + "\"";
 
             Debug.WriteLine(argument);
 
@@ -679,6 +679,8 @@ public class MainWindowModel
                 break;
             case UndoAction.Move:
                 memento.Node.Move(memento.Parent);
+                CurrentFolder.FolderColor = true;
+                memento.Parent.FolderColor = true; // TODO: Bake into Move method
                 break;
         }
         

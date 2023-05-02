@@ -55,10 +55,10 @@ public static class TreeHandler
     }
 
     /// Rebuilds the tree from the root files
-    public static void RebuildTree(TreeView fileTreeView)
+    public static async void RebuildTree(TreeView fileTreeView)
     {
         FullFolderList.Clear();
-        BuildTree(rootFiles, fileTreeView);
+        await BuildTree(rootFiles, fileTreeView);
     }
 
     // // // Helper functions // // //
