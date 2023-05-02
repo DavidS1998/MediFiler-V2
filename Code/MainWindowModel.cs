@@ -531,7 +531,7 @@ public class MainWindowModel
         try
         {
             var newFolder = await node.Folder.CreateFolderAsync(folderName);
-            node.SubFolders.Add(new FileSystemNode(newFolder, CurrentFolder.Depth + 1, node));
+            node.SubFolders.Insert(0, new FileSystemNode(newFolder, CurrentFolder.Depth + 1, node));
             TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1, _mainWindow.dispatcherQueue);
             await Task.Delay(1);
             Debug.WriteLine("Finished");
@@ -606,8 +606,8 @@ public class MainWindowModel
 
         var newName = ((TextBox)dialog.Content).Text;
         if (newName == node.Folder.Name) return;
-        
-        RenameFolder(newName, node);
+
+        await Task.Run(() => RenameFolder(newName, node));
     }
     
     private async void RenameFolder(string newName, FileSystemNode node)
@@ -631,9 +631,13 @@ public class MainWindowModel
         // Rename the folder
         try
         {
-            await node.Folder.RenameAsync(newName);
             node.Name = newName;
+            node.Path = node.Parent.Path + "\\" + newName;
             TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1, _mainWindow.dispatcherQueue);
+            node.Folder.RenameAsync(newName);
+            await Task.Delay(1);
+            
+            Debug.WriteLine("Finished");
             //FullRefresh();
         }
         catch (Exception e)

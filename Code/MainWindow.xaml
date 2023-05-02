@@ -47,7 +47,7 @@
                        Style="{StaticResource CaptionTextBlockStyle}"
                        VerticalAlignment="Center"
                        HorizontalAlignment="Left"
-                       Margin="44,0,0,0"></TextBlock>
+                       Margin="44,0,0,0"/>
             
             <CommandBar HorizontalAlignment="Center" 
                 Background="Transparent" IsOpen="False" DefaultLabelPosition="Collapsed">
@@ -272,7 +272,7 @@
                             Name="FavoriteView" Background="Transparent" HorizontalAlignment="Left" Width="76"
                             VerticalAlignment="Stretch" CanDrag="False" CanDragItems="False" CanReorderItems="False"
                             SelectionMode="None" Margin="-15,0,0,150"
-                            PointerMoved="SortView_OnPointerMoved" PointerExited="SortView_OnPointerExited">
+                            PointerEntered="SortView_OnPointerMoved" PointerExited="SortView_OnPointerExited">
                             <ListView.ItemTemplate>
                                 <DataTemplate x:DataType="code:QuickFolder">
                                     <Button Background="Transparent" 
