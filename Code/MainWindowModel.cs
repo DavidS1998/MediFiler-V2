@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Intrinsics.X86;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.System;
 using Microsoft.UI;
@@ -369,7 +370,7 @@ public class MainWindowModel
 
         IStorageFolder baseDirectory = await StorageFolder.GetFolderFromPathAsync(AppDomain.CurrentDomain.BaseDirectory);
         var trashFolder = await baseDirectory.CreateFolderAsync("Trash", CreationCollisionOption.OpenIfExists);
-        var trashFolderNode = new FileSystemNode(trashFolder, 0);
+        var trashFolderNode = new FileSystemNode(trashFolder, 0, null);
         
         // Undo queue
         Push(CurrentFolder.SubFiles[CurrentFolderIndex].CreateMemento(UndoAction.Move));
@@ -529,16 +530,15 @@ public class MainWindowModel
 
         try
         {
-            // Create the folder
             var newFolder = await node.Folder.CreateFolderAsync(folderName);
-            // Add the folder to the current folder
-            node.SubFolders.Add(new FileSystemNode(newFolder, CurrentFolder.Depth + 1));
-            //FullRefresh();
-            TreeHandler.RebuildTree(_mainWindow.FileTreeView1);
+            node.SubFolders.Add(new FileSystemNode(newFolder, CurrentFolder.Depth + 1, node));
+            TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1);
+            await Task.Delay(1);
+            Debug.WriteLine("Finished");
         }
         catch (Exception e)
         {
-            Console.WriteLine("Error creating folder: " + e);
+            Debug.WriteLine("Error creating folder: " + e);
         }
     }
     
@@ -558,7 +558,7 @@ public class MainWindowModel
         var result = await dialog.ShowAsync();
 
         if (result != ContentDialogResult.Primary) return;
-
+        
         DeleteFolder(node);
     }
 
@@ -566,10 +566,12 @@ public class MainWindowModel
     {
         try
         {
-            await node.Folder.DeleteAsync(StorageDeleteOption.Default);
             node.Parent.SubFolders.Remove(node);
-            TreeHandler.RebuildTree(_mainWindow.FileTreeView1);
-            //FullRefresh();
+            TreeHandler.FullFolderList.Remove(node);
+            TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1);
+            node.Folder.DeleteAsync(StorageDeleteOption.Default);
+            await Task.Delay(1);
+            Debug.WriteLine("Finished");
         }
         catch (Exception e)
         {
@@ -627,12 +629,12 @@ public class MainWindowModel
         {
             await node.Folder.RenameAsync(newName);
             node.Name = newName;
-            TreeHandler.RebuildTree(_mainWindow.FileTreeView1);
+            TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1);
             //FullRefresh();
         }
         catch (Exception e)
         {
-            Console.WriteLine("Folder already exists: " + e);
+            Debug.WriteLine("Folder already exists: " + e);
         }
     }
     

@@ -384,6 +384,10 @@ namespace MediFiler_V2.Code
             // Show loading animation while building tree
             _model.CurrentFolder = null;
             _model.Clear(false);
+            ImageViewer.Visibility = Visibility.Visible;
+            TextHolder.Visibility = Visibility.Collapsed;
+            VideoHolder.Visibility = Visibility.Collapsed;
+            
             ImageViewer.Source = new BitmapImage(new Uri("ms-appx:///Assets/Loading.gif"));
             ImageViewer.Stretch = Stretch.None;
             await TreeHandler.BuildTree(items, FileTreeView);

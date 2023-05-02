@@ -48,7 +48,7 @@ namespace MediFiler_V2
         public IStorageFile File { get; set; }
         public IStorageFolder Folder { get; set; }
 
-        public FileSystemNode(IStorageItem storageItem, int depth, FileSystemNode parent = null, bool temp = false)
+        public FileSystemNode(IStorageItem storageItem, int depth, FileSystemNode parent, bool temp = false)
         {
             Name = storageItem.Name;
             Path = storageItem.Path;

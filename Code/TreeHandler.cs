@@ -28,7 +28,7 @@ public static class TreeHandler
         await Task.Run(() =>
         {
             // Extract all root nodes
-            Parallel.ForEach(filesAndFolders, path => RootNodes.Add(new FileSystemNode(path, 0)));
+            Parallel.ForEach(filesAndFolders, path => RootNodes.Add(new FileSystemNode(path, 0, null)));
 
             // Go down each root node and build a tree
             foreach (var node in RootNodes)
@@ -55,12 +55,11 @@ public static class TreeHandler
     }
 
     /// Rebuilds the tree from the root files
-    public static async void RebuildTree(TreeView fileTreeView)
+    public static void RebuildTree(TreeView fileTreeView)
     {
         FullFolderList.Clear();
-        await BuildTree(rootFiles, fileTreeView);
+        BuildTree(rootFiles, fileTreeView);
     }
-
 
     // // // Helper functions // // //
     
