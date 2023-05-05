@@ -1,2 +1,2 @@
 # MediFiler-V2
-![image](https://user-images.githubusercontent.com/32343843/236165980-fa53ad66-7dc0-4a42-9648-9f54381f112e.png)
+![image](https://user-images.githubusercontent.com/32343843/236585181-dfd51a0f-cd61-42ae-8ff6-04bb339d9aa2.png)
