@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.Storage;
+using MediFiler_V2.Code;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Controls;
 
@@ -57,10 +58,12 @@ public static class TreeHandler
     }
 
     /// Rebuilds the tree from the root files
-    public static async void RebuildTree(TreeView fileTreeView)
+    public static async void RebuildTree(TreeView fileTreeView, MainWindow mainWindow = null)
     {
         FullFolderList.Clear();
         await BuildTree(rootFiles, fileTreeView);
+        
+        if (mainWindow != null) mainWindow.StartLoadFilesInBackground();
     }
 
     // // // Helper functions // // //

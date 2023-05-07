@@ -333,7 +333,7 @@ public class MainWindowModel
     /// Rebuilds the entire context from scratch, may be slow
     public void FullRefresh()
     {
-        TreeHandler.RebuildTree(_mainWindow.FileTreeView1);
+        TreeHandler.RebuildTree(_mainWindow.FileTreeView1, _mainWindow);
         Refresh();
     }
     

@@ -24,11 +24,12 @@ namespace MediFiler_V2
         public FileSystemNode Parent { get; set; }
         public List<FileSystemNode> SubFiles { get; set; } = new();
         public List<FileSystemNode> SubFolders { get; set; } = new();
+        public bool IsLoaded = false;
         private int _fileCount;
         public int FileCount { 
             get { return _fileCount; } 
             set { _fileCount = value; OnPropertyChanged(nameof(FileCount)); } }
-        public int ChildFileCount { get { return FileCount + SubFolders.Sum(f => f.ChildFileCount); } }
+        public int ChildFileCount { get { return FileCount + SubFolders.Sum(f => f.ChildFileCount); } set {  } }
         
         private bool _folderColor;
         public bool FolderColor { 
@@ -65,7 +66,7 @@ namespace MediFiler_V2
             }
             
             // Return if this is a file (leaf)
-            if (!storageItem.IsOfType(StorageItemTypes.Folder))
+            if (storageItem.IsOfType(StorageItemTypes.File))
             {
                 File = storageItem as IStorageFile;
                 IsFile = true;
@@ -75,15 +76,16 @@ namespace MediFiler_V2
             Folder = storageItem as IStorageFolder;
             
             var folder = (StorageFolder) storageItem;
-            var filesAndFolders = folder.GetItemsAsync().AsTask().Result;
+            //var filesAndFolders = folder.GetItemsAsync().AsTask().Result;
+            var folders = folder.GetFoldersAsync().AsTask().Result;
 
             // Make a node for each file and folder
-            Parallel.ForEach(filesAndFolders, item =>
+            Parallel.ForEach(folders, item =>
             {
-                if (item.IsOfType(StorageItemTypes.File))
-                {
-                    SubFiles.Add(new FileSystemNode(item, depth + 1, this));
-                }
+                // if (item.IsOfType(StorageItemTypes.File))
+                // {
+                //     SubFiles.Add(new FileSystemNode(item, depth + 1, this));
+                // }
                 if (item.IsOfType(StorageItemTypes.Folder))
                 {
                     SubFolders.Add(new FileSystemNode(item, depth + 1, this));
@@ -91,11 +93,37 @@ namespace MediFiler_V2
             });
             
             // Sort result
-            SubFiles = SubFiles.OrderBy(x => x.Name).ToList();
+            //SubFiles = SubFiles.OrderBy(x => x.Name).ToList();
             SubFolders = SubFolders.OrderBy(x => x.Name).ToList();
             
             // Supplementary information
+            //FileCount = SubFiles.Count;
+        }
+
+        public async Task GetSubFiles()
+        {
+            var files = await Folder.GetFilesAsync();
+
+            if (!IsLoaded)
+            {
+                Parallel.ForEach(files, file => { SubFiles.Add(new FileSystemNode(file, Depth + 1, this)); });
+            }
+            else
+            {
+                Debug.WriteLine("ISLOADED");
+            }
+
+            SubFiles = SubFiles.OrderBy(x => x.Name).ToList();
+            IsLoaded = true;
+            _fileCount = SubFiles.Count;
+        }
+        
+        public void UpdateAsLoaded()
+        {
             FileCount = SubFiles.Count;
+            ChildFileCount = FileCount + SubFolders.Sum(f => f.ChildFileCount);
+            FolderColor = true;
+            OnPropertyChanged(nameof(FileCount));
         }
 
         public string GetFormattedText(int fileCount, string name, int childFileCount)
@@ -181,7 +209,8 @@ namespace MediFiler_V2
         public void LocalRefresh()
         {
             if (IsFile) return;
-            Debug.WriteLine("Refreshed!");
+            //Debug.WriteLine("Refreshed!");
+            IsLoaded = true;
             
             // Get rid of SubFiles and load them anew
             SubFiles.Clear();

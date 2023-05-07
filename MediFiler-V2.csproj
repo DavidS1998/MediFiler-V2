@@ -13,6 +13,8 @@
     <WindowsPackageType>None</WindowsPackageType>
     <ApplicationIcon>Assets\Icon 2.ico</ApplicationIcon>
     <Nullable>warnings</Nullable>
+    <PackageIcon>Icon 2.ico</PackageIcon>
+    <LangVersion>11</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Content Remove="Assets\Icon.ico" />

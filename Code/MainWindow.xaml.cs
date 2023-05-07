@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.Storage;
@@ -64,6 +65,9 @@ namespace MediFiler_V2.Code
         /// Initialize window
         public MainWindow()
         {
+            Debug.Write("!!!!!!!!!!!! VERSION: " + typeof(string).Assembly.ImageRuntimeVersion);
+
+            
             InitializeComponent();
             dispatcherQueue = DispatcherQueue.GetForCurrentThread();
 
@@ -199,6 +203,7 @@ namespace MediFiler_V2.Code
             {
                 respectiveNode.IsCurrentFolder = true;
                 respectiveNode.IsExpanded = true;
+                respectiveNode.UpdateAsLoaded();
                 _model.CurrentFolder.IsCurrentFolder = false;
                 _model.SwitchFolder(respectiveNode); 
             }
@@ -393,6 +398,7 @@ namespace MediFiler_V2.Code
             ImageViewer.Source = new BitmapImage(new Uri("ms-appx:///Assets/Loading.gif"));
             ImageViewer.Stretch = Stretch.None;
             await TreeHandler.BuildTree(items, FileTreeView);
+            StartLoadFilesInBackground();
             ImageViewer.Source = null;
             ImageViewer.Stretch = Stretch.Uniform;
 
@@ -406,6 +412,38 @@ namespace MediFiler_V2.Code
             
             AddQuickFolder(_model.CurrentFolder);
         }
+        
+        // Will update the entire tree at once when this is done which may take a while,
+        // but the initial load is much faster in exchange
+        public async void StartLoadFilesInBackground()
+        {
+            await Task.Run(() => LoadFiles());
+            foreach (var folder in TreeHandler.FullFolderList)
+                { folder.UpdateAsLoaded(); }
+        }
+        
+        // Load files
+        public void LoadFiles()
+        {
+            try
+            {
+                // Performance measuring
+                var stopwatch = new Stopwatch();
+                stopwatch.Start();
+                
+                // Simultaneously load files from all folders
+                Parallel.ForEach(TreeHandler.FullFolderList, folder =>
+                { folder.GetSubFiles().Wait(); });
+                
+                // Print performance data
+                stopwatch.Stop();
+                Debug.WriteLine("Files loaded in " + stopwatch.ElapsedMilliseconds + "ms");
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("Interrupted:" + e);
+            }
+        } 
         
         /// Runs when file(s) have been dropped on the main window
         private async void Window_OnDrop(object sender, DragEventArgs e)
