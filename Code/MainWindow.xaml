@@ -154,7 +154,7 @@
                         
                         <TreeView Grid.Row="1" Name="RecentFoldersView">
                             <TreeView.ItemTemplate>
-                                <DataTemplate x:DataType="code:QuickFolder">
+                                <DataTemplate x:DataType="code:QuickAccessFolder">
                                     <TreeViewItem
                                         CanDrag="False" Tapped="QuickFolderClick" RightTapped="QuickFolder_OnRightTapped">
                                         <Grid>
@@ -179,7 +179,7 @@
                         
                         <TreeView Grid.Row="1" Name="MostOpenedFoldersView">
                             <TreeView.ItemTemplate>
-                                <DataTemplate x:DataType="code:QuickFolder">
+                                <DataTemplate x:DataType="code:QuickAccessFolder">
                                     <TreeViewItem
                                         CanDrag="False" Tapped="QuickFolderClick" RightTapped="QuickFolder_OnRightTapped">
                                         <Grid>
@@ -204,7 +204,7 @@
                         
                         <TreeView Grid.Row="1" Name="FavoriteFoldersView">
                             <TreeView.ItemTemplate>
-                                <DataTemplate x:DataType="code:QuickFolder">
+                                <DataTemplate x:DataType="code:QuickAccessFolder">
                                     <TreeViewItem
                                         CanDrag="False" Tapped="QuickFolderClick" RightTapped="QuickFolder_OnRightTapped">
                                         <Grid>
@@ -223,7 +223,6 @@
                 </Grid>
 
                 <!--Sort view-->
-                
                 <Grid Visibility="Collapsed" Name="SortView" Background="Black" 
                       PointerWheelChanged="MouseWheelScrollHandler" 
                       SizeChanged="ImageViewer_SizeChanged" RightTapped="FileAction_RightClick">
@@ -249,7 +248,8 @@
 
                     <!--Sorting side panel-->
                     <Grid Name="SortPanel" Margin="-1,-1,0,0">
-                        <Grid Name="SortBackground" Width="450" HorizontalAlignment="Left">
+                        <Grid
+                            Name="SortBackground" Width="420" HorizontalAlignment="Left">
                             <Grid.Background>
                                 <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
                                     <LinearGradientBrush.RelativeTransform>
@@ -260,13 +260,24 @@
                                             <TranslateTransform/>
                                         </TransformGroup>
                                     </LinearGradientBrush.RelativeTransform>
-                                    <GradientStop Color="#E5000000"/>
-                                    <GradientStop Color="#99000000" Offset="0.8"/>
-                                    <GradientStop Color="#00000000" Offset="1"/>
+                                    <GradientStop Color="#FF000000"/>
+                                    <GradientStop Color="#BB000000" Offset="1"/>
                                 </LinearGradientBrush>
                             </Grid.Background>
                         </Grid>
                         
+                        
+                        <!--COMMAND BAR FOR SORTING-->
+                        <Grid
+                            Width="420" HorizontalAlignment="Left" Opacity="0.5"
+                            PointerEntered="SortView_OnPointerMoved" PointerExited="SortView_OnPointerExited"
+                            Background="Transparent" Height="40" VerticalAlignment="Top">
+                        
+                            <CommandBar Background="Transparent" DefaultLabelPosition="Collapsed" HorizontalAlignment="Right" Margin="8,0">
+                                <AppBarButton Icon="Bullets" Label="Collapse list" IsEnabled="True" Width="32" Name="CollapseToggle" Tapped="CollapseButton_OnTapped">
+                                </AppBarButton>
+                            </CommandBar>
+                        </Grid>
                         <!--QUICK FOLDERS-->
                         <ListView
                             Name="FavoriteView" Background="Transparent" HorizontalAlignment="Left" Width="76"
@@ -274,7 +285,7 @@
                             SelectionMode="None" Margin="-15,0,0,150"
                             PointerEntered="SortView_OnPointerMoved" PointerExited="SortView_OnPointerExited">
                             <ListView.ItemTemplate>
-                                <DataTemplate x:DataType="code:QuickFolder">
+                                <DataTemplate x:DataType="code:QuickAccessFolder">
                                     <Button Background="Transparent" 
                                           VerticalAlignment="Center"
                                           HorizontalAlignment="Stretch"
@@ -302,7 +313,7 @@
                         <TreeView
                             Name="FileTreeView" Background="Transparent" HorizontalAlignment="Left" Width="350"
                             VerticalAlignment="Stretch" CanDrag="False" CanDragItems="False" CanReorderItems="False"
-                            SelectionMode="None" Margin="60,0,0,150"
+                            SelectionMode="None" Margin="60,40,0,150"
                             PointerMoved="SortView_OnPointerMoved" PointerExited="SortView_OnPointerExited">
                             <TreeView.ItemTemplate>
                                 <DataTemplate x:DataType="local:FileSystemNode">
@@ -323,11 +334,17 @@
                                                        VerticalAlignment="Center"
                                                        FontStretch="UltraCondensed"
                                                        IsHitTestVisible="False"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       TextWrapping="NoWrap"
+                                                       MaxWidth="220"
                                                        Text="{x:Bind GetFormattedText(FileCount, Name, ChildFileCount), Mode=OneWay}"/>
+                                            <Image Height="18" Width="22" Source="{x:Bind FolderIcon, Mode=OneWay}"
+                                                   HorizontalAlignment="Right" VerticalAlignment="Center" 
+                                                   Margin="0,0,8,0"></Image>
                                             <DropDownButton 
                                                 Name="FolderDropDown"
                                                 Visibility="Collapsed"
-                                                Background="Black" 
+                                                Background="Transparent" 
                                                 HorizontalAlignment="Right" VerticalAlignment="Center" 
                                                 Height="18" Width="22" Margin="0,0,8,0">
                                                 <DropDownButton.Flyout>

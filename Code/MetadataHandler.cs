@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
+using Windows.Storage.FileProperties;
+using Windows.UI;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Documents;
@@ -41,12 +43,12 @@ public class MetadataHandler
     {
         // TODO: Find a better place to do this
         if (FileTypeHelper.GetFileCategory(fileSystem.Path) != FileTypeHelper.FileCategory.IMAGE
-            || vertical is not ((< 1300 or > 5000) and not 0) 
+            || vertical is not ((< 1000 or > 5000) and not 0) 
             || fileSystem.Name.EndsWith(".gif")
             || fileSystem.Name.EndsWith(".ico"))
             return;
         
-        appbar.Background = new SolidColorBrush(Colors.LightGray);
+        appbar.Background = new SolidColorBrush(Color.FromArgb(255, 50, 50, 50));
     }
 
     private void SetTitleText(FileSystemNode fileSystem)
@@ -65,9 +67,18 @@ public class MetadataHandler
     private async Task SetInfoText(FileSystemNode fileSystem)
     {
         var metadataText = "";
+        BasicProperties file;
 
         // File size
-        var file = await fileSystem.File.GetBasicPropertiesAsync();
+        try
+        {
+            file = await fileSystem.File.GetBasicPropertiesAsync();
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine(e);
+            return;
+        }
         var size = file.Size;
         var sizeString = FileSizeHelper.GetReadableFileSize(size);
         metadataText += sizeString;

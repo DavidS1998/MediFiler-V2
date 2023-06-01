@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
@@ -19,8 +18,10 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 using WinRT.Interop;
 using BitmapImage = Microsoft.UI.Xaml.Media.Imaging.BitmapImage;
-using Expander = ABI.Microsoft.UI.Xaml.Controls.Expander;
 using WindowActivatedEventArgs = Microsoft.UI.Xaml.WindowActivatedEventArgs;
+using System.Runtime.InteropServices;
+using Windows.Storage.FileProperties;
+using MediFiler_V2.Code.Utilities;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -54,9 +55,16 @@ namespace MediFiler_V2.Code
         public AppBarButton OpenButton1 { get => OpenButton; set => OpenButton = value; }
         public AppBarButton UpscaleButton1 { get => UpscaleButton; set => UpscaleButton = value; }
 
+        public TreeView RecentFoldersView1 => RecentFoldersView;
+        public TreeView MostOpenedFoldersView1 => MostOpenedFoldersView;
+        public TreeView FavoriteFoldersView1 => FavoriteFoldersView;
+        public ListView FavoriteView1 => FavoriteView;
+
+        public JsonHandler JsonHandler => _jsonHandler;
+
         private AppWindow _appWindow;
         private readonly MainWindowModel _model;
-        private bool _sortPanelPinned = true;
+        public bool SortPanelPinned = true;
         
         public DispatcherQueue dispatcherQueue;
 
@@ -81,20 +89,17 @@ namespace MediFiler_V2.Code
             WindowId myWndId = Win32Interop.GetWindowIdFromWindow(hWnd);
             _appWindow = AppWindow.GetFromWindowId(myWndId);
             
+            // Initializers
             _model = new MainWindowModel(this);
+            _jsonHandler = new JsonHandler(this);
             SetSelectedItem("Home");
-            
-            ReadJsonFile(); // Loads settings
-            UpdateHomeFolders();
+
+            JsonHandler.ReadJsonFile(); // Loads settings
+            JsonHandler.UpdateHomeFolders();
 
             _imageTransformGroup.Children.Add(_translateTransform);
             _imageTransformGroup.Children.Add(_scaleTransform);
             ImageViewer.RenderTransform = _imageTransformGroup;
-        }
-
-        public void UpdateFavoriteList()
-        {
-            FavoriteView.ItemsSource = FavoriteFolders.Values.OrderBy(x => x.Name);
         }
 
         public void ToggleFullscreen()
@@ -125,7 +130,7 @@ namespace MediFiler_V2.Code
         
         
         // // // TOP NAVIGATION // // //
-        #region TOP NAVIGATION
+
 
         public void OpenSortView()
         {
@@ -167,11 +172,10 @@ namespace MediFiler_V2.Code
             }
         }
 
-        #endregion
+
         // // // UI EVENTS // // //
-        #region UI Events
-        
-        
+
+
         /// Scroll between files
         public void MouseWheelScrollHandler(object sender, PointerRoutedEventArgs e)
         {
@@ -198,20 +202,19 @@ namespace MediFiler_V2.Code
             if (originalName == "ExpandCollapseChevron") return;
             if (originalName == "RootGrid") return;
             //Debug.WriteLine( ((FrameworkElement)e.OriginalSource).Name );
-
             if (leftClick)
             {
                 respectiveNode.IsCurrentFolder = true;
                 respectiveNode.IsExpanded = true;
-                respectiveNode.UpdateAsLoaded();
+                //respectiveNode.UpdateAsLoaded();
                 _model.CurrentFolder.IsCurrentFolder = false;
-                _model.SwitchFolder(respectiveNode); 
+                _model.SwitchFolder(respectiveNode);
             }
             else
             {
-                _model.MoveFile(respectiveNode);
+                _model.FileOperations.MoveFile(respectiveNode);
                 _model.CurrentFolder.FolderColor = true;
-                respectiveNode.FolderColor = true; 
+                //respectiveNode.FolderColor = true; 
             }
         }
 
@@ -267,7 +270,7 @@ namespace MediFiler_V2.Code
             var dropDownButton = FindVisualChild<DropDownButton>(treeViewItem);
             dropDownButton.Visibility = Visibility.Visible;
         }
-
+        
         private void FolderItem_OnPointerExited(object sender, PointerRoutedEventArgs e)
         {
             var treeViewItem = sender as TreeViewItem;
@@ -295,29 +298,26 @@ namespace MediFiler_V2.Code
         private void NewFolder_OnPointerPressed(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
         {
             if (((FrameworkElement)tappedRoutedEventArgs.OriginalSource).DataContext is not FileSystemNode node) return;
-            _model.CreateFolderDialog(node);
+            _model.FolderOperations.CreateFolderDialog(node);
         }
         
         // Rename folder
         private void RenameFolder_OnPointerPressed(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
         {
             if (((FrameworkElement)tappedRoutedEventArgs.OriginalSource).DataContext is not FileSystemNode node) return;
-            _model.RenameFolderDialog(node);
+            _model.FolderOperations.RenameFolderDialog(node);
         }
         
         // Delete folder
         private void DeleteFolder_OnPointerPressed(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
         {
             if (((FrameworkElement)tappedRoutedEventArgs.OriginalSource).DataContext is not FileSystemNode node) return;
-            _model.DeleteFolderDialog(node);
+            _model.FolderOperations.DeleteFolderDialog(node);
         }
         
         
-
-        #endregion
         // // // WINDOW EVENTS // // //
-        #region WINDOW EVENTS
-        
+
 
         /// Runs when the window changes focus
         private void MainWindow_Activated(object sender, WindowActivatedEventArgs args)
@@ -342,13 +342,13 @@ namespace MediFiler_V2.Code
         
         private void SortView_OnPointerMoved(object sender, PointerRoutedEventArgs e)
         {
-            if (_sortPanelPinned) return;
+            if (SortPanelPinned) return;
             SortPanel.Opacity = 1;
         }
 
         private void SortView_OnPointerExited(object sender, PointerRoutedEventArgs e)
         {
-            if (_sortPanelPinned) return;
+            if (SortPanelPinned) return;
             SortPanel.Opacity = 0;
         }
         
@@ -369,19 +369,34 @@ namespace MediFiler_V2.Code
         }
         
         // Pin
-        private void TogglePin()
+        public void TogglePin()
         {
-            SortPanel.Opacity = _sortPanelPinned ? 1 : 0;
-            PinButton.Icon = _sortPanelPinned ? new SymbolIcon(Symbol.UnPin) : new SymbolIcon(Symbol.Pin);
-            
-            UpdateJsonFile();
+            SortPanel.Opacity = SortPanelPinned ? 1 : 0;
+            PinButton.Icon = SortPanelPinned ? new SymbolIcon(Symbol.UnPin) : new SymbolIcon(Symbol.Pin);
+
+            JsonHandler.UpdateJsonFile();
             // Save _sortPanelPinned to settings
             //ApplicationDataContainer  localSettings = ApplicationData.Current.LocalSettings;
             //localSettings.Values["SortPanelPinned"] = _sortPanelPinned.ToString();
         }
+        
+        public bool Expanded = true;
+        private void ToggleCollapseList()
+        {
+            Expanded = !Expanded;
+            //var collapse = !TreeHandler.FullFolderList.FirstOrDefault().AllExpanded;
+            
+            // Iterate and collapse every FileSystemNode in FileTreeView list
+            foreach (var node in TreeHandler.FullFolderList)
+            {
+                // Skip if node is in TreeHandler.RootNodes
+                if (TreeHandler.RootNodes.Contains(node)) continue;
+                node.AllExpanded = Expanded;
+                node.IsExpanded = Expanded;
+            }
+        }
 
 
-        #endregion
         // // // LOADING // // //
         
         
@@ -409,17 +424,22 @@ namespace MediFiler_V2.Code
             
             RebuildButton.IsEnabled = true;
             RefreshButton.IsEnabled = true;
-            
-            AddQuickFolder(_model.CurrentFolder);
+
+            JsonHandler.AddQuickFolder(_model.CurrentFolder);
         }
         
         // Will update the entire tree at once when this is done which may take a while,
         // but the initial load is much faster in exchange
         public async void StartLoadFilesInBackground()
         {
-            await Task.Run(() => LoadFiles());
+            // Color and file count
+            await Task.Run(LoadFiles);
+            await Task.Run(() => FolderIconGetter.GetFolderIcon(dispatcherQueue));
             foreach (var folder in TreeHandler.FullFolderList)
-                { folder.UpdateAsLoaded(); }
+            { folder.UpdateAsLoaded(); }
+            
+            // Load folder icons afterwards
+            
         }
         
         // Load files
@@ -489,16 +509,16 @@ namespace MediFiler_V2.Code
             LoadFolder(new List<IStorageItem> {item});
         }
         
-        /// Quick folder
+        /// Quick access folder
         private void QuickFolderClick(object sender, RoutedEventArgs e)
         {
             if (((FrameworkElement)sender).DataContext == null) return;
-            var quickFolder = (QuickFolder)((FrameworkElement)sender).DataContext;
+            var quickFolder = (QuickAccessFolder)((FrameworkElement)sender).DataContext;
             
             // Does not exist
             if (!Directory.Exists(quickFolder.Path) && !File.Exists(quickFolder.Path))
             {
-                RemoveQuickFolder(quickFolder.Path);
+                JsonHandler.RemoveQuickFolder(quickFolder.Path);
                 return;
             }
 
@@ -519,123 +539,45 @@ namespace MediFiler_V2.Code
             LoadFolder(new List<IStorageItem> {item});
         }
         
-        // Add/remove favorite
+        // Add/remove favorite quick access folder
         private void QuickFolder_OnRightTapped(object sender, RightTappedRoutedEventArgs e)
         {
-            if (((FrameworkElement)e.OriginalSource).DataContext is not QuickFolder quickFolder) return;
+            if (((FrameworkElement)e.OriginalSource).DataContext is not QuickAccessFolder quickFolder) return;
 
-            if (FavoriteFolders.ContainsKey(quickFolder.Path))
+            if (JsonHandler.FavoriteFolders.ContainsKey(quickFolder.Path))
             {
-                FavoriteFolders.Remove(quickFolder.Path);
+                JsonHandler.FavoriteFolders.Remove(quickFolder.Path);
             }
             else
             {
-                FavoriteFolders.TryAdd(quickFolder.Path, quickFolder);
-            }
-            UpdateJsonFile();
-            UpdateHomeFolders();
-        }
-        
-        
-        // TODO: Refactor into own class
-        // TODO: Add a favorites list
-        // // // JSON // // //
-        #region JSON
-
-        public class SettingsRoot
-        {
-            public Dictionary<string, QuickFolder> QuickFolders { get; set; }
-            public Dictionary<string, QuickFolder> FavoriteFolders { get; set; }
-            public bool SortPanelPinned { get; set; }
-        }
-        private Dictionary<string, QuickFolder> QuickFolders = new();
-        private Dictionary<string, QuickFolder> FavoriteFolders = new();
-        
-        // Create QuickFolder from appsettings.json
-        public void UpdateHomeFolders()
-        {
-            RecentFoldersView.ItemsSource = null;
-            MostOpenedFoldersView.ItemsSource = null;
-            
-            RecentFoldersView.ItemsSource = QuickFolders.Values.OrderByDescending(x => x.LastOpened);
-            MostOpenedFoldersView.ItemsSource = QuickFolders.Values.OrderByDescending(x => x.TimesOpened);
-            FavoriteFoldersView.ItemsSource = FavoriteFolders.Values.OrderBy(x => x.Name);
-            
-            UpdateFavoriteList();
-        }
-        
-        private void ReadJsonFile()
-        {
-            // Deserialize JSON to QuickFolders list
-            var json = File.ReadAllText("appsettings.json");
-            var rootObject = JsonSerializer.Deserialize<SettingsRoot>(json);
-            if (rootObject != null) QuickFolders = rootObject.QuickFolders;
-            if (rootObject != null) FavoriteFolders = rootObject.FavoriteFolders;
-            if (rootObject != null) _sortPanelPinned = rootObject.SortPanelPinned;
-            TogglePin();
-        }
-
-        private void AddQuickFolder(FileSystemNode node)
-        {
-            if (node.IsFile) return;
-            
-            // Opened before
-            if (QuickFolders.ContainsKey(node.Path))
-            {
-                QuickFolders[node.Path].LastOpened = DateTime.Now;
-                QuickFolders[node.Path].TimesOpened++;
-                UpdateJsonFile();
-                UpdateHomeFolders();
-                return;
-            }
-            
-            // New QuickFolder
-            var quickFolder = new QuickFolder(node.Name)
-            {
-                Path = node.Path,
-                LastOpened = DateTime.Now,
-                TimesOpened = 1
-            };
-            
-            QuickFolders.Add(node.Path, quickFolder);
-            UpdateJsonFile();
-            UpdateHomeFolders();
-        }
-        
-        private void RemoveQuickFolder(string path)
-        {
-            QuickFolders.Remove(path);
-            UpdateJsonFile();
-            UpdateHomeFolders();
-        }
-
-        private void UpdateJsonFile()
-        {
-            // Create a dictionary with a single key-value pair for QuickFolders
-            var quickFolders = new Dictionary<string, QuickFolder>();
-            foreach (var folder in QuickFolders)
-            {
-                quickFolders.Add(folder.Key, folder.Value);
+                JsonHandler.FavoriteFolders.TryAdd(quickFolder.Path, quickFolder);
             }
 
-            var dictionary = new Dictionary<string, object>
-            {
-                { "QuickFolders", quickFolders },
-                { "FavoriteFolders", FavoriteFolders },
-                { "SortPanelPinned", _sortPanelPinned }
-            };
-
-            // Serialize the dictionary to JSON
-            var options = new JsonSerializerOptions { WriteIndented = true };
-            var json = JsonSerializer.Serialize(dictionary, options);
-
-            // Serialize and write the prettified JSON to appsettings.json
-            File.WriteAllText("appsettings.json", json);
+            JsonHandler.UpdateJsonFile();
+            JsonHandler.UpdateHomeFolders();
+        }
+        
+        // Open quick access folder
+        private void Favorite_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            QuickFolderClick(sender, e);
         }
 
-
+        // Move to quick access folder
+        private void Favorite_OnRightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+            var quickFolder = (QuickAccessFolder) ((FrameworkElement) sender).DataContext;
+            if (quickFolder == null) return;
+            
+            // Get storage item at path
+            IStorageFolder folder = StorageFolder.GetFolderFromPathAsync(quickFolder.Path).AsTask().Result;
+            if (folder == null) return;
+            
+            var node = new FileSystemNode(folder, 0, null, true);
+            _model.FileOperations.MoveFile(node);
+        }
         
-        #endregion
+
         // // // BUTTONS // // //
         
         
@@ -653,19 +595,19 @@ namespace MediFiler_V2.Code
         
         // Refresh all button
         private void RenameButton_OnPointerReleased(object sender, TappedRoutedEventArgs e)
-        { _model.RenameDialog(); }        
+        { _model.FileOperations.RenameDialog(); }        
         
         // Undo button
         private void UndoButton_OnPointerReleased(object sender, TappedRoutedEventArgs e)
-        { _model.Undo(); }  
+        { _model.UndoHandler.Undo(); }  
         
         // Undo button
         private void DeleteButton_OnPointerReleased(object sender, TappedRoutedEventArgs e)
-        { _model.DeleteFile(); }     
+        { _model.FileOperations.DeleteFile(); }     
         
         // Pin button
         private void Pin_OnPointerReleased(object sender, TappedRoutedEventArgs e)
-        { _sortPanelPinned = !_sortPanelPinned; TogglePin(); }    
+        { SortPanelPinned = !SortPanelPinned; TogglePin(); }    
         
         // Fullscreen button
         private void Fullscreen_OnPointerReleased(object sender, TappedRoutedEventArgs e)
@@ -673,11 +615,11 @@ namespace MediFiler_V2.Code
         
         // Plus button
         private void PlusButton_OnPointerReleased(object sender, TappedRoutedEventArgs e)
-        { _model.AddPlus(); }
+        { _model.FileOperations.AddPlus(); }
         
         // Minus button
         private void MinusButton_OnPointerReleased(object sender, TappedRoutedEventArgs e)
-        { _model.RemovePlus(); }
+        { _model.FileOperations.RemovePlus(); }
         
         // Open in button
         private void OpenButton_OnTapped(object sender, TappedRoutedEventArgs e)
@@ -686,7 +628,13 @@ namespace MediFiler_V2.Code
         // Upscale button
         private void UpscaleButton_OnTapped(object sender, TappedRoutedEventArgs e)
         { _model.Upscale(2); }
-
+        
+        // Toggle collapse
+        private void CollapseButton_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            ToggleCollapseList();
+        }
+        
 
         // // // KEYBOARD SHORTCUTS // // //
         
@@ -701,19 +649,19 @@ namespace MediFiler_V2.Code
         
         // F2 - Rename
         private void Rename_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-        { _model.RenameDialog(); args.Handled = true; }        
+        { _model.FileOperations.RenameDialog(); args.Handled = true; }        
         
         // CTRL + Z - Undo
         private void Undo_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-        { _model.Undo(); args.Handled = true; }      
+        { _model.UndoHandler.Undo(); args.Handled = true; }      
         
         // Delete - Delete file
         private void Delete_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-        { _model.DeleteFile(); args.Handled = true; }
+        { _model.FileOperations.DeleteFile(); args.Handled = true; }
         
         // Tab - Pin
         private void Pin_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-        { _sortPanelPinned = !_sortPanelPinned; TogglePin(); args.Handled = true; }        
+        { SortPanelPinned = !SortPanelPinned; TogglePin(); args.Handled = true; }        
         
         // F11 - Fullscreen
         private void Fullscreen_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
@@ -721,16 +669,17 @@ namespace MediFiler_V2.Code
         
         // F6 - Plus
         private void Plus_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-        { _model.AddPlus(); args.Handled = true; }
+        { _model.FileOperations.AddPlus(); args.Handled = true; }
         
         // F7 - Minus
         private void Minus_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-        { _model.RemovePlus(); args.Handled = true; }
+        { _model.FileOperations.RemovePlus(); args.Handled = true; }
         
         // F8 - Upscale
         private void Upscale_OnInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
         { _model.Upscale(2); args.Handled = true; }
 
+        
         
         // // // FILE MANIPULATION // // //
         // TODO: Lots of bugs in this section
@@ -814,6 +763,7 @@ namespace MediFiler_V2.Code
         private Point _previousPosition;
 
         private Point _lastTransformPosition;
+        private readonly JsonHandler _jsonHandler;
 
         //private Double _lastX;
         // PAN
@@ -856,12 +806,6 @@ namespace MediFiler_V2.Code
             _lastTransformPosition = new Point(_translateTransform.X, _translateTransform.Y);
             _previousPosition = convertAbsoluteToRelative;
         }
-
-        
-        
-        
-        
-        
         
         private void FileHolder_OnPointerPressed(object sender, PointerRoutedEventArgs e)
         {
@@ -881,26 +825,6 @@ namespace MediFiler_V2.Code
 
             _isDragging = false;
             ImageViewer.ReleasePointerCapture(e.Pointer);
-        }
-        
-        // Open folder
-        private void Favorite_OnTapped(object sender, TappedRoutedEventArgs e)
-        {
-            QuickFolderClick(sender, e);
-        }
-
-        // 
-        private void Favorite_OnRightTapped(object sender, RightTappedRoutedEventArgs e)
-        {
-            var quickFolder = (QuickFolder) ((FrameworkElement) sender).DataContext;
-            if (quickFolder == null) return;
-            
-            // Get storage item at path
-            IStorageFolder folder = StorageFolder.GetFolderFromPathAsync(quickFolder.Path).AsTask().Result;
-            if (folder == null) return;
-            
-            var node = new FileSystemNode(folder, 0, null, true);
-            _model.MoveFile(node);
         }
     }
 }

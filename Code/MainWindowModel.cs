@@ -1,16 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Runtime.Intrinsics.X86;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.System;
+using MediFiler_V2.Code.Utilities;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 
 namespace MediFiler_V2.Code;
@@ -18,34 +12,45 @@ namespace MediFiler_V2.Code;
 public class MainWindowModel
 {
     // UI
-    private MainWindow _mainWindow;
+    private readonly MainWindow _mainWindow;
     
     // Helper classes
-    private MetadataHandler _metadataHandler;
-    private FileThumbnail _fileThumbnail;
-    private FileImage _fileImage;
+    private readonly MetadataHandler _metadataHandler;
+    private readonly FileThumbnail _fileThumbnail;
+    private readonly ImageLoader _imageLoader;
+    
+    private readonly FolderOperations _folderOperations;
+    public FolderOperations FolderOperations => _folderOperations;
+    private readonly FileOperations _fileOperations;
+    public FileOperations FileOperations => _fileOperations;
+    private readonly UndoHandler _undoHandler;
+    public UndoHandler UndoHandler => _undoHandler;
 
     // Constants
-    public const int PreloadDistance = 21;
+    public const int PreloadDistance = 13; // 21 fills ultrawide
 
     // TODO: Stop using global variables
     private int _latestLoadedImage = -1;
-    public FileSystemNode CurrentFolder ;
+    public FileSystemNode CurrentFolder;
     public int CurrentFolderIndex;
     public bool FileActionInProgress;
-    
+
+
     public MainWindowModel(MainWindow window)
     {
         _mainWindow = window;
 
         _metadataHandler = new MetadataHandler(_mainWindow, this, _mainWindow.AppTitleBar1);
         _fileThumbnail = new FileThumbnail(this, PreloadDistance);
-        _fileImage = new FileImage();
+        _imageLoader = new ImageLoader();
         
         // Set thumbnail preview count on startup
         _fileThumbnail.CreatePreviews(PreloadDistance, _mainWindow.PreviewImageContainer1);
+        _undoHandler = new UndoHandler(this, _mainWindow);
+        _folderOperations = new FolderOperations(this, _mainWindow);
+        _fileOperations = new FileOperations(this, _mainWindow);
     }
-
+    
     /// Load file
     public void Load()
     {
@@ -68,7 +73,7 @@ public class MainWindowModel
         {
             FileActionInProgress = false;
             _mainWindow.ResetImage();
-            return;
+            //return;
         }
         
         try
@@ -147,7 +152,7 @@ public class MainWindowModel
     {
         var sentInIndex = CurrentFolderIndex; // File change check
         var sentInFolder = CurrentFolder.Path; // Context change check
-        var bitmap = await _fileImage.LoadImage(fileSystem, (int)_mainWindow.FileHolder1.ActualHeight);
+        var bitmap = await _imageLoader.LoadImage(fileSystem, (int)_mainWindow.FileHolder1.ActualHeight);
         // Throw away result if current file changed; Invalid images don't overwrite thumbnails
         if (sentInIndex != CurrentFolderIndex || sentInFolder != CurrentFolder.Path || bitmap == null) return;
         _mainWindow.ImageViewer1.Source = bitmap;
@@ -299,19 +304,20 @@ public class MainWindowModel
         _mainWindow.ImageViewer1.Source = null;
         _fileThumbnail.ClearPreviewCache(_mainWindow.PreviewImageContainer1);
         _metadataHandler.ClearMetadata();
+        _mainWindow.Expanded = true;
 
         // Only run on real folder switch
         // Debug.WriteLine(sameFolder ? "Same folder" : "Different folder");
         if (sameFolder) return;
         Debug.WriteLine("Undo queue cleared");
-        ClearUndoQueue();
+        UndoHandler.ClearUndoQueue();
         EmptyTrash();
     }
 
     /// Refreshes the current folder and reloads all items within it
     public void Refresh(bool reorder = true)
     {
-        _mainWindow.UpdateHomeFolders();
+        _mainWindow.JsonHandler.UpdateHomeFolders();
         
         if (!CurrentFolder.FolderStillExists())
         {
@@ -337,361 +343,23 @@ public class MainWindowModel
         Refresh();
     }
     
-    
-    // // // FILE OPERATIONS // // //
-
-    
-    public void MoveFile(FileSystemNode destination)
-    {
-        // Error check
-        if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0 || destination.Path == CurrentFolder.Path) return;
-
-        try
-        {
-            // Undo queue
-            Push(CurrentFolder.SubFiles[CurrentFolderIndex].CreateMemento(UndoAction.Move));
-            CurrentFolder.SubFiles[CurrentFolderIndex].Move(destination);
-            Refresh();
-        }
-        catch (Exception e)
-        {
-            UndoQueue.Pop();
-            Refresh();
-            Console.WriteLine(e);
-        }
-        
-    }
-    
-    /// Deletes by moving to a trash folder, and recycling it only when switching folders
-    public async void DeleteFile()
-    {
-        // Error check
-        if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0) return;
-
-        IStorageFolder baseDirectory = await StorageFolder.GetFolderFromPathAsync(AppDomain.CurrentDomain.BaseDirectory);
-        var trashFolder = await baseDirectory.CreateFolderAsync("Trash", CreationCollisionOption.OpenIfExists);
-        var trashFolderNode = new FileSystemNode(trashFolder, 0, null);
-        
-        // Undo queue
-        Push(CurrentFolder.SubFiles[CurrentFolderIndex].CreateMemento(UndoAction.Move));
-        
-        CurrentFolder.SubFiles[CurrentFolderIndex].Move(trashFolderNode);
-        Refresh();
-    }
-
     /// Empty Trash - Runs when switching folders
-    public async void EmptyTrash()
-    {
-        var baseDirectory = await StorageFolder.GetFolderFromPathAsync(AppDomain.CurrentDomain.BaseDirectory);
-        var trashFolder = await baseDirectory.CreateFolderAsync("Trash", CreationCollisionOption.OpenIfExists);
-        
-        // For each file in the trash folder, delete it while awaiting
-        foreach (var file in await trashFolder.GetFilesAsync())
-        {
-            await file.DeleteAsync();
-        }
-    }
-
-    /// Renames the currently selected file
-    public async void RenameDialog()
-    {
-        // Error check
-        if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0) return;
-        
-        // Get the file extension as a string
-        var fileExtension = CurrentFolder.SubFiles[CurrentFolderIndex].Name.Split('.').Last();
-        
-        // Create a ContentDialog box with a text input field
-        var dialog = new ContentDialog
-        {
-            Title = "Rename File",
-            Content = new TextBox
-            {
-                // Text is the current file name without the extension
-                SelectedText = CurrentFolder.SubFiles[CurrentFolderIndex].Name.Replace("." + fileExtension, ""),
-                AcceptsReturn = false,
-            },
-            PrimaryButtonText = "Rename",
-            SecondaryButtonText = "Cancel",
-            XamlRoot = _mainWindow.Content.XamlRoot,
-            DefaultButton = ContentDialogButton.Primary,
-        };
-        var result = await dialog.ShowAsync();
-
-        if (result != ContentDialogResult.Primary) return;
-
-        var newName = ((TextBox)dialog.Content).Text;
-        
-        RenameFile(newName);
-    }
-    
-    public async void RenameFile(string newName)
-    {
-        // Get the file extension as a string
-        var fileExtension = CurrentFolder.SubFiles[CurrentFolderIndex].Name.Split('.').Last();
-        
-        // Only allow valid File names
-        var invalidCharsRegex = new Regex("[\\\\/:*?\"<>|]");
-        if (string.IsNullOrWhiteSpace(newName) || invalidCharsRegex.IsMatch(newName))
-        {
-            var errorDialog = new ContentDialog
-            {
-                Title = "Invalid File Name",
-                Content = "File names cannot contain following characters: \\ / : * ? \" < > |",
-                PrimaryButtonText = "OK",
-                XamlRoot = _mainWindow.Content.XamlRoot,
-                DefaultButton = ContentDialogButton.Primary
-            };
-            await errorDialog.ShowAsync();
-            return;
-        }
-        
-        // Undo queue
-        Push(CurrentFolder.SubFiles[CurrentFolderIndex].CreateMemento(UndoAction.Rename));
-        
-        CurrentFolder.SubFiles[CurrentFolderIndex].Rename(newName + "." + fileExtension);
-        Refresh(false);
-    }
-    
-    // TODO: Separate into a plug-in? Setting?
-    // Add +
-    public void AddPlus()
-    {
-        // Error check
-        if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0) return;
-        
-        var fileExtension = CurrentFolder.SubFiles[CurrentFolderIndex].Name.Split('.').Last();
-        var currentName = CurrentFolder.SubFiles[CurrentFolderIndex].Name.Replace("." + fileExtension, "");
-        // Add a + to the start of the name
-        var newName = "+" + currentName;
-        RenameFile(newName);
-    }
-    
-    // Remove +
-    public void RemovePlus()
-    {
-        // Error check
-        if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0) return;
-        
-        var fileExtension = CurrentFolder.SubFiles[CurrentFolderIndex].Name.Split('.').Last();
-        var currentName = CurrentFolder.SubFiles[CurrentFolderIndex].Name.Replace("." + fileExtension, "");
-        // Check if the name starts with a +
-        if (!currentName.StartsWith("+")) return;
-
-        // Remove one + from the start of the name
-        var newName = currentName.Remove(0, 1);
-        RenameFile(newName);
-    }
-    
-    // // // FOLDER MANIPULATION // // //
-    
-    // Create new folder
-    public async void CreateFolderDialog(FileSystemNode node)
-    {
-        // Create a ContentDialog box with a text input field
-        var dialog = new ContentDialog
-        {
-            Title = "Create new folder",
-            Content = new TextBox
-            {
-                AcceptsReturn = false
-            },
-            PrimaryButtonText = "Create",
-            SecondaryButtonText = "Cancel",
-            XamlRoot = _mainWindow.Content.XamlRoot,
-            DefaultButton = ContentDialogButton.Primary
-        };
-        var result = await dialog.ShowAsync();
-
-        if (result != ContentDialogResult.Primary) return;
-
-        var folderName = ((TextBox)dialog.Content).Text;
-        
-        await Task.Run(() => CreateFolder(folderName, node));
-    }
-    
-    private async void CreateFolder(string folderName, FileSystemNode node)
-    {
-        // Only allow valid File names
-        var invalidCharsRegex = new Regex("[\\\\/:*?\"<>|]");
-        if (string.IsNullOrWhiteSpace(folderName) || invalidCharsRegex.IsMatch(folderName))
-        {
-            var errorDialog = new ContentDialog
-            {
-                Title = "Invalid Folder Name",
-                Content = "Folder names cannot contain following characters: \\ / : * ? \" < > |",
-                PrimaryButtonText = "OK",
-                XamlRoot = _mainWindow.Content.XamlRoot,
-                DefaultButton = ContentDialogButton.Primary
-            };
-            await errorDialog.ShowAsync();
-            return;
-        }
-
-        try
-        {
-            var newFolder = await node.Folder.CreateFolderAsync(folderName);
-            node.SubFolders.Insert(0, new FileSystemNode(newFolder, CurrentFolder.Depth + 1, node));
-            TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1, _mainWindow.dispatcherQueue);
-            await Task.Delay(1);
-            Debug.WriteLine("Finished");
-        }
-        catch (Exception e)
-        {
-            Debug.WriteLine("Error creating folder: " + e);
-        }
-    }
-    
-    // Delete folder
-    public async void DeleteFolderDialog(FileSystemNode node)
-    {
-        // Create a ContentDialog box with a text input field
-        var dialog = new ContentDialog
-        {
-            Title = "Delete Folder",
-            Content = "Are you sure you want to delete this folder to the recycling bin?",
-            PrimaryButtonText = "Delete",
-            SecondaryButtonText = "Cancel",
-            XamlRoot = _mainWindow.Content.XamlRoot,
-            DefaultButton = ContentDialogButton.Primary
-        };
-        var result = await dialog.ShowAsync();
-
-        if (result != ContentDialogResult.Primary) return;
-        
-        // Run DeleteFolder() on a separate thread using Task
-        await Task.Run(() => DeleteFolder(node));
-    }
-
-
-    private async void DeleteFolder(FileSystemNode node)
+    private static async void EmptyTrash()
     {
         try
         {
-            node.Parent.SubFolders.Remove(node);
-            TreeHandler.FullFolderList.Remove(node);
-            TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1, _mainWindow.dispatcherQueue);
+            var baseDirectory = await StorageFolder.GetFolderFromPathAsync(AppDomain.CurrentDomain.BaseDirectory);
+            var trashFolder = await baseDirectory.CreateFolderAsync("Trash", CreationCollisionOption.OpenIfExists);
             
-            #pragma warning disable 4014
-            node.Folder.DeleteAsync(StorageDeleteOption.Default);
-            await Task.Delay(1);
-            Debug.WriteLine("Finished");
+            // For each file in the trash folder, delete it while awaiting
+            foreach (var file in await trashFolder.GetFilesAsync())
+            {
+                await file.DeleteAsync();
+            }
         }
         catch (Exception e)
         {
-            Debug.WriteLine("Error deleting folder: " + e.Message);
-            SwitchFolder(TreeHandler.RootNodes[0]);
+            Debug.WriteLine(e);
         }
-    }
-
-    public async void RenameFolderDialog(FileSystemNode node)
-    {
-        // Create a ContentDialog box with a text input field
-        var dialog = new ContentDialog
-        {
-            Title = "Rename Folder",
-            Content = new TextBox
-            {
-                SelectedText = node.Folder.Name,
-                AcceptsReturn = false
-            },
-            PrimaryButtonText = "Rename",
-            SecondaryButtonText = "Cancel",
-            XamlRoot = _mainWindow.Content.XamlRoot,
-            DefaultButton = ContentDialogButton.Primary
-        };
-        var result = await dialog.ShowAsync();
-
-        if (result != ContentDialogResult.Primary) return;
-
-        var newName = ((TextBox)dialog.Content).Text;
-        if (newName == node.Folder.Name) return;
-
-        await Task.Run(() => RenameFolder(newName, node));
-    }
-    
-    private async void RenameFolder(string newName, FileSystemNode node)
-    {
-        // Only allow valid File names
-        var invalidCharsRegex = new Regex("[\\\\/:*?\"<>|]");
-        if (string.IsNullOrWhiteSpace(newName) || invalidCharsRegex.IsMatch(newName))
-        {
-            var errorDialog = new ContentDialog
-            {
-                Title = "Invalid Folder Name",
-                Content = "Folder names cannot contain following characters: \\ / : * ? \" < > |",
-                PrimaryButtonText = "OK",
-                XamlRoot = _mainWindow.Content.XamlRoot,
-                DefaultButton = ContentDialogButton.Primary
-            };
-            await errorDialog.ShowAsync();
-            return;
-        }
-        
-        // Rename the folder
-        try
-        {
-            node.Name = newName;
-            node.Path = node.Parent.Path + "\\" + newName;
-            TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1, _mainWindow.dispatcherQueue);
-            node.Folder.RenameAsync(newName);
-            await Task.Delay(1);
-            
-            Debug.WriteLine("Finished");
-            //FullRefresh();
-        }
-        catch (Exception e)
-        {
-            Debug.WriteLine("Folder already exists: " + e);
-        }
-    }
-    
-    
-    // TODO: Refactor into own class
-    // // // UNDO QUEUE // // //
-    
-    
-    // Undo queue - for undoing delete, rename, and move operations
-    public Stack<NodeMemento> UndoQueue = new();
-    
-    public void Push(NodeMemento memento)
-    {
-        if (UndoQueue.Count <= 0) _mainWindow.UndoButton1.IsEnabled = true;
-        UndoQueue.Push(memento);
-        Debug.WriteLine("Pushing " + memento.Action + " of " + memento.Name);
-    }
-    
-    public void ClearUndoQueue()
-    {
-        UndoQueue.Clear();
-        _mainWindow.UndoButton1.IsEnabled = false;
-    }
-
-    /// Undo the last operation
-    public void Undo()
-    {
-        if (UndoQueue.Count <= 0)
-        {
-            Debug.WriteLine("UNDO STACK EMPTY");
-            return;
-        };
-        
-        var memento = UndoQueue.Pop();
-        if (UndoQueue.Count <= 0) _mainWindow.UndoButton1.IsEnabled = false;
-        
-        Debug.WriteLine("Undoing " + memento.Action + " of " + memento.Node.Name);
-        switch (memento.Action)
-        {
-            case UndoAction.Rename:
-                memento.Node.Rename(memento.Name);
-                break;
-            case UndoAction.Move:
-                memento.Node.Move(memento.Parent);
-                CurrentFolder.FolderColor = true;
-                memento.Parent.FolderColor = true; // TODO: Bake into Move method
-                break;
-        }
-        
-        Refresh();
     }
 }

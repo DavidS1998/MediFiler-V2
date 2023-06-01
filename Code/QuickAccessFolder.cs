@@ -4,14 +4,14 @@ using System.Text.RegularExpressions;
 
 namespace MediFiler_V2.Code;
 
-public class QuickFolder
+public class QuickAccessFolder
 {
     public string Name { get; set; }
     public string Path { get; set; }
     public int TimesOpened { get; set; }
     public DateTime LastOpened { get; set; }
 
-    public QuickFolder(string name)
+    public QuickAccessFolder(string name)
     {
         Name = name;
     }

@@ -9,9 +9,11 @@ using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.UI;
 using MediFiler_V2.Code;
+using MediFiler_V2.Code.Utilities;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace MediFiler_V2
 {
@@ -24,6 +26,7 @@ namespace MediFiler_V2
         public FileSystemNode Parent { get; set; }
         public List<FileSystemNode> SubFiles { get; set; } = new();
         public List<FileSystemNode> SubFolders { get; set; } = new();
+        public BitmapImage FolderIcon = null;
         public bool IsLoaded = false;
         private int _fileCount;
         public int FileCount { 
@@ -40,7 +43,8 @@ namespace MediFiler_V2
         public bool IsCurrentFolder { 
             get { return _isCurrentFolder; }
             set { _isCurrentFolder = value; OnPropertyChanged(nameof(IsCurrentFolder)); } }
-        
+
+        public bool AllExpanded = true;
         private static bool _isExpanded;
         public bool IsExpanded { 
             get { return _isExpanded; } 
@@ -95,7 +99,7 @@ namespace MediFiler_V2
             // Sort result
             //SubFiles = SubFiles.OrderBy(x => x.Name).ToList();
             SubFolders = SubFolders.OrderBy(x => x.Name).ToList();
-            
+
             // Supplementary information
             //FileCount = SubFiles.Count;
         }
@@ -123,7 +127,20 @@ namespace MediFiler_V2
             FileCount = SubFiles.Count;
             ChildFileCount = FileCount + SubFolders.Sum(f => f.ChildFileCount);
             FolderColor = true;
+            //SetFolderIcon();
             OnPropertyChanged(nameof(FileCount));
+        }
+        
+        public void SetFolderIcon()
+        {
+            if (IsFile) return;
+            if (FolderIcon != null) return;
+            if (!FolderIconGetter.IconCache.ContainsKey(Path)) return;
+            
+            var thumbnail = FolderIconGetter.IconCache[Path];
+            FolderIcon = new BitmapImage();
+            FolderIcon.SetSource(thumbnail);
+            OnPropertyChanged(nameof(FolderIcon));
         }
 
         public string GetFormattedText(int fileCount, string name, int childFileCount)
@@ -150,6 +167,7 @@ namespace MediFiler_V2
                 _ when Name.StartsWith("[SORT]") => Color.FromArgb(255, 128, 128, 255),
                 _ when Name.StartsWith("[META]") => Color.FromArgb(255, 255, 255, 128),
                 _ when Name.StartsWith("[SET]") => Color.FromArgb(255, 255,113,206),
+                _ when Name.StartsWith("[THEME]") => Color.FromArgb(255, 120, 155, 120),
                 // Star filtering
                 _ when Name.StartsWith("++++++") => Color.FromArgb(255, 255, 69, 0),
                 _ when Name.StartsWith("+++++") => Color.FromArgb(255, 159, 49, 222),
@@ -161,12 +179,21 @@ namespace MediFiler_V2
                 _ when IsFile => Color.FromArgb(0, 150, 150, 150),
                 _ when FileCount == 0 => Color.FromArgb(64, 255, 255, 255),
                 _ when FileCount >= 100 => Color.FromArgb(255, 255, 0, 0),
+                // When file list contains any file not starting with +
+                _ when SubFiles.Any(f => !f.Name.StartsWith("+")) && Depth != 0 => Color.FromArgb(255, 255, 128, 0),
+                
                 _ when Depth == 0 => Color.FromArgb(255, 255, 255, 255),
                 _ when Depth == 1 => Color.FromArgb(255, 255, 255, 255),
                 _ when Depth == 2 => Color.FromArgb(255, 200, 200, 200),
                 _ when Depth >= 3 => Color.FromArgb(255, 150, 150, 150),
                 _ => Color.FromArgb(255, 255, 255, 255)
             };
+        }
+        
+        
+        public void UpdateColorStatus()
+        {
+            // TODO: Simplify condition checks into one function; currently has bugs regarding moving and undoing
         }
 
         public Brush ActiveFolderBackgroundColor(bool isCurrentFolder)
@@ -189,7 +216,6 @@ namespace MediFiler_V2
         
         public bool ConditionalExpand(bool isExpanded)
         {
-
             return Name switch
             {
                 _ when _isCurrentFolder => true,
@@ -199,6 +225,8 @@ namespace MediFiler_V2
                 _ when Name.Contains("[SET]") => false,
                 _ when Name.Contains("[Theme]") => false,
                 _ when Parent != null && Parent.Name.Contains("[CREATOR]") => false,
+                _ when AllExpanded => true,
+                _ when !AllExpanded => false,
                 _ => true
             };
         }
@@ -276,7 +304,7 @@ namespace MediFiler_V2
 
             // TODO: Folder renaming
         }
-        
+
         // Checks if this folder node has been deleted
         public bool FolderStillExists()
         {

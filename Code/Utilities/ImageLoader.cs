@@ -7,7 +7,7 @@ using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace MediFiler_V2.Code;
 
-public class FileImage
+public class ImageLoader
 {
     /// Load image from file
     public async Task<BitmapImage> LoadImage(FileSystemNode fileSystem, int size)
@@ -22,6 +22,7 @@ public class FileImage
             await bitmap.SetSourceAsync(stream);
             
             //var resolution = bitmap.PixelWidth + "×" + bitmap.PixelHeight;
+            // TODO: Send resolution to MetadataHandler?
 
             stream.Dispose();
         }
