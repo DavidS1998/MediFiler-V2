@@ -403,7 +403,7 @@
             </Grid>
         </NavigationView>
         
-        <Grid Name="FullscreenAnchor" Height="32" Background="Transparent" VerticalAlignment="Top" Grid.Row="0" Grid.RowSpan="3"
+        <Grid Name="FullscreenAnchor" Height="1" Background="Transparent" VerticalAlignment="Top" Grid.Row="0" Grid.RowSpan="3"
               PointerEntered="FullscreenChecker_OnPointerEntered"></Grid>
     </Grid>
 </Window>

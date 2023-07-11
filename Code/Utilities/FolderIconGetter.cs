@@ -14,7 +14,7 @@ public static class FolderIconGetter
 {
     public static Dictionary<string, StorageItemThumbnail> IconCache = new();
 
-    // Saves thumbnail to the dictionary with the index as key
+    // Saves thumbnail to the dictionary with the path as key
     public static async void GetFolderIcon(Microsoft.UI.Dispatching.DispatcherQueue queue)
     {
         IconCache.Clear();
@@ -23,7 +23,6 @@ public static class FolderIconGetter
         foreach (var node in nodes)
         {
             StorageItemThumbnail thumbnail;
-
             try
             {
                 var file = await StorageFolder.GetFolderFromPathAsync(node.Path);
@@ -34,17 +33,10 @@ public static class FolderIconGetter
                 Debug.WriteLine("Failed getting folder icon for " + node.Path + ": " + e);
                 continue;
             }
-
             IconCache.TryAdd(node.Path, thumbnail);
+            // Call UI thread to update the icon
+            queue.TryEnqueue(() => { node.SetFolderIcon(); });
         }
-        
-        queue.TryEnqueue(() =>
-        {
-            foreach (var node in nodes)
-            {
-                node.SetFolderIcon();
-            }
-        });
     }
 }
 
