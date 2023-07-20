@@ -8,6 +8,7 @@ namespace MediFiler_V2
         {
             IMAGE,
             VIDEO,
+            AUDIO,
             TEXT,
             OTHER
         }
@@ -23,6 +24,8 @@ namespace MediFiler_V2
                 ".mp4" or ".webm" or ".wmw" or ".flv" or ".avi" or ".mov" or ".mkv" or ".m4v" or ".mpg" or ".mpeg" or ".m2v" 
                     or ".3gp" or ".3g2" or ".mxf" or ".roq" or ".nsv" or ".flv" or ".f4v" or ".f4p" or ".f4a" or ".f4b"
                     => FileCategory.VIDEO,
+                ".mp3" or ".wav" or ".ogg" or ".m4a" or ".flac" or ".wma" or ".aac" or ".alac" or ".aiff" or ".dsd" or ".opus"
+                    => FileCategory.AUDIO,
                 ".txt" or ".md"
                     => FileCategory.TEXT,
                 _ 

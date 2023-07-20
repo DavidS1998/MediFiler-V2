@@ -81,6 +81,7 @@ public class MainWindowModel
             var currentFile = CurrentFolder.SubFiles[CurrentFolderIndex];
             
             SetAppBarColor(currentFile);
+            _mainWindow.VideoViewer1.Source = null;
             _metadataHandler.ShowMetadata(currentFile);
             _fileThumbnail.ClearPreviewCache(_mainWindow.PreviewImageContainer1);
             _fileThumbnail.PreloadThumbnails(CurrentFolderIndex, CurrentFolder, _mainWindow.PreviewImageContainer1);
@@ -128,9 +129,17 @@ public class MainWindowModel
                 break;
             case FileTypeHelper.FileCategory.VIDEO:
                 _mainWindow.TextHolder1.Visibility = Visibility.Collapsed;
+                _mainWindow.ImageViewer1.Visibility = Visibility.Collapsed;
+                _mainWindow.VideoHolder1.Visibility = Visibility.Visible;
+                DisplayVideo(fileSystem);
+                break;
+            case FileTypeHelper.FileCategory.AUDIO:
+                _mainWindow.TextHolder1.Visibility = Visibility.Collapsed;
                 _mainWindow.ImageViewer1.Visibility = Visibility.Visible;
                 _mainWindow.VideoHolder1.Visibility = Visibility.Visible;
                 DisplayThumbnail(fileSystem);
+                DisplayVideo(fileSystem);
+                //DisplayAudio(fileSystem);
                 break;
             case FileTypeHelper.FileCategory.TEXT:
                 _mainWindow.TextHolder1.Visibility = Visibility.Visible;
@@ -177,18 +186,47 @@ public class MainWindowModel
         _mainWindow.TextViewer1.Text = text;
     }
     
+    public async void DisplayVideo(FileSystemNode fileSystem)
+    {
+        var file = await StorageFile.GetFileFromPathAsync(fileSystem.Path);
+        var stream = await file.OpenAsync(FileAccessMode.Read);
+        _mainWindow.VideoViewer1.Source = Windows.Media.Core.MediaSource.CreateFromStream(stream, file.FileType);
+        
+        //_mainWindow.VideoViewer1.MediaPlayer.IsLoopingEnabled = true;
+        _mainWindow.VideoViewer1.TransportControls.IsCompact = true;
+        _mainWindow.VideoViewer1.TransportControls.ShowAndHideAutomatically = false;
+        _mainWindow.VideoViewer1.TransportControls.IsRepeatButtonVisible = true;
+        _mainWindow.VideoViewer1.TransportControls.IsZoomButtonVisible = false;
+        _mainWindow.VideoViewer1.TransportControls.IsRepeatEnabled = true;
+        _mainWindow.VideoViewer1.TransportControls.Opacity = 0.75;
+        _mainWindow.VideoViewer1.TransportControls.Width = _mainWindow.FileHolder1.ActualWidth * 0.25;
+        _mainWindow.VideoViewer1.TransportControls.VerticalAlignment = VerticalAlignment.Top;
+        _mainWindow.VideoViewer1.TransportControls.Visibility = Visibility.Visible;
+        
+        // TODO: Save status of Repeat, Volume, Visbility
+    }
+
     
-    public void FileAction()
+    public void FileAction(bool altAction = false)
     {
         var currentFile = CurrentFolder.SubFiles[CurrentFolderIndex];
-        
+
         switch (FileTypeHelper.GetFileCategory(currentFile.Path))
         {
             case FileTypeHelper.FileCategory.IMAGE:
                 ImageAction(currentFile);
                 break;
-            case FileTypeHelper.FileCategory.TEXT:
             case FileTypeHelper.FileCategory.VIDEO:
+            case FileTypeHelper.FileCategory.AUDIO:
+                if (altAction)
+                {
+                    // Toggle transport controls
+                    _mainWindow.VideoViewer1.TransportControls.Visibility = _mainWindow.VideoViewer1.TransportControls.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+                    break;
+                }
+                VideoAction(currentFile);
+                break;
+            case FileTypeHelper.FileCategory.TEXT:
             case FileTypeHelper.FileCategory.OTHER:
                 OpenDefaultAction(currentFile);
                 break;
@@ -265,6 +303,20 @@ public class MainWindowModel
         }
         FileActionInProgress = true;
     }
+    
+    public void VideoAction(FileSystemNode currentFile)
+    {
+        // Check if VideoViewer is playing
+        if (_mainWindow.VideoViewer1.MediaPlayer.PlaybackSession.PlaybackState == Windows.Media.Playback.MediaPlaybackState.Playing)
+        {
+            _mainWindow.VideoViewer1.MediaPlayer.Pause();
+        }
+        else
+        {
+            _mainWindow.VideoViewer1.MediaPlayer.Play();
+        }
+    }
+
     
     
     // // // NAVIGATION // // //

@@ -44,6 +44,7 @@ namespace MediFiler_V2.Code
         public ScrollViewer TextHolder1 { get => TextHolder; set => TextHolder = value; }
         public Grid VideoHolder1 { get => VideoHolder; set => VideoHolder = value; }
         public TreeView FileTreeView1 { get => FileTreeView; set => FileTreeView = value; }
+        public MediaPlayerElement VideoViewer1 { get => MediaPlayer; set => MediaPlayer = value; }
         
         public AppBarButton RefreshButton1 { get => RefreshButton; set => RefreshButton = value; }
         public AppBarButton RebuildButton1 { get => RebuildButton; set => RebuildButton = value; }
@@ -258,8 +259,26 @@ namespace MediFiler_V2.Code
             // Only run if the clicked element has name FileHolder or FileViewer
             if (((FrameworkElement)e.OriginalSource).Name != "FileHolder" && 
                 ((FrameworkElement)e.OriginalSource).Name != "ImageViewer" &&
+                ((FrameworkElement)e.OriginalSource).Name != "VideoHolder" &&
+                ((FrameworkElement)e.OriginalSource).Name != "MediaPlayer" &&
                 ((FrameworkElement)e.OriginalSource).Name != "TextViewer") return;
             _model.FileAction();
+        }
+        private void FileAction_RightClick2(object sender, RightTappedRoutedEventArgs e)
+        {
+            // Temporary workaround, for video player
+            // TODO: Test if Border with MediaPlayer as parent?
+            _model.FileAction();
+        }
+        private void FileAction_LeftClick1(object sender, TappedRoutedEventArgs e)
+        {
+            // Registers when left clicking on video frame
+            // TODO: Do not use Border
+            if (((FrameworkElement)e.OriginalSource) is not Border)
+            {
+                return;
+            }
+            _model.FileAction(true);
         }
         
                 

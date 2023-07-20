@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:code="using:MediFiler_V2.Code"
+    xmlns:utilities="using:MediFiler_V2.Code.Utilities"
     mc:Ignorable="d">
 
     <Grid x:Name="MainContent" AllowDrop="True" Drop="Window_OnDrop" DragOver="Window_OnDragOver">
@@ -225,7 +226,7 @@
                 <!--Sort view-->
                 <Grid Visibility="Collapsed" Name="SortView" Background="Black" 
                       PointerWheelChanged="MouseWheelScrollHandler" 
-                      SizeChanged="ImageViewer_SizeChanged" RightTapped="FileAction_RightClick">
+                      SizeChanged="ImageViewer_SizeChanged" RightTapped="FileAction_RightClick" >
                     
                     <Grid Name="FileHolder" Background="Black"
                                   PointerMoved="FileHolder_OnPointerMoved"
@@ -240,9 +241,21 @@
                                        TextWrapping="Wrap"/>
                         </ScrollViewer>
                         
-                        <Grid Name="VideoHolder" Visibility="Collapsed" IsHitTestVisible="False">
-                            <Image Source="../Assets/PlayIcon.png" IsHitTestVisible="False"
-                                   Width="200" Height="200" HorizontalAlignment="Center" VerticalAlignment="Center"></Image>
+                        <Grid Name="VideoHolder" Visibility="Visible">
+                            <MediaPlayerElement Name="MediaPlayer"
+                                                AutoPlay="False"
+                                                AreTransportControlsEnabled="True"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Width="auto"
+                                                RightTapped="FileAction_RightClick2"
+                                                Tapped="FileAction_LeftClick1"
+                                                
+                                                Height="auto">
+                                <MediaPlayerElement.TransportControls>
+                                    <MediaTransportControls Name="Controls"></MediaTransportControls>
+                                </MediaPlayerElement.TransportControls>
+                            </MediaPlayerElement>
                         </Grid>
                     </Grid>
 
