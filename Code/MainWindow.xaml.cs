@@ -214,8 +214,8 @@ namespace MediFiler_V2.Code
             else
             {
                 _model.FileOperations.MoveFile(respectiveNode);
-                _model.CurrentFolder.FolderColor = true;
-                //respectiveNode.FolderColor = true; 
+                _model.CurrentFolder.UpdateColor();
+                //respectiveNode.UpdateColor();
             }
         }
 

@@ -131,6 +131,9 @@ public class FileOperations
         // Add a + to the start of the name
         var newName = "+" + currentName;
         RenameFile(newName);
+        
+        // Update folder color if criteria is met
+        if (!PlusExists()) _mainWindowModel.CurrentFolder.FolderColor = true;
     }
 
     public void RemovePlus()
@@ -146,5 +149,14 @@ public class FileOperations
         // Remove one + from the start of the name
         var newName = currentName.Remove(0, 1);
         RenameFile(newName);
+        
+        // Update folder color if criteria is no longer met
+        if (PlusExists()) _mainWindowModel.CurrentFolder.FolderColor = true;
+    }
+
+    private bool PlusExists()
+    {
+        // If _mainWindowModel.CurrentFolder.SubFiles contains even one file not starting with a +, return false
+        return _mainWindowModel.CurrentFolder.SubFiles.Any(file => !file.Name.StartsWith("+"));
     }
 }

@@ -192,18 +192,22 @@ public class MainWindowModel
         var stream = await file.OpenAsync(FileAccessMode.Read);
         _mainWindow.VideoViewer1.Source = Windows.Media.Core.MediaSource.CreateFromStream(stream, file.FileType);
         
-        //_mainWindow.VideoViewer1.MediaPlayer.IsLoopingEnabled = true;
+        // Temporary defaults
+        _mainWindow.VideoViewer1.MediaPlayer.Play();
+        _mainWindow.VideoViewer1.MediaPlayer.IsMuted = true;
+        _mainWindow.VideoViewer1.MediaPlayer.IsLoopingEnabled = true;
         _mainWindow.VideoViewer1.TransportControls.IsCompact = true;
         _mainWindow.VideoViewer1.TransportControls.ShowAndHideAutomatically = false;
         _mainWindow.VideoViewer1.TransportControls.IsRepeatButtonVisible = true;
-        _mainWindow.VideoViewer1.TransportControls.IsZoomButtonVisible = false;
         _mainWindow.VideoViewer1.TransportControls.IsRepeatEnabled = true;
+        _mainWindow.VideoViewer1.TransportControls.IsZoomButtonVisible = false;
         _mainWindow.VideoViewer1.TransportControls.Opacity = 0.75;
         _mainWindow.VideoViewer1.TransportControls.Width = _mainWindow.FileHolder1.ActualWidth * 0.25;
         _mainWindow.VideoViewer1.TransportControls.VerticalAlignment = VerticalAlignment.Top;
         _mainWindow.VideoViewer1.TransportControls.Visibility = Visibility.Visible;
         
         // TODO: Save status of Repeat, Volume, Visbility
+        // TODO: Revert temporary default
     }
 
     

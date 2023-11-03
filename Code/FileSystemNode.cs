@@ -130,6 +130,11 @@ namespace MediFiler_V2
             //SetFolderIcon();
             OnPropertyChanged(nameof(FileCount));
         }
+
+        public void UpdateColor()
+        {
+            OnPropertyChanged(nameof(FolderColor));
+        }
         
         public void SetFolderIcon()
         {
