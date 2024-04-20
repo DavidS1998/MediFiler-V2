@@ -13,67 +13,98 @@ namespace MediFiler_V2;
 public static class TreeHandler
 {
     // TODO: Use helper functions instead of global variables
-    public static readonly List<FileSystemNode> RootNodes = new(); // Top folders
-    public static readonly List<FileSystemNode> FullFolderList = new(); // Used for the folder list view
-    private static IReadOnlyList<IStorageItem> rootFiles;
+    public static List<FileSystemNode> RootNodes = new(); // Top folders
+    private static List<FileSystemNode> _fullFolderList = new(); // Used for the folder list view
+    private static IReadOnlyList<IStorageItem> _rootFiles;
+    private static object fullFolderListLock = new object(); // Lock object for synchronization
+
 
     public static async Task BuildTree(IReadOnlyList<IStorageItem> filesAndFolders, TreeView fileTreeView)
     {
-        rootFiles = filesAndFolders;
+        _rootFiles = filesAndFolders;
         ClearTree(fileTreeView);
+        fileTreeView.ItemsSource = null;
         
         // Performance measuring
-        var stopwatch = new Stopwatch();
-        stopwatch.Start();
+        //var stopwatch = new Stopwatch();
+        //stopwatch.Start();
 
+        // Create the file structure in the background, may be very resource intensive
+        // Extract all root nodes
         // Create the file structure in the background, may be very resource intensive
         await Task.Run(() =>
         {
             // Extract all root nodes
-            Parallel.ForEach(filesAndFolders, path => RootNodes.Add(new FileSystemNode(path, 0, null)));
-
-            // Go down each root node and build a tree
-            foreach (var node in RootNodes)
+            foreach (var path in filesAndFolders)
             {
+                var node = new FileSystemNode(path, 0, null);
+                RootNodes.Add(node);
                 AddFolderToTree(node);
             }
         });
-        fileTreeView.ItemsSource = null;
+
         fileTreeView.ItemsSource = RootNodes;
         
         // Print performance data
-        stopwatch.Stop();
-        Debug.WriteLine("Tree generated in " + stopwatch.ElapsedMilliseconds + "ms");
+        //stopwatch.Stop();
+        //Debug.WriteLine("Tree generated in " + stopwatch.ElapsedMilliseconds + "ms");
     }
     
     /// Recursively extracts folder data from nodes
     public static void AddFolderToTree(FileSystemNode systemNode)
     {
-        FullFolderList.Add(systemNode);
+        lock (fullFolderListLock)
+        {
+            _fullFolderList.Add(systemNode);
+        }
+    
         foreach (var subNode in systemNode.SubFolders)
         {
             AddFolderToTree(subNode);
         }
-        //FullFolderList.OrderBy(x => x.Name, new FileSystemNode.SortLiterally()).ToList();
+        //Debug.WriteLine("Added folder: " + systemNode.Name);
     }
 
     /// Rebuilds the tree from the root files
     public static async void RebuildTree(TreeView fileTreeView, MainWindow mainWindow = null)
     {
-        FullFolderList.Clear();
-        await BuildTree(rootFiles, fileTreeView);
+        //FullFolderList.Clear();
+        await BuildTree(_rootFiles, fileTreeView);
         
         if (mainWindow != null) mainWindow.StartLoadFilesInBackground();
     }
+    
 
+    
     // // // Helper functions // // //
     
+    
+    
+    // Get copy of the full folder list
+    public static List<FileSystemNode> GetFullFolderList()
+    {
+        lock (fullFolderListLock)
+        {
+            return _fullFolderList;
+        }
+    }
+    
+    public static void RemoveNode(FileSystemNode node)
+    {
+        lock (fullFolderListLock)
+        {
+            _fullFolderList.Remove(node);
+        }
+    }
     
     private static void ClearTree(TreeView fileTreeView)
     {
         fileTreeView.ItemsSource = null;
         RootNodes.Clear();
-        FullFolderList.Clear();
+        lock (fullFolderListLock)
+        {
+            _fullFolderList.Clear();
+        }
     }
 
     public static void AssignTreeToUserInterface(TreeView fileTreeView, DispatcherQueue queue)
@@ -93,7 +124,7 @@ public static class TreeHandler
 
     public static FileSystemNode FindNode(string Path)
     {
-        foreach (var node in FullFolderList)
+        foreach (var node in _fullFolderList)
         {
             if (node.Path == Path) return node;
         }

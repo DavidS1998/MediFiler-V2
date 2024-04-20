@@ -15,7 +15,7 @@
             <RowDefinition Height="48"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-
+       
         <!--Title bar-->
         <Grid x:Name="AppTitleBar" Height="32" Background="#000000" VerticalAlignment="Top" Grid.Row="0">
             

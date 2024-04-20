@@ -406,7 +406,7 @@ namespace MediFiler_V2.Code
             //var collapse = !TreeHandler.FullFolderList.FirstOrDefault().AllExpanded;
             
             // Iterate and collapse every FileSystemNode in FileTreeView list
-            foreach (var node in TreeHandler.FullFolderList)
+            foreach (var node in TreeHandler.GetFullFolderList())
             {
                 // Skip if node is in TreeHandler.RootNodes
                 if (TreeHandler.RootNodes.Contains(node)) continue;
@@ -454,11 +454,10 @@ namespace MediFiler_V2.Code
             // Color and file count
             await Task.Run(LoadFiles);
             await Task.Run(() => FolderIconGetter.GetFolderIcon(dispatcherQueue));
-            foreach (var folder in TreeHandler.FullFolderList)
+            foreach (var folder in TreeHandler.GetFullFolderList())
             { folder.UpdateAsLoaded(); }
             
             // Load folder icons afterwards
-            
         }
         
         // Load files
@@ -467,20 +466,22 @@ namespace MediFiler_V2.Code
             try
             {
                 // Performance measuring
-                var stopwatch = new Stopwatch();
-                stopwatch.Start();
+                //var stopwatch = new Stopwatch();
+                //stopwatch.Start();
                 
                 // Simultaneously load files from all folders
-                Parallel.ForEach(TreeHandler.FullFolderList, folder =>
-                { folder.GetSubFiles().Wait(); });
+                Parallel.ForEach(TreeHandler.GetFullFolderList(), folder =>
+                {
+                    folder.GetSubFiles().Wait();
+                });
                 
                 // Print performance data
-                stopwatch.Stop();
-                Debug.WriteLine("Files loaded in " + stopwatch.ElapsedMilliseconds + "ms");
+                //stopwatch.Stop();
+                //Debug.WriteLine("Files loaded in " + stopwatch.ElapsedMilliseconds + "ms");
             }
             catch (Exception e)
             {
-                Debug.WriteLine("Interrupted:" + e);
+                Debug.WriteLine("!!! Interrupted:" + e);
             }
         } 
         

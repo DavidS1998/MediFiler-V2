@@ -213,6 +213,7 @@ public class MainWindowModel
     
     public void FileAction(bool altAction = false)
     {
+        if (CurrentFolder == null || CurrentFolder.SubFiles.Count <= 0) return;
         var currentFile = CurrentFolder.SubFiles[CurrentFolderIndex];
 
         switch (FileTypeHelper.GetFileCategory(currentFile.Path))
@@ -267,10 +268,10 @@ public class MainWindowModel
             if (baseDirectory == null) return;
             baseDirectory = await baseDirectory.TryGetItemAsync("Upscalers") as StorageFolder;
             if (baseDirectory == null) return;
-            baseDirectory = await baseDirectory.TryGetItemAsync("ncnn") as StorageFolder;
+            baseDirectory = await baseDirectory.TryGetItemAsync("ncnn2") as StorageFolder;
             if (baseDirectory == null) return;
 
-            var upscalerExe = await baseDirectory.TryGetItemAsync("ncnn.exe");
+            var upscalerExe = await baseDirectory.TryGetItemAsync("realcugan-ncnn-vulkan.exe");
             if (upscalerExe == null) return;
         
             var exe = (StorageFile) upscalerExe;
@@ -327,7 +328,7 @@ public class MainWindowModel
 
 
     /// For loading a different folder context
-    public void SwitchFolder(FileSystemNode newFolder, int position = 0, bool reorder = true)
+    public void SwitchFolder(FileSystemNode newFolder, int position = 0, bool reorder = true, bool moved = false)
     {
         var sameFolder = CurrentFolder == newFolder && CurrentFolder != null;
         CurrentFolder = newFolder;
@@ -337,11 +338,13 @@ public class MainWindowModel
             // TODO: UNSURE IF THIS SHOULUD BE DEFAULT BEHAVIOR - MAYBE ONLY IF FOLDER IS EMPTY
             // Slows down loading of folders with many files
             
-            if (reorder) { CurrentFolder.LocalRefresh(); }
+            if (reorder && moved) { CurrentFolder.FileRemoved(CurrentFolderIndex); }
+            if (reorder && !moved) { CurrentFolder.LocalRefresh(); }
         }
         catch (Exception)
         {
             // Folder does not exist
+            Debug.WriteLine("Switch folder failed, folder does not exist?");
             FullRefresh();
         }
         
@@ -371,12 +374,13 @@ public class MainWindowModel
     }
 
     /// Refreshes the current folder and reloads all items within it
-    public void Refresh(bool reorder = true)
+    public void Refresh(bool reorder = true, bool moved = false)
     {
         _mainWindow.JsonHandler.UpdateHomeFolders();
         
         if (!CurrentFolder.FolderStillExists())
         {
+            Debug.WriteLine("Hello");
             // Folder does not exist, load empty context
             return;
         }
@@ -384,11 +388,7 @@ public class MainWindowModel
         //TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1);
         if (reorder)
         {
-            SwitchFolder(CurrentFolder, CurrentFolderIndex);
-        }
-        else
-        {
-            SwitchFolder(CurrentFolder, CurrentFolderIndex, false);
+            SwitchFolder(CurrentFolder, CurrentFolderIndex, reorder, moved);
         }
     }
 

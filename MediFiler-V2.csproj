@@ -21,81 +21,144 @@
     <None Remove="appsettings.json" />
     <Content Include="appsettings.json" />
     <None Remove="Upscalers\ncnn\models\realesr-animevideov3-x2.bin" />
-    <Content Include="Upscalers\ncnn\models\realesr-animevideov3-x2.bin">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Remove="Upscalers\ncnn\models\realesr-animevideov3-x2.param" />
-    <Content Include="Upscalers\ncnn\models\realesr-animevideov3-x2.param">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Remove="Upscalers\ncnn\models\realesr-animevideov3-x3.bin" />
-    <Content Include="Upscalers\ncnn\models\realesr-animevideov3-x3.bin">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Remove="Upscalers\ncnn\models\realesr-animevideov3-x3.param" />
-    <Content Include="Upscalers\ncnn\models\realesr-animevideov3-x3.param">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Remove="Upscalers\ncnn\models\realesr-animevideov3-x4.bin" />
-    <Content Include="Upscalers\ncnn\models\realesr-animevideov3-x4.bin">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Remove="Upscalers\ncnn\models\realesr-animevideov3-x4.param" />
-    <Content Include="Upscalers\ncnn\models\realesr-animevideov3-x4.param">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Remove="Upscalers\ncnn\models\realesrgan-x4plus.bin" />
-    <Content Include="Upscalers\ncnn\models\realesrgan-x4plus.bin">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Remove="Upscalers\ncnn\models\realesrgan-x4plus.param" />
-    <Content Include="Upscalers\ncnn\models\realesrgan-x4plus.param">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Remove="Upscalers\ncnn\models\realesrgan-x4plus-anime.bin" />
-    <Content Include="Upscalers\ncnn\models\realesrgan-x4plus-anime.bin">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Remove="Upscalers\ncnn\models\realesrgan-x4plus-anime.param" />
-    <Content Include="Upscalers\ncnn\models\realesrgan-x4plus-anime.param">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Remove="Upscalers\ncnn\input.jpg" />
-    <Content Include="Upscalers\ncnn\input.jpg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Remove="Upscalers\ncnn\input2.jpg" />
-    <Content Include="Upscalers\ncnn\input2.jpg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Remove="Upscalers\ncnn\ncnn.bat" />
-    <Content Include="Upscalers\ncnn\ncnn.bat">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Remove="Upscalers\ncnn\ncnn.exe" />
-    <Content Include="Upscalers\ncnn\ncnn.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Remove="Upscalers\ncnn\onepiece_demo.mp4" />
-    <Content Include="Upscalers\ncnn\onepiece_demo.mp4">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Remove="Upscalers\ncnn\README_windows.md" />
-    <Content Include="Upscalers\ncnn\README_windows.md">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Remove="Upscalers\ncnn\realesrgan-ncnn-vulkan.exe" />
-    <Content Include="Upscalers\ncnn\realesrgan-ncnn-vulkan.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Remove="Upscalers\ncnn\vcomp140.dll" />
-    <Content Include="Upscalers\ncnn\vcomp140.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Remove="Upscalers\ncnn\vcomp140d.dll" />
-    <Content Include="Upscalers\ncnn\vcomp140d.dll">
+    <None Update="Upscalers\ncnn2\models-se\up2x-denoise1x.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    </None>
+    <None Update="Upscalers\ncnn2\models-pro\up3x-no-denoise.param">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\README.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-se\up2x-no-denoise.param">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-se\up4x-conservative.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-pro\up3x-conservative.param">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-pro\up3x-denoise3x.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-nose\up2x-no-denoise.param">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-se\up2x-denoise2x.param">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-pro\up2x-no-denoise.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-se\up3x-denoise3x.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-pro\up2x-denoise3x.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\vcomp140.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-pro\up2x-no-denoise.param">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-se\up3x-denoise3x.param">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-se\up4x-denoise3x.param">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-se\up2x-conservative.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-pro\up3x-no-denoise.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-pro\up2x-denoise3x.param">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-se\up2x-no-denoise.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-nose\up2x-no-denoise.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-se\up3x-no-denoise.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-se\up2x-conservative.param">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\LICENSE">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-se\up4x-denoise3x.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-pro\up2x-conservative.param">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-se\up2x-denoise1x.param">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-se\up4x-no-denoise.param">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-pro\up2x-conservative.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-se\up3x-no-denoise.param">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-se\up4x-conservative.param">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-pro\up3x-denoise3x.param">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-se\up2x-denoise3x.param">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\realcugan-ncnn-vulkan.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-se\up3x-conservative.param">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-se\up2x-denoise3x.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-se\up4x-no-denoise.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-pro\up3x-conservative.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-se\up2x-denoise2x.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Upscalers\ncnn2\models-se\up3x-conservative.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>

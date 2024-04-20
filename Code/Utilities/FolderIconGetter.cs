@@ -18,24 +18,24 @@ public static class FolderIconGetter
     public static async void GetFolderIcon(Microsoft.UI.Dispatching.DispatcherQueue queue)
     {
         IconCache.Clear();
-        var nodes = TreeHandler.FullFolderList;
+        var nodes = TreeHandler.GetFullFolderList();
+        if (nodes.Count <= 0) return;
 
-        foreach (var node in nodes)
+        try
         {
-            StorageItemThumbnail thumbnail;
-            try
+            foreach (var node in nodes)
             {
+                StorageItemThumbnail thumbnail;
                 var file = await StorageFolder.GetFolderFromPathAsync(node.Path);
                 thumbnail = await file.GetThumbnailAsync(ThumbnailMode.SingleItem);
+                IconCache.TryAdd(node.Path, thumbnail);
+                // Call UI thread to update the icon
+                queue.TryEnqueue(() => { node.SetFolderIcon(); });
             }
-            catch (Exception e)
-            {
-                Debug.WriteLine("Failed getting folder icon for " + node.Path + ": " + e);
-                continue;
-            }
-            IconCache.TryAdd(node.Path, thumbnail);
-            // Call UI thread to update the icon
-            queue.TryEnqueue(() => { node.SetFolderIcon(); });
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine("Failed getting folder icon: " + e);
         }
     }
 }

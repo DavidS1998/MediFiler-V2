@@ -29,8 +29,8 @@ public class FileOperations
         {
             // Undo queue
             _mainWindowModel.UndoHandler.Push(_mainWindowModel.CurrentFolder.SubFiles[_mainWindowModel.CurrentFolderIndex].CreateMemento(UndoAction.Move));
-            _mainWindowModel.CurrentFolder.SubFiles[_mainWindowModel.CurrentFolderIndex].Move(destination);
-            _mainWindowModel.Refresh();
+            _mainWindowModel.CurrentFolder.SubFiles[_mainWindowModel.CurrentFolderIndex].Move(destination, 0);
+            _mainWindowModel.Refresh(moved: true);
         }
         catch (Exception e)
         {
@@ -54,7 +54,7 @@ public class FileOperations
         // Undo queue
         _mainWindowModel.UndoHandler.Push(_mainWindowModel.CurrentFolder.SubFiles[_mainWindowModel.CurrentFolderIndex].CreateMemento(UndoAction.Move));
 
-        _mainWindowModel.CurrentFolder.SubFiles[_mainWindowModel.CurrentFolderIndex].Move(trashFolderNode);
+        _mainWindowModel.CurrentFolder.SubFiles[_mainWindowModel.CurrentFolderIndex].Move(trashFolderNode, 0);
         _mainWindowModel.Refresh();
     }
 

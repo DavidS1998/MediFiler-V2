@@ -52,12 +52,12 @@ public class UndoHandler
                 memento.Node.Rename(memento.Name);
                 break;
             case UndoAction.Move:
-                memento.Node.Move(memento.Parent);
+                memento.Node.Move(memento.Parent, _mainWindowModel.CurrentFolderIndex);
                 _mainWindowModel.CurrentFolder.FolderColor = true;
                 memento.Parent.FolderColor = true; // TODO: Bake into Move method
                 break;
         }
 
-        _mainWindowModel.Refresh();
+        _mainWindowModel.Refresh(moved: true);
     }
 }

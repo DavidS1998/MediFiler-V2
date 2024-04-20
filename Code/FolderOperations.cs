@@ -99,7 +99,7 @@ public class FolderOperations
         try
         {
             node.Parent.SubFolders.Remove(node);
-            TreeHandler.FullFolderList.Remove(node);
+            TreeHandler.RemoveNode(node);
             TreeHandler.AssignTreeToUserInterface(_mainWindow.FileTreeView1, _mainWindow.dispatcherQueue);
             
             #pragma warning disable 4014

@@ -84,7 +84,9 @@ namespace MediFiler_V2
             var folders = folder.GetFoldersAsync().AsTask().Result;
 
             // Make a node for each file and folder
-            Parallel.ForEach(folders, item =>
+            // Parallel causes race conditions, performance improvement was negligible
+            //Parallel.ForEach(folders, item =>
+            foreach (var item in folders)
             {
                 // if (item.IsOfType(StorageItemTypes.File))
                 // {
@@ -94,7 +96,8 @@ namespace MediFiler_V2
                 {
                     SubFolders.Add(new FileSystemNode(item, depth + 1, this));
                 }
-            });
+            }
+            //});
             
             // Sort result
             //SubFiles = SubFiles.OrderBy(x => x.Name).ToList();
@@ -107,14 +110,22 @@ namespace MediFiler_V2
         public async Task GetSubFiles()
         {
             var files = await Folder.GetFilesAsync();
-
+            
             if (!IsLoaded)
             {
-                Parallel.ForEach(files, file => { SubFiles.Add(new FileSystemNode(file, Depth + 1, this)); });
+                try
+                {
+                    Parallel.ForEach(files, file => { SubFiles.Add(new FileSystemNode(file, Depth + 1, this)); });
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine("Error: " + e);
+                }
+
             }
             else
             {
-                Debug.WriteLine("ISLOADED");
+                //Debug.WriteLine("ISLOADED");
             }
 
             SubFiles = SubFiles.OrderBy(x => x.Name).ToList();
@@ -260,6 +271,18 @@ namespace MediFiler_V2
             FileCount = SubFiles.Count;
         }
 
+        public void FileRemoved(int index)
+        {
+            // Do nothing??
+            //if (IsFile) return;
+            //Debug.WriteLine(index);
+            
+
+            //if (index < 0 || index >= SubFiles.Count) return;
+            //SubFiles.RemoveAt(index);
+            //FileCount = SubFiles.Count;
+        }
+
         // Reloads all files within this folder node and all subfolders
         public void CascadingRefresh()
         {
@@ -267,7 +290,7 @@ namespace MediFiler_V2
         }
 
         // Move this node to another node
-        public void Move(FileSystemNode destination)
+        public void Move(FileSystemNode destination, int index)
         {
             if (!IsFile) return;
             
@@ -295,9 +318,12 @@ namespace MediFiler_V2
             this.Depth = destination.Depth + 1;
 
             // Add to new parent
-            destination.SubFiles.Add(this);
+            if (index < 0 || index >= destination.SubFiles.Count)
+                { destination.SubFiles.Add(this); }
+            else
+                { destination.SubFiles.Insert(index, this); }
             destination.FileCount++;
-            destination.SubFiles = destination.SubFiles = SubFiles.OrderBy(x => x.Name, new SortLiterally()).ToList();
+            //destination.SubFiles = destination.SubFiles = SubFiles.OrderBy(x => x.Name, new SortLiterally()).ToList();
         }
         
         public void Rename(string newName)
