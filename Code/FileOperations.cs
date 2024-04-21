@@ -116,7 +116,7 @@ public class FileOperations
         _mainWindowModel.UndoHandler.Push(_mainWindowModel.CurrentFolder.SubFiles[_mainWindowModel.CurrentFolderIndex].CreateMemento(UndoAction.Rename));
 
         _mainWindowModel.CurrentFolder.SubFiles[_mainWindowModel.CurrentFolderIndex].Rename(newName + "." + fileExtension);
-        _mainWindowModel.Refresh(false);
+        _mainWindowModel.Refresh(true, moved: true);
     }
 
     
