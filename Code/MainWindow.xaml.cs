@@ -190,9 +190,53 @@ namespace MediFiler_V2.Code
 
             // Scroll through files in folder
             if (_model.CurrentFolderIndex + increment < 0 ||
-                _model.CurrentFolderIndex + increment >= _model.CurrentFolder.SubFiles.Count) return;
+                _model.CurrentFolderIndex + increment >= _model.CurrentFolder.SubFiles.Count)
+            {
+                // Overscroll thrice to switch folders
+                _overscrollCounter += 1;
+                // TODO: Animation when attempting to overscroll, and when switching folders
+                if (_overscrollCounter < 3) return;
+                Overscroll(increment);
+                _overscrollCounter = 0;
+                return;
+            }
+            _overscrollCounter = 0;
             _model.CurrentFolderIndex += increment;
             _model.Load();
+        }
+        private int _overscrollCounter = 0;
+        
+        // Overscroll (scrolling past the first or last file)
+        private void Overscroll(int increment)
+        {
+            if (increment < 0)
+            {
+                // Switch to previous folder in GetFullFolderList
+                var index = TreeHandler.GetFullFolderList().IndexOf(_model.CurrentFolder);
+                if (index == 0) return;
+                _model.CurrentFolder.IsCurrentFolder = false;
+                _model.CurrentFolder = TreeHandler.GetFullFolderList()[index - 1];
+                _model.CurrentFolder.IsCurrentFolder = true;
+                _model.SwitchFolder(_model.CurrentFolder);
+                
+                // Start at the end
+                _model.CurrentFolderIndex = _model.CurrentFolder.SubFiles.Count - 1;
+                _model.Load();
+            }
+            else
+            {
+                // Switch to next folder in GetFullFolderList
+                var index = TreeHandler.GetFullFolderList().IndexOf(_model.CurrentFolder);
+                if (index == TreeHandler.GetFullFolderList().Count - 1) return;
+                _model.CurrentFolder.IsCurrentFolder = false;
+                _model.CurrentFolder = TreeHandler.GetFullFolderList()[index + 1];
+                _model.CurrentFolder.IsCurrentFolder = true;
+                _model.SwitchFolder(_model.CurrentFolder);
+                
+                // Start at the beginning
+                _model.CurrentFolderIndex = 0;
+                _model.Load();
+            }
         }
 
         /// Handler for the folder list
@@ -634,11 +678,11 @@ namespace MediFiler_V2.Code
         { ToggleFullscreen(); }
         
         // Plus button
-        private void PlusButton_OnPointerReleased(object sender, TappedRoutedEventArgs e)
+        private void PlusButton_OnPointerReleased(object sender, RoutedEventArgs e)
         { _model.FileOperations.AddPlus(); }
         
         // Minus button
-        private void MinusButton_OnPointerReleased(object sender, TappedRoutedEventArgs e)
+        private void MinusButton_OnPointerReleased(object sender, RoutedEventArgs e)
         { _model.FileOperations.RemovePlus(); }
         
         // Open in button

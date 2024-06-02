@@ -98,13 +98,13 @@
             </CommandBar>
             
             <CommandBar Background="Transparent" DefaultLabelPosition="Collapsed" HorizontalAlignment="Right" Margin="8,0">
-                <AppBarButton Icon="Add" Label="+" IsEnabled="False" Width="32" Name="PlusButton" Tapped="PlusButton_OnPointerReleased">
+                <AppBarButton Icon="Add" Label="+" IsEnabled="False" Width="32" Name="PlusButton" Click="PlusButton_OnPointerReleased">
                     <AppBarButton.KeyboardAccelerators>
                         <KeyboardAccelerator Key="F7"
                                              Invoked="Plus_OnInvoked"></KeyboardAccelerator>
                     </AppBarButton.KeyboardAccelerators>
                 </AppBarButton>
-                <AppBarButton Icon="Remove" Label="-" IsEnabled="False" Width="32" Name="MinusButton" Tapped="MinusButton_OnPointerReleased">
+                <AppBarButton Icon="Remove" Label="-" IsEnabled="False" Width="32" Name="MinusButton" Click="MinusButton_OnPointerReleased">
                     <AppBarButton.KeyboardAccelerators>
                         <KeyboardAccelerator Key="F6"
                                              Invoked="Minus_OnInvoked"></KeyboardAccelerator>
