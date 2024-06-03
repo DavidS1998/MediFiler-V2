@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
@@ -23,6 +24,7 @@ using System.Runtime.InteropServices;
 using Windows.Storage.FileProperties;
 using MediFiler_V2.Code.Utilities;
 using Microsoft.UI.Xaml.Shapes;
+using Path = ABI.Microsoft.UI.Xaml.Shapes.Path;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -91,6 +93,11 @@ namespace MediFiler_V2.Code
             IntPtr hWnd = WindowNative.GetWindowHandle(this);
             WindowId myWndId = Win32Interop.GetWindowIdFromWindow(hWnd);
             _appWindow = AppWindow.GetFromWindowId(myWndId);
+            
+            // Set app icon
+            var appWindow = AppWindow.GetFromWindowId(myWndId);
+            appWindow.SetIcon(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) 
+                                                     ?? throw new InvalidOperationException(), "Assets", "Icon 2.ico"));
             
             // Initializers
             _model = new MainWindowModel(this);
