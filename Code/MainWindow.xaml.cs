@@ -22,6 +22,7 @@ using WindowActivatedEventArgs = Microsoft.UI.Xaml.WindowActivatedEventArgs;
 using System.Runtime.InteropServices;
 using Windows.Storage.FileProperties;
 using MediFiler_V2.Code.Utilities;
+using Microsoft.UI.Xaml.Shapes;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -66,6 +67,7 @@ namespace MediFiler_V2.Code
         private AppWindow _appWindow;
         private readonly MainWindowModel _model;
         public bool SortPanelPinned = true;
+        private int _overscrollCounter = 0;
         
         public DispatcherQueue dispatcherQueue;
 
@@ -194,21 +196,23 @@ namespace MediFiler_V2.Code
             {
                 // Overscroll thrice to switch folders
                 _overscrollCounter += 1;
-                // TODO: Animation when attempting to overscroll, and when switching folders
-                if (_overscrollCounter < 3) return;
+                if (_overscrollCounter < 3)
+                {
+                    OverscrollAnimation(increment, _overscrollCounter); 
+                    return;
+                }
                 Overscroll(increment);
-                _overscrollCounter = 0;
                 return;
             }
             _overscrollCounter = 0;
             _model.CurrentFolderIndex += increment;
             _model.Load();
         }
-        private int _overscrollCounter = 0;
         
         // Overscroll (scrolling past the first or last file)
         private void Overscroll(int increment)
         {
+            _overscrollCounter = 0;
             if (increment < 0)
             {
                 // Switch to previous folder in GetFullFolderList
@@ -237,6 +241,29 @@ namespace MediFiler_V2.Code
                 _model.CurrentFolderIndex = 0;
                 _model.Load();
             }
+        }
+
+        private void OverscrollAnimation(int increment, int counter)
+        {
+            // Return if previous or next folder does not exist
+            if (increment < 0 && TreeHandler.GetFullFolderList().IndexOf(_model.CurrentFolder) == 0) return;
+            if (increment > 0 && TreeHandler.GetFullFolderList().IndexOf(_model.CurrentFolder) == TreeHandler.GetFullFolderList().Count - 1) return;
+            
+            Ellipse overflowUI = increment > 0 ? RightOverflow : LeftOverflow;
+                
+            DoubleAnimation opacityAnimation = new DoubleAnimation
+            {
+                From = 0.0,
+                To = 0.3,
+                Duration = new Duration(TimeSpan.FromSeconds(0.2)),
+                AutoReverse = true
+            };
+            Storyboard storyboard = new Storyboard();
+            storyboard.Children.Add(opacityAnimation);
+
+            Storyboard.SetTarget(opacityAnimation, overflowUI);
+            Storyboard.SetTargetProperty(opacityAnimation, "Opacity");
+            storyboard.Begin();
         }
 
         /// Handler for the folder list

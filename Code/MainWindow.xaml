@@ -227,11 +227,11 @@
                 <Grid Visibility="Collapsed" Name="SortView" Background="Black" 
                       PointerWheelChanged="MouseWheelScrollHandler" 
                       SizeChanged="ImageViewer_SizeChanged" RightTapped="FileAction_RightClick" >
-                    
+
                     <Grid Name="FileHolder" Background="Black"
-                                  PointerMoved="FileHolder_OnPointerMoved"
-                                  PointerPressed="FileHolder_OnPointerPressed"
-                                  PointerReleased="FileHolder_OnPointerReleased">
+                          PointerMoved="FileHolder_OnPointerMoved"
+                          PointerPressed="FileHolder_OnPointerPressed"
+                          PointerReleased="FileHolder_OnPointerReleased">
                         <Image Name="ImageViewer" Stretch="Uniform">
                             <Image.RenderTransform/>
                         </Image>
@@ -374,6 +374,9 @@
                             </TreeView.ItemTemplate>
                         </TreeView>
                     </Grid>
+                    
+                    <Ellipse Name="RightOverflow" Width="300" Margin="0, 0, -190, 0" Fill="Cyan" IsHitTestVisible="False" Opacity="0" HorizontalAlignment="Right" VerticalAlignment="Stretch"/>
+                    <Ellipse Name="LeftOverflow" Width="300" Margin="-190, 0, 0, 0" Fill="Cyan" IsHitTestVisible="False" Opacity="0" HorizontalAlignment="Left" VerticalAlignment="Stretch"/>
 
                     <!-- Preview bottom bar -->
                     <Grid Height="150" Width="Auto" VerticalAlignment="Bottom" Background="#000000FF"
