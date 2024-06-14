@@ -1,18 +1,21 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.System;
 using MediFiler_V2.Code.Utilities;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace MediFiler_V2.Code;
 
 public class MainWindowModel
 {
     // UI
-    private readonly MainWindow _mainWindow;
+    public readonly MainWindow _mainWindow;
     
     // Helper classes
     private readonly MetadataHandler _metadataHandler;
@@ -27,7 +30,7 @@ public class MainWindowModel
     public UndoHandler UndoHandler => _undoHandler;
 
     // Constants
-    public const int PreloadDistance = 13; // 21 fills ultrawide
+    public const int PreloadDistance = 21; // 21 fills ultrawide
 
     // TODO: Stop using global variables
     private int _latestLoadedImage = -1;
@@ -85,6 +88,7 @@ public class MainWindowModel
             _metadataHandler.ShowMetadata(currentFile);
             _fileThumbnail.ClearPreviewCache(_mainWindow.PreviewImageContainer1);
             _fileThumbnail.PreloadThumbnails(CurrentFolderIndex, CurrentFolder, _mainWindow.PreviewImageContainer1);
+            Task.Run(() => _fileThumbnail.CacheAllThumbnails());
             DisplayCurrentFile(currentFile);
             
             _mainWindow.RenameButton1.IsEnabled = true;
@@ -99,6 +103,36 @@ public class MainWindowModel
             // If file cannot be found, refresh context and try again
             Debug.WriteLine("File not found when loading");
             Refresh();
+        }
+    }
+
+    // Reuse thumbnails for the folder view
+    public void UpdateFolderView()
+    {
+        _mainWindow.folderViewList.ReplaceFolderItems(ConvertThumbnailsList());
+    }
+
+    public Dictionary<string, BitmapImage> ConvertThumbnailsList()
+    {
+        var _fileThumbnails = _fileThumbnail.GetThumbnails();
+        var _formattedDictionary = new Dictionary<string, BitmapImage>();
+        
+        try
+        {
+            SortedDictionary<int,BitmapImage> _sortedThumbnails = new(_fileThumbnails);
+            
+            // Gets the filename from the supplied ID
+            foreach (var thumbnail in _sortedThumbnails)
+            {
+                var file = CurrentFolder.SubFiles[thumbnail.Key];
+                _formattedDictionary.Add(file.Name, thumbnail.Value);
+            }
+            return _formattedDictionary;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return _formattedDictionary;
         }
     }
     
@@ -335,7 +369,7 @@ public class MainWindowModel
         
         try
         {
-            // TODO: UNSURE IF THIS SHOULUD BE DEFAULT BEHAVIOR - MAYBE ONLY IF FOLDER IS EMPTY
+            // TODO: UNSURE IF THIS SHOULD BE DEFAULT BEHAVIOR - MAYBE ONLY IF FOLDER IS EMPTY
             // Slows down loading of folders with many files
             
             if (reorder && moved) { CurrentFolder.FileRemoved(CurrentFolderIndex); }
@@ -364,6 +398,7 @@ public class MainWindowModel
         _fileThumbnail.ClearPreviewCache(_mainWindow.PreviewImageContainer1);
         _metadataHandler.ClearMetadata();
         _mainWindow.Expanded = true;
+        _mainWindow.folderViewList.ClearFolderItems();
 
         // Only run on real folder switch
         // Debug.WriteLine(sameFolder ? "Same folder" : "Different folder");

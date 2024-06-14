@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
@@ -51,14 +52,19 @@ public class FileThumbnail
             return;
         }
 
-        var bitmap = new BitmapImage();
-        await bitmap.SetSourceAsync(thumbnail);
-        ThumbnailCache.TryAdd(index, bitmap);
+        _model._mainWindow.dispatcherQueue.TryEnqueue(() =>
+        {
+            var bitmap = new BitmapImage();
+            bitmap.SetSourceAsync(thumbnail);
+            ThumbnailCache.TryAdd(index, bitmap);
+        });
+        
     }
     
     /// Caches several adjacent file thumbnails into the dictionary
     public async void PreloadThumbnails(int currentPositionInFolder, FileSystemNode currentFolder, StackPanel previewImageContainer)
     {
+        /*
         var tasks = new List<Task>();
         // For loop using PreloadDistance as length in both directions
         for (var i = -PreloadDistance; i < PreloadDistance; i++)
@@ -70,15 +76,63 @@ public class FileThumbnail
             tasks.Add(SaveThumbnailToCache(path, fileIndex));
         }
         await Task.WhenAll(tasks);
+        */
         
-        
-        FillPreviews(previewImageContainer);
+        // Ensure the following code runs on the UI thread
+        _model._mainWindow.dispatcherQueue.TryEnqueue(() =>
+        {
+            FillPreviews(previewImageContainer);
+        });
         
         // Rapid folder switching may cause thumbnails from the wrong folder to be loaded
         if (currentFolder == _model.CurrentFolder) return;
         Debug.WriteLine("LOADED WRONG FOLDER, RETRYING");
         ThumbnailCache.Clear();
         PreloadThumbnails(currentPositionInFolder, _model.CurrentFolder, previewImageContainer);
+    }
+    
+    /// Cache all thumbnails in the current folder
+    public async void CacheAllThumbnails()
+    {
+        // Check if all have been cached
+        if (ThumbnailCache.Count == _model.CurrentFolder.SubFiles.Count) return;
+        if (_isCaching) return;
+        _isCaching = true;
+        
+        var tasks = new List<Task>();
+        try
+        {
+            for (var i = 0; i < _model.CurrentFolder.SubFiles.Count; i++)
+            {
+                var path = _model.CurrentFolder.SubFiles[i].Path;
+                tasks.Add(SaveThumbnailToCache(path, i));
+                await Task.Delay(1);
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine(e + " - Context likely changed");
+            _isCaching = false;
+            return;
+        }
+        await Task.WhenAll(tasks);
+        Debug.WriteLine("Thumbnail caching complete");
+        _isCaching = false;
+        
+        _model._mainWindow.dispatcherQueue.TryEnqueue(() =>
+        {
+            _model.UpdateFolderView();
+        });
+    }
+    private bool _isCaching;
+    
+    
+    // // // FOLDER VIEW // // //
+
+    
+    public Dictionary<int, BitmapImage> GetThumbnails()
+    {
+        return ThumbnailCache;
     }
     
     

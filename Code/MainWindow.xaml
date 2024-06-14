@@ -131,6 +131,7 @@
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="Home" Icon="Home" Tag="Home"/>
                 <NavigationViewItem Content="Sort" Icon="Sort" Tag="Sort"/>
+                <NavigationViewItem Content="Folder" Icon="Folder" Tag="Folder"/>
             </NavigationView.MenuItems>
             
             <Grid>
@@ -241,7 +242,7 @@
                                        TextWrapping="Wrap"/>
                         </ScrollViewer>
                         
-                        <Grid Name="VideoHolder" Visibility="Visible">
+                        <Grid Name="VideoHolder" Visibility="Collapsed">
                             <MediaPlayerElement Name="MediaPlayer"
                                                 AutoPlay="False"
                                                 AreTransportControlsEnabled="True"
@@ -416,6 +417,30 @@
                     </Grid>
                     
                 </Grid>
+
+                <!--Folder view-->
+                <Grid Visibility="Collapsed" Name="FolderView" Background="Black">
+                    
+                    <GridView x:Name="FolderViewItems" HorizontalAlignment="Center">
+                        <GridView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Height="250" Width="250">
+                                    <Image Source="{Binding Path}" Stretch="UniformToFill"/>
+                                    <StackPanel Orientation="Vertical" Height="60" VerticalAlignment="Bottom" Background="#AA000000" Padding="12">
+                                        <TextBlock Text="{Binding Name}" TextWrapping="Wrap" MaxLines="2"/>
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </GridView.ItemTemplate>
+                        <GridView.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <ItemsWrapGrid Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </GridView.ItemsPanel>
+                    </GridView>
+                    
+                </Grid>
+                
             </Grid>
         </NavigationView>
         

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -65,6 +66,7 @@ namespace MediFiler_V2.Code
         public ListView FavoriteView1 => FavoriteView;
 
         public JsonHandler JsonHandler => _jsonHandler;
+        public FolderViewList folderViewList = new FolderViewList();
 
         private AppWindow _appWindow;
         private readonly MainWindowModel _model;
@@ -102,6 +104,7 @@ namespace MediFiler_V2.Code
             // Initializers
             _model = new MainWindowModel(this);
             _jsonHandler = new JsonHandler(this);
+            FolderViewItems.ItemsSource = folderViewList.FolderItems;
             SetSelectedItem("Home");
 
             JsonHandler.ReadJsonFile(); // Loads settings
@@ -146,6 +149,7 @@ namespace MediFiler_V2.Code
         {
             SortView.Visibility = Visibility.Visible;
             HomeView.Visibility = Visibility.Collapsed;
+            FolderView.Visibility = Visibility.Collapsed;
             SetSelectedItem("Sort");
         }
         
@@ -153,7 +157,17 @@ namespace MediFiler_V2.Code
         {
             SortView.Visibility = Visibility.Collapsed;
             HomeView.Visibility = Visibility.Visible;
+            FolderView.Visibility = Visibility.Collapsed;
             SetSelectedItem("Home");
+        }
+        
+        public void OpenFolderView()
+        {
+            //_model.UpdateFolderView();
+            SortView.Visibility = Visibility.Collapsed;
+            HomeView.Visibility = Visibility.Collapsed;
+            FolderView.Visibility = Visibility.Visible;
+            SetSelectedItem("Folder");
         }
 
         private void SetSelectedItem(string tag)
@@ -179,6 +193,9 @@ namespace MediFiler_V2.Code
                 case "Sort":
                     OpenSortView();
                     break;
+                case "Folder":
+                    OpenFolderView();
+                    break;
             }
         }
 
@@ -203,7 +220,7 @@ namespace MediFiler_V2.Code
             {
                 // Overscroll thrice to switch folders
                 _overscrollCounter += 1;
-                if (_overscrollCounter < 3)
+                if (_overscrollCounter < 4)
                 {
                     OverscrollAnimation(increment, _overscrollCounter); 
                     return;
