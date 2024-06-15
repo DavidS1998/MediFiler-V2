@@ -85,6 +85,7 @@ public class FileThumbnail
         _dispatcherQueue.TryEnqueue(() =>
         {
             FillPreviews(previewImageContainer);
+            _model.UpdateFolderView();
         });
         
         // Rapid folder switching may cause thumbnails from the wrong folder to be loaded

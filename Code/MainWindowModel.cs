@@ -115,25 +115,25 @@ public class MainWindowModel
 
     public Dictionary<string, BitmapImage> ConvertThumbnailsList()
     {
-        var _fileThumbnails = _fileThumbnail.GetThumbnails();
-        var _formattedDictionary = new Dictionary<string, BitmapImage>();
+        var fileThumbnails = _fileThumbnail.GetThumbnails();
+        var formattedDictionary = new Dictionary<string, BitmapImage>();
         
         try
         {
-            SortedDictionary<int,BitmapImage> _sortedThumbnails = new(_fileThumbnails);
+            SortedDictionary<int,BitmapImage> sortedThumbnails = new(fileThumbnails);
             
             // Gets the filename from the supplied ID
-            foreach (var thumbnail in _sortedThumbnails)
+            foreach (var thumbnail in sortedThumbnails)
             {
                 var file = CurrentFolder.SubFiles[thumbnail.Key];
-                _formattedDictionary.Add(file.Name, thumbnail.Value);
+                formattedDictionary.Add(file.Name, thumbnail.Value);
             }
-            return _formattedDictionary;
+            return formattedDictionary;
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
-            return _formattedDictionary;
+            return formattedDictionary;
         }
     }
     

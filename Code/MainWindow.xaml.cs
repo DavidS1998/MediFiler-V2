@@ -112,6 +112,7 @@ namespace MediFiler_V2.Code
             JsonHandler.ReadJsonFile(); // Loads settings
             JsonHandler.UpdateHomeFolders();
             SizeSlider.Value = _folderViewSize;
+            //folderViewList.UpdateSizes(_folderViewSize);
 
             _imageTransformGroup.Children.Add(_translateTransform);
             _imageTransformGroup.Children.Add(_scaleTransform);
