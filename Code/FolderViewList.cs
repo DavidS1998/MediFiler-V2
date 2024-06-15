@@ -40,11 +40,12 @@ public class FolderViewList
         Debug.WriteLine("Updated folder view");
     }
     
-    public void UpdateSizes(double size)
+    public void UpdateSizes(double sizeHeight, double sizeWidth)
     {
         foreach (var item in folderItems)
         {
-            item.Size = size;
+            item.SizeHeight = sizeHeight;
+            item.SizeWidth = sizeWidth;
         }
     }
 }
@@ -53,11 +54,17 @@ public class FolderItem : INotifyPropertyChanged
 {
     public string Name { get; set; }
     public BitmapImage Path { get; set; }
-    private double size;
-    public double Size
+    private double sizeHeight;
+    public double SizeHeight
     {
-        get => size;
-        set { size = value; OnPropertyChanged(nameof(Size)); }
+        get => sizeHeight;
+        set { sizeHeight = value; OnPropertyChanged(nameof(SizeHeight)); }
+    }
+    private double sizeWidth;
+    public double SizeWidth
+    {
+        get => sizeWidth;
+        set { sizeWidth = value; OnPropertyChanged(nameof(SizeWidth)); }
     }
         
     public FolderItem(string name, BitmapImage path)

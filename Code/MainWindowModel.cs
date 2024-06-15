@@ -110,7 +110,7 @@ public class MainWindowModel
     public void UpdateFolderView()
     {
         _mainWindow.folderViewList.ReplaceFolderItems(ConvertThumbnailsList());
-        _mainWindow.folderViewList.UpdateSizes(_mainWindow._folderViewSize);
+        _mainWindow.folderViewList.UpdateSizes(_mainWindow._folderViewSizeHeight, _mainWindow._folderViewSizeWidth);
     }
 
     public Dictionary<string, BitmapImage> ConvertThumbnailsList()

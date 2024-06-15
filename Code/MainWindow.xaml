@@ -52,7 +52,8 @@
                        HorizontalAlignment="Left"
                        Margin="44,0,0,0"/>
             
-            <Slider Name="SizeSlider" ValueChanged="SizeSlider_OnValueChanged" SnapsTo="StepValues" TickFrequency="50" Minimum="100" Maximum="400" StepFrequency="50" TickPlacement="TopLeft" Width="200" HorizontalAlignment="Right" Height="44" Margin="0 6 48 0"></Slider>
+            <Slider Name="SizeSliderHeight" ValueChanged="SizeSlider_OnValueChanged" SnapsTo="StepValues" TickFrequency="50" Minimum="100" Maximum="400" StepFrequency="50" TickPlacement="TopLeft" Width="150" HorizontalAlignment="Right" Height="44" Margin="0 6 48 0"></Slider>
+            <Slider Name="SizeSliderWidth" ValueChanged="SizeSlider_OnValueChanged" SnapsTo="StepValues" TickFrequency="50" Minimum="100" Maximum="400" StepFrequency="50" TickPlacement="TopLeft" Width="150" HorizontalAlignment="Right" Height="44" Margin="0 6 218 0"></Slider>
             <CommandBar HorizontalAlignment="Center" 
                 Background="Transparent" IsOpen="False" DefaultLabelPosition="Collapsed">
                 
@@ -427,7 +428,7 @@
                     <GridView x:Name="FolderViewItems" HorizontalAlignment="Center">
                         <GridView.ItemTemplate>
                             <DataTemplate>
-                                <Grid Height="{Binding Size}" Width="{Binding Size}" Tapped="FolderViewItemClicked">
+                                <Grid Height="{Binding SizeHeight}" Width="{Binding SizeWidth}" Tapped="FolderViewItemClicked">
                                     <Image Source="{Binding Path}" Stretch="UniformToFill"/>
                                     <StackPanel Orientation="Vertical" Height="60" VerticalAlignment="Bottom" Background="#AA000000" Padding="12">
                                         <TextBlock Text="{Binding Name}" TextWrapping="Wrap" MaxLines="2"/>

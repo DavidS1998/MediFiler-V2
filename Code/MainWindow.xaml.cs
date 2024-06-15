@@ -74,7 +74,8 @@ namespace MediFiler_V2.Code
         private readonly MainWindowModel _model;
         public bool SortPanelPinned = true;
         private int _overscrollCounter = 0;
-        public int _folderViewSize = 150;
+        public int _folderViewSizeHeight = 150;
+        public int _folderViewSizeWidth = 150;
         
         public DispatcherQueue dispatcherQueue;
 
@@ -111,7 +112,8 @@ namespace MediFiler_V2.Code
 
             JsonHandler.ReadJsonFile(); // Loads settings
             JsonHandler.UpdateHomeFolders();
-            SizeSlider.Value = _folderViewSize;
+            SizeSliderHeight.Value = _folderViewSizeHeight;
+            SizeSliderWidth.Value = _folderViewSizeWidth;
             //folderViewList.UpdateSizes(_folderViewSize);
 
             _imageTransformGroup.Children.Add(_translateTransform);
@@ -157,7 +159,8 @@ namespace MediFiler_V2.Code
             
             PlusButton.Visibility = Visibility.Visible;
             MinusButton.Visibility = Visibility.Visible;
-            SizeSlider.Visibility = Visibility.Collapsed;
+            SizeSliderHeight.Visibility = Visibility.Collapsed;
+            SizeSliderWidth.Visibility = Visibility.Collapsed;
             SetSelectedItem("Sort");
         }
         
@@ -169,7 +172,8 @@ namespace MediFiler_V2.Code
             
             PlusButton.Visibility = Visibility.Collapsed;
             MinusButton.Visibility = Visibility.Collapsed;
-            SizeSlider.Visibility = Visibility.Collapsed;
+            SizeSliderHeight.Visibility = Visibility.Collapsed;
+            SizeSliderWidth.Visibility = Visibility.Collapsed;
             SetSelectedItem("Home");
         }
         
@@ -182,7 +186,8 @@ namespace MediFiler_V2.Code
             
             PlusButton.Visibility = Visibility.Collapsed;
             MinusButton.Visibility = Visibility.Collapsed;
-            SizeSlider.Visibility = Visibility.Visible;
+            SizeSliderHeight.Visibility = Visibility.Visible;
+            SizeSliderWidth.Visibility = Visibility.Visible;
             SetSelectedItem("Folder");
         }
 
@@ -474,10 +479,18 @@ namespace MediFiler_V2.Code
         private void SizeSlider_OnValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
             if (e.NewValue == 0) return;
-            
-            folderViewList.UpdateSizes(e.NewValue);
-            _folderViewSize = (int)e.NewValue;
-            //Debug.WriteLine("Size: " + e.NewValue);
+            // Get name from sender
+            var name = ((FrameworkElement)sender).Name;
+            if (name == "SizeSliderHeight")
+            {
+                _folderViewSizeHeight = (int)e.NewValue;
+                folderViewList.UpdateSizes(_folderViewSizeHeight, _folderViewSizeWidth);
+            }
+            else if (name == "SizeSliderWidth")
+            {
+                _folderViewSizeWidth = (int)e.NewValue;
+                folderViewList.UpdateSizes(_folderViewSizeHeight, _folderViewSizeWidth);
+            }
         }
         
         
