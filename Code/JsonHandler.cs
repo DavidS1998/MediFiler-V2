@@ -19,6 +19,7 @@ public sealed class JsonHandler
     {
         public Dictionary<string, QuickAccessFolder> QuickFolders { get; set; }
         public Dictionary<string, QuickAccessFolder> FavoriteFolders { get; set; }
+        public int FolderSize { get; set; }
         public bool SortPanelPinned { get; set; }
     }
     public Dictionary<string, QuickAccessFolder> QuickFolders = new();
@@ -43,6 +44,7 @@ public sealed class JsonHandler
         var rootObject = JsonSerializer.Deserialize<SettingsRoot>(json);
         if (rootObject != null) QuickFolders = rootObject.QuickFolders;
         if (rootObject != null) FavoriteFolders = rootObject.FavoriteFolders;
+        if (rootObject != null) _mainWindow._folderViewSize = rootObject.FolderSize;
         if (rootObject != null) _mainWindow.SortPanelPinned = rootObject.SortPanelPinned;
         _mainWindow.TogglePin();
     }
@@ -94,6 +96,7 @@ public sealed class JsonHandler
         {
             { "QuickFolders", quickFolders },
             { "FavoriteFolders", FavoriteFolders },
+            { "FolderSize", _mainWindow._folderViewSize },
             { "SortPanelPinned", _mainWindow.SortPanelPinned }
         };
 

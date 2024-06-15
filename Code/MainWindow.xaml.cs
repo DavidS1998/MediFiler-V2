@@ -24,6 +24,8 @@ using WindowActivatedEventArgs = Microsoft.UI.Xaml.WindowActivatedEventArgs;
 using System.Runtime.InteropServices;
 using Windows.Storage.FileProperties;
 using MediFiler_V2.Code.Utilities;
+using Microsoft.UI.Input;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Shapes;
 using Path = ABI.Microsoft.UI.Xaml.Shapes.Path;
 
@@ -72,6 +74,7 @@ namespace MediFiler_V2.Code
         private readonly MainWindowModel _model;
         public bool SortPanelPinned = true;
         private int _overscrollCounter = 0;
+        public int _folderViewSize = 150;
         
         public DispatcherQueue dispatcherQueue;
 
@@ -81,7 +84,6 @@ namespace MediFiler_V2.Code
         public MainWindow()
         {
             Debug.Write("!!!!!!!!!!!! VERSION: " + typeof(string).Assembly.ImageRuntimeVersion);
-
             
             InitializeComponent();
             dispatcherQueue = DispatcherQueue.GetForCurrentThread();
@@ -109,6 +111,7 @@ namespace MediFiler_V2.Code
 
             JsonHandler.ReadJsonFile(); // Loads settings
             JsonHandler.UpdateHomeFolders();
+            SizeSlider.Value = _folderViewSize;
 
             _imageTransformGroup.Children.Add(_translateTransform);
             _imageTransformGroup.Children.Add(_scaleTransform);
@@ -150,6 +153,10 @@ namespace MediFiler_V2.Code
             SortView.Visibility = Visibility.Visible;
             HomeView.Visibility = Visibility.Collapsed;
             FolderView.Visibility = Visibility.Collapsed;
+            
+            PlusButton.Visibility = Visibility.Visible;
+            MinusButton.Visibility = Visibility.Visible;
+            SizeSlider.Visibility = Visibility.Collapsed;
             SetSelectedItem("Sort");
         }
         
@@ -158,6 +165,10 @@ namespace MediFiler_V2.Code
             SortView.Visibility = Visibility.Collapsed;
             HomeView.Visibility = Visibility.Visible;
             FolderView.Visibility = Visibility.Collapsed;
+            
+            PlusButton.Visibility = Visibility.Collapsed;
+            MinusButton.Visibility = Visibility.Collapsed;
+            SizeSlider.Visibility = Visibility.Collapsed;
             SetSelectedItem("Home");
         }
         
@@ -167,6 +178,10 @@ namespace MediFiler_V2.Code
             SortView.Visibility = Visibility.Collapsed;
             HomeView.Visibility = Visibility.Collapsed;
             FolderView.Visibility = Visibility.Visible;
+            
+            PlusButton.Visibility = Visibility.Collapsed;
+            MinusButton.Visibility = Visibility.Collapsed;
+            SizeSlider.Visibility = Visibility.Visible;
             SetSelectedItem("Folder");
         }
 
@@ -333,11 +348,17 @@ namespace MediFiler_V2.Code
         {
             var parent = ((FrameworkElement)e.OriginalSource).Parent;
             var index = PreviewImageContainer.Children.IndexOf((FrameworkElement)parent);
-            // Print out class of clicked child
-            Debug.WriteLine(index);
-
+            //Debug.WriteLine(index);
+            
             // Invalid element clicked
             if (index == -1 || e.OriginalSource.GetType() != typeof(Image)) return;
+            
+            // Right click instead opens the folder view
+            if (e.GetCurrentPoint(PreviewImageContainer).Properties.PointerUpdateKind == PointerUpdateKind.RightButtonReleased)
+            {
+                OpenFolderView();
+                return;
+            }
             
             // Figure out the requested index
             var middleIndex = (int)Math.Floor(PreviewImageContainer.Children.Count / 2.0);
@@ -430,6 +451,35 @@ namespace MediFiler_V2.Code
         }
         
         
+        // // // FOLDER VIEW // // //
+
+        
+        // Folder view actions
+        private void FolderViewItemClicked(object sender, TappedRoutedEventArgs e)
+        {
+            if (((FrameworkElement)e.OriginalSource).DataContext is not FolderItem item) return;
+
+            // Find index of clicked item
+            var index = folderViewList.FolderItems.IndexOf(item);
+            
+            Debug.WriteLine("Clicked: " + item.Name + " at position " + index);
+            
+            // Load the file
+            _model.CurrentFolderIndex = index;
+            _model.Load();
+            OpenSortView();
+        }
+        
+        private void SizeSlider_OnValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            if (e.NewValue == 0) return;
+            
+            folderViewList.UpdateSizes(e.NewValue);
+            _folderViewSize = (int)e.NewValue;
+            //Debug.WriteLine("Size: " + e.NewValue);
+        }
+        
+        
         // // // WINDOW EVENTS // // //
 
 
@@ -508,6 +558,12 @@ namespace MediFiler_V2.Code
                 node.AllExpanded = Expanded;
                 node.IsExpanded = Expanded;
             }
+        }
+        
+        // When window is closed
+        private void MainWindow_OnClosed(object sender, WindowEventArgs args)
+        {
+            JsonHandler.UpdateJsonFile();
         }
 
 

@@ -15,7 +15,7 @@ namespace MediFiler_V2.Code;
 public class MainWindowModel
 {
     // UI
-    public readonly MainWindow _mainWindow;
+    private readonly MainWindow _mainWindow;
     
     // Helper classes
     private readonly MetadataHandler _metadataHandler;
@@ -30,7 +30,7 @@ public class MainWindowModel
     public UndoHandler UndoHandler => _undoHandler;
 
     // Constants
-    public const int PreloadDistance = 21; // 21 fills ultrawide
+    public const int PreloadDistance = 13; // 21 fills ultrawide
 
     // TODO: Stop using global variables
     private int _latestLoadedImage = -1;
@@ -44,7 +44,7 @@ public class MainWindowModel
         _mainWindow = window;
 
         _metadataHandler = new MetadataHandler(_mainWindow, this, _mainWindow.AppTitleBar1);
-        _fileThumbnail = new FileThumbnail(this, PreloadDistance);
+        _fileThumbnail = new FileThumbnail(this, PreloadDistance, _mainWindow.dispatcherQueue);
         _imageLoader = new ImageLoader();
         
         // Set thumbnail preview count on startup
@@ -87,8 +87,8 @@ public class MainWindowModel
             _mainWindow.VideoViewer1.Source = null;
             _metadataHandler.ShowMetadata(currentFile);
             _fileThumbnail.ClearPreviewCache(_mainWindow.PreviewImageContainer1);
-            _fileThumbnail.PreloadThumbnails(CurrentFolderIndex, CurrentFolder, _mainWindow.PreviewImageContainer1);
             Task.Run(() => _fileThumbnail.CacheAllThumbnails());
+            _fileThumbnail.PreloadThumbnails(CurrentFolderIndex, CurrentFolder, _mainWindow.PreviewImageContainer1);
             DisplayCurrentFile(currentFile);
             
             _mainWindow.RenameButton1.IsEnabled = true;
@@ -110,6 +110,7 @@ public class MainWindowModel
     public void UpdateFolderView()
     {
         _mainWindow.folderViewList.ReplaceFolderItems(ConvertThumbnailsList());
+        _mainWindow.folderViewList.UpdateSizes(_mainWindow._folderViewSize);
     }
 
     public Dictionary<string, BitmapImage> ConvertThumbnailsList()

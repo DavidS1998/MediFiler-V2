@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Microsoft.UI;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
@@ -19,10 +20,12 @@ public class FileThumbnail
     public Dictionary<int, BitmapImage> ThumbnailCache = new();
 
     MainWindowModel _model;
+    private DispatcherQueue _dispatcherQueue;
     int PreloadDistance;
     
-    public FileThumbnail(MainWindowModel mainWindow, int preloadDistance)
+    public FileThumbnail(MainWindowModel mainWindow, int preloadDistance, DispatcherQueue dispatcherQueue)
     {
+        _dispatcherQueue = dispatcherQueue;
         _model = mainWindow;
         PreloadDistance = preloadDistance;
     }
@@ -52,7 +55,7 @@ public class FileThumbnail
             return;
         }
 
-        _model._mainWindow.dispatcherQueue.TryEnqueue(() =>
+        _dispatcherQueue.TryEnqueue(() =>
         {
             var bitmap = new BitmapImage();
             bitmap.SetSourceAsync(thumbnail);
@@ -64,7 +67,7 @@ public class FileThumbnail
     /// Caches several adjacent file thumbnails into the dictionary
     public async void PreloadThumbnails(int currentPositionInFolder, FileSystemNode currentFolder, StackPanel previewImageContainer)
     {
-        /*
+        // Immediate secondary caching; starts at user position, less waiting
         var tasks = new List<Task>();
         // For loop using PreloadDistance as length in both directions
         for (var i = -PreloadDistance; i < PreloadDistance; i++)
@@ -76,10 +79,10 @@ public class FileThumbnail
             tasks.Add(SaveThumbnailToCache(path, fileIndex));
         }
         await Task.WhenAll(tasks);
-        */
+        
         
         // Ensure the following code runs on the UI thread
-        _model._mainWindow.dispatcherQueue.TryEnqueue(() =>
+        _dispatcherQueue.TryEnqueue(() =>
         {
             FillPreviews(previewImageContainer);
         });
@@ -119,7 +122,7 @@ public class FileThumbnail
         Debug.WriteLine("Thumbnail caching complete");
         _isCaching = false;
         
-        _model._mainWindow.dispatcherQueue.TryEnqueue(() =>
+        _dispatcherQueue.TryEnqueue(() =>
         {
             _model.UpdateFolderView();
         });

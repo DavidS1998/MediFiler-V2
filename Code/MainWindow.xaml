@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:code="using:MediFiler_V2.Code"
+    Closed="MainWindow_OnClosed"
     xmlns:utilities="using:MediFiler_V2.Code.Utilities"
     mc:Ignorable="d">
 
@@ -29,6 +30,7 @@
                        VerticalAlignment="Center"
                        Margin="28,0,0,0" />
         </Grid>
+        
         <!--Info bar-->
         <Grid Row="1" Height="48" VerticalAlignment="Top" Background="Transparent" Name="InfoBar" 
               PointerExited="FullscreenChecker_OnPointerExited" PointerWheelChanged="MouseWheelScrollHandler">
@@ -50,6 +52,7 @@
                        HorizontalAlignment="Left"
                        Margin="44,0,0,0"/>
             
+            <Slider Name="SizeSlider" ValueChanged="SizeSlider_OnValueChanged" SnapsTo="StepValues" TickFrequency="50" Minimum="100" Maximum="400" StepFrequency="50" TickPlacement="TopLeft" Width="200" HorizontalAlignment="Right" Height="44" Margin="0 6 48 0"></Slider>
             <CommandBar HorizontalAlignment="Center" 
                 Background="Transparent" IsOpen="False" DefaultLabelPosition="Collapsed">
                 
@@ -424,7 +427,7 @@
                     <GridView x:Name="FolderViewItems" HorizontalAlignment="Center">
                         <GridView.ItemTemplate>
                             <DataTemplate>
-                                <Grid Height="250" Width="250">
+                                <Grid Height="{Binding Size}" Width="{Binding Size}" Tapped="FolderViewItemClicked">
                                     <Image Source="{Binding Path}" Stretch="UniformToFill"/>
                                     <StackPanel Orientation="Vertical" Height="60" VerticalAlignment="Bottom" Background="#AA000000" Padding="12">
                                         <TextBlock Text="{Binding Name}" TextWrapping="Wrap" MaxLines="2"/>
