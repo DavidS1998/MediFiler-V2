@@ -112,7 +112,7 @@ public class MainWindowModel
         _mainWindow.folderViewList.ReplaceFolderItems(ConvertThumbnailsList());
         _mainWindow.folderViewList.UpdateSizes(_mainWindow._folderViewSizeHeight, _mainWindow._folderViewSizeWidth);
     }
-
+                
     public Dictionary<string, BitmapImage> ConvertThumbnailsList()
     {
         var fileThumbnails = _fileThumbnail.GetThumbnails();

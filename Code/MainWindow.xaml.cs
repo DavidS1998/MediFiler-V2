@@ -1011,5 +1011,25 @@ namespace MediFiler_V2.Code
             _isDragging = false;
             ImageViewer.ReleasePointerCapture(e.Pointer);
         }
+
+        private void FolderViewItem_OnPointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            // Find StackPanel child, and collapse it
+            var stackPanel = FindVisualChild<StackPanel>(sender as Grid);
+            stackPanel.Visibility = Visibility.Collapsed;
+            
+            var image = FindVisualChild<Image>(sender as Grid);
+            image.Stretch = Stretch.Uniform;
+        }
+
+        private void FolderViewItem_OnPointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            // Find StackPanel child, and collapse it
+            var stackPanel = FindVisualChild<StackPanel>(sender as Grid);
+            stackPanel.Visibility = Visibility.Visible;
+            
+            var image = FindVisualChild<Image>(sender as Grid);
+            image.Stretch = Stretch.UniformToFill;
+        }
     }
 }
