@@ -11,7 +11,6 @@ using Windows.Foundation;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Microsoft.UI;
-using Microsoft.UI.Dispatching;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -23,10 +22,12 @@ using BitmapImage = Microsoft.UI.Xaml.Media.Imaging.BitmapImage;
 using WindowActivatedEventArgs = Microsoft.UI.Xaml.WindowActivatedEventArgs;
 using System.Runtime.InteropServices;
 using Windows.Storage.FileProperties;
+using Windows.System;
 using MediFiler_V2.Code.Utilities;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Shapes;
+using DispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue;
 using Path = ABI.Microsoft.UI.Xaml.Shapes.Path;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -456,6 +457,40 @@ namespace MediFiler_V2.Code
             _model.FolderOperations.DeleteFolderDialog(node);
         }
         
+        // Open in Explorer
+        private void OpenFolder_OnPointerPressed(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
+        {
+            if (((FrameworkElement)tappedRoutedEventArgs.OriginalSource).DataContext is not FileSystemNode node) return;
+            var folder = StorageFolder.GetFolderFromPathAsync(node.Path);
+            Launcher.LaunchFolderAsync(folder.GetAwaiter().GetResult());
+        }
+        
+        // Set as root
+        private void SetRootFolder_OnPointerPressed(object sender, TappedRoutedEventArgs e)
+        {
+            if (((FrameworkElement)e.OriginalSource).DataContext is not FileSystemNode node) return;
+            
+            // Does not exist
+            if (!Directory.Exists(node.Path)) { return; }
+            
+            IStorageItem item;
+            // If node has depth 0, use parent
+            if (node.Depth == 0)
+            {
+                var parent = Directory.GetParent(node.Path);
+                item = parent == null ? 
+                    StorageFolder.GetFolderFromPathAsync(node.Path).GetAwaiter().GetResult() :
+                    StorageFolder.GetFolderFromPathAsync(parent.FullName).GetAwaiter().GetResult();
+            }
+            else
+            {
+                item =  StorageFolder.GetFolderFromPathAsync(node.Path).GetAwaiter().GetResult();
+            }
+
+            // Load folder
+            OpenSortView();
+            LoadFolder(new List<IStorageItem> {item});
+        }
         
         // // // FOLDER VIEW // // //
 

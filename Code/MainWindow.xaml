@@ -31,7 +31,7 @@
                        Margin="28,0,0,0" />
         </Grid>
         
-        <!--Info bar-->
+        <!--Info and command bar-->
         <Grid Row="1" Height="48" VerticalAlignment="Top" Background="Transparent" Name="InfoBar" 
               PointerExited="FullscreenChecker_OnPointerExited" PointerWheelChanged="MouseWheelScrollHandler">
             <CommandBar Background="Transparent" DefaultLabelPosition="Collapsed" HorizontalAlignment="Left" Margin="8,0">
@@ -134,9 +134,12 @@
                         SelectionChanged="SideNav_OnSelectionChanged">
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="Home" Icon="Home" Tag="Home"/>
+                <NavigationViewItemSeparator/>
                 <NavigationViewItem Content="Sort" Icon="Sort" Tag="Sort"/>
                 <NavigationViewItem Content="Folder" Icon="Folder" Tag="Folder"/>
             </NavigationView.MenuItems>
+            <!--Navigation rail ends here-->
+
             
             <Grid>
                 <!--Home view-->
@@ -367,9 +370,12 @@
                                                 Height="18" Width="22" Margin="0,0,8,0">
                                                 <DropDownButton.Flyout>
                                                     <MenuFlyout>
-                                                        <MenuFlyoutItem Text="New folder" Tapped="NewFolder_OnPointerPressed"/>
-                                                        <MenuFlyoutItem Text="Rename folder" Tapped="RenameFolder_OnPointerPressed"/>
+                                                        <MenuFlyoutItem Text="New folder..." Tapped="NewFolder_OnPointerPressed"/>
+                                                        <MenuFlyoutItem Text="Rename folder..." Tapped="RenameFolder_OnPointerPressed"/>
                                                         <MenuFlyoutItem Text="Delete folder" Tapped="DeleteFolder_OnPointerPressed"/>
+                                                        <MenuFlyoutSeparator></MenuFlyoutSeparator>
+                                                        <MenuFlyoutItem Text="Open in Explorer" Tapped="OpenFolder_OnPointerPressed"></MenuFlyoutItem>
+                                                        <MenuFlyoutItem Text="Set as root folder" Tapped="SetRootFolder_OnPointerPressed"></MenuFlyoutItem>
                                                     </MenuFlyout>
                                                 </DropDownButton.Flyout>
                                             </DropDownButton>
@@ -380,8 +386,8 @@
                         </TreeView>
                     </Grid>
                     
-                    <Ellipse Name="RightOverflow" Width="300" Margin="0, 0, -190, 0" Fill="Cyan" IsHitTestVisible="False" Opacity="0" HorizontalAlignment="Right" VerticalAlignment="Stretch"/>
-                    <Ellipse Name="LeftOverflow" Width="300" Margin="-190, 0, 0, 0" Fill="Cyan" IsHitTestVisible="False" Opacity="0" HorizontalAlignment="Left" VerticalAlignment="Stretch"/>
+                    <Ellipse Name="RightOverflow" Width="300" Margin="0, 0, -190, 0" Fill="AliceBlue" IsHitTestVisible="False" Opacity="0" HorizontalAlignment="Right" VerticalAlignment="Stretch"/>
+                    <Ellipse Name="LeftOverflow" Width="300" Margin="-190, 0, 0, 0" Fill="AliceBlue" IsHitTestVisible="False" Opacity="0" HorizontalAlignment="Left" VerticalAlignment="Stretch"/>
 
                     <!-- Preview bottom bar -->
                     <Grid Height="150" Width="Auto" VerticalAlignment="Bottom" Background="#000000FF"
@@ -425,21 +431,28 @@
                 <!--Folder view-->
                 <Grid Visibility="Collapsed" Name="FolderView" Background="Black">
                     
-                    <GridView x:Name="FolderViewItems" HorizontalAlignment="Center">
-                        <GridView.ItemTemplate>
-                            <DataTemplate>
-                                <Grid Height="{Binding SizeHeight}" Width="{Binding SizeWidth}" Tapped="FolderViewItemClicked" PointerEntered="FolderViewItem_OnPointerEntered" PointerExited="FolderViewItem_OnPointerExited">
-                                    <Image Source="{Binding Path}" Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    <StackPanel Orientation="Vertical" Height="60" VerticalAlignment="Bottom" Background="{Binding BackgroundColor}" Padding="12" IsHitTestVisible="False">
-                                        <TextBlock Text="{Binding Name}" TextWrapping="Wrap" MaxLines="2"/>
-                                    </StackPanel>
-                                    
-                                    <ToolTipService.ToolTip>
-                                        <TextBlock Text="{Binding Name}" TextWrapping="Wrap"/>
-                                    </ToolTipService.ToolTip>
-                                </Grid>
-                            </DataTemplate>
-                        </GridView.ItemTemplate>
+                    <Grid.Resources>
+                        <DataTemplate x:Key="NormalTemplate">
+                            <Grid Height="{Binding SizeHeight}" Width="{Binding SizeWidth}" Tapped="FolderViewItemClicked" PointerEntered="FolderViewItem_OnPointerEntered" PointerExited="FolderViewItem_OnPointerExited">
+                                <Image Source="{Binding Path}" Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <StackPanel Orientation="Vertical" Height="60" VerticalAlignment="Bottom" Background="{Binding BackgroundColor}" Padding="12" IsHitTestVisible="False">
+                                    <TextBlock Text="{Binding Name}" TextWrapping="Wrap" MaxLines="2"/>
+                                </StackPanel>
+                                        
+                                <ToolTipService.ToolTip>
+                                    <TextBlock Text="{Binding Name}" TextWrapping="Wrap"/>
+                                </ToolTipService.ToolTip>
+                            </Grid>
+                        </DataTemplate>
+                        
+                        <DataTemplate x:Key="BreakTemplate">
+                            <Grid Width="auto" Height="0" Background="Wheat"/>
+                        </DataTemplate>
+                        <code:FolderItemTemplateSelector x:Key="FolderItemTemplateSelector"
+                                                         NormalTemplate="{StaticResource NormalTemplate}"
+                                                         BreakTemplate="{StaticResource BreakTemplate}"/>
+                    </Grid.Resources>
+                    <GridView x:Name="FolderViewItems" SelectionMode="None" ItemsSource="{Binding FolderItems}" ItemTemplateSelector="{StaticResource FolderItemTemplateSelector}">
                         <GridView.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <ItemsWrapGrid Orientation="Horizontal"/>

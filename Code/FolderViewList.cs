@@ -1,8 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using Windows.UI;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 
@@ -12,6 +17,7 @@ public class FolderViewList
 {
     public ObservableCollection<FolderItem> FolderItems => _folderItems;
     readonly ObservableCollection<FolderItem> _folderItems = new();
+    private SolidColorBrush _defaultColor = new SolidColorBrush(Color.FromArgb(200, 0, 0, 0));
     
     private readonly Dictionary<string, SolidColorBrush> _prefixColorMapping = new()
     {
@@ -31,13 +37,24 @@ public class FolderViewList
     public void ReplaceFolderItems(Dictionary<string, BitmapImage> thumbnailCache)
     {
         _folderItems.Clear();
+        SolidColorBrush lastColor = GetColorForName(thumbnailCache.Keys.First());
+        
         foreach (var item in thumbnailCache)
         {
             var name = item.Key;
             var color = GetColorForName(name);
+            
+            /*
+            // Add breaks in between each color change
+            if (color != lastColor)
+            {
+                _folderItems.Add(new FolderItem("Break", null, null, true));
+            }
+            lastColor = color;
+            */
+            
             _folderItems.Add(new FolderItem(name, item.Value, color));
         }
-        //Debug.WriteLine("Updated folder view");
     }
     
     public void UpdateSizes(double sizeHeight, double sizeWidth)
@@ -59,7 +76,7 @@ public class FolderViewList
             }
         }
         // Default color if no prefix matches
-        return new SolidColorBrush(Color.FromArgb(200, 0, 0, 0));
+        return _defaultColor;
     }
 }
 
@@ -68,25 +85,30 @@ public class FolderItem : INotifyPropertyChanged
     public string Name { get; set; }
     public BitmapImage Path { get; set; }
     
-    private SolidColorBrush backgroundColor = new SolidColorBrush(Color.FromArgb(170, 0, 0, 0));
+    private SolidColorBrush _backgroundColor = new SolidColorBrush(Color.FromArgb(170, 0, 0, 0));
     public SolidColorBrush BackgroundColor {
-        get => backgroundColor; 
-        set { backgroundColor = value; OnPropertyChanged(nameof(BackgroundColor)); }}
+        get => _backgroundColor; 
+        set { _backgroundColor = value; OnPropertyChanged(nameof(BackgroundColor)); }}
     
-    private double sizeHeight;
+    private double _sizeHeight;
     public double SizeHeight { 
-        get => sizeHeight; 
-        set { sizeHeight = value; OnPropertyChanged(nameof(SizeHeight)); }}
+        get => _sizeHeight;
+        set { _sizeHeight = value; OnPropertyChanged(nameof(SizeHeight)); }}
     
-    private double sizeWidth;
-    public double SizeWidth {
-        get => sizeWidth; 
-        set { sizeWidth = value; OnPropertyChanged(nameof(SizeWidth)); } }
-        
-    public FolderItem(string name, BitmapImage path, SolidColorBrush bgColor = null)
+    private double _sizeWidth;
+    public double SizeWidth
     {
+        get => _sizeWidth;
+        set { _sizeWidth = value; OnPropertyChanged(nameof(SizeWidth)); }}
+    
+    public bool IsBreak { get; set; }
+        
+    public FolderItem(string name, BitmapImage path, SolidColorBrush bgColor = null, bool isBreak = false)
+    {
+        // Random value between 100 and 200
         Name = name;
         Path = path;
+        IsBreak = isBreak;
         if (bgColor != null) BackgroundColor = bgColor;
     }
     
@@ -94,5 +116,17 @@ public class FolderItem : INotifyPropertyChanged
     protected virtual void OnPropertyChanged(string propertyName)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+}
+
+public class FolderItemTemplateSelector : DataTemplateSelector
+{
+    public DataTemplate NormalTemplate { get; set; }
+    public DataTemplate BreakTemplate { get; set; }
+
+    protected override DataTemplate SelectTemplateCore(object item, DependencyObject container)
+    {
+        var folderItem = item as FolderItem;
+        return folderItem != null && folderItem.IsBreak ? BreakTemplate : NormalTemplate;
     }
 }
