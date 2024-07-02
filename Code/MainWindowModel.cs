@@ -387,6 +387,7 @@ public class MainWindowModel
         CurrentFolderIndex = position < 0 ? 0 : (position >= newFolder.SubFiles.Count ? (newFolder.FileCount - 1) : position);
         Clear(sameFolder);
         Load();
+        _mainWindow.Title = CurrentFolder.Name;
     }
     
     /// Clear all loaded content
@@ -395,6 +396,7 @@ public class MainWindowModel
         _latestLoadedImage = -1;
         _fileThumbnail.ThumbnailCache.Clear();
         _mainWindow.AppTitleTextBlock1.Text = "MediFiler";
+        _mainWindow.Title = "MediFiler";
         _mainWindow.ImageViewer1.Source = null;
         _fileThumbnail.ClearPreviewCache(_mainWindow.PreviewImageContainer1);
         _metadataHandler.ClearMetadata();

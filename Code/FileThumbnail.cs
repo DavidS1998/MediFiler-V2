@@ -61,7 +61,6 @@ public class FileThumbnail
             bitmap.SetSourceAsync(thumbnail);
             ThumbnailCache.TryAdd(index, bitmap);
         });
-        
     }
     
     /// Caches several adjacent file thumbnails into the dictionary

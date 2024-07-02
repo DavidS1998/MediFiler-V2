@@ -30,6 +30,7 @@ namespace MediFiler_V2
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
             m_window = new MainWindow();
+            m_window.Title = "MediFiler";
             m_window.Activate();
         }
 
