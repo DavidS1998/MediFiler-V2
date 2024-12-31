@@ -37,7 +37,8 @@ public class FolderViewList
     public void ReplaceFolderItems(Dictionary<string, BitmapImage> thumbnailCache)
     {
         _folderItems.Clear();
-        SolidColorBrush lastColor = GetColorForName(thumbnailCache.Keys.First());
+        //SolidColorBrush lastColor = GetColorForName(thumbnailCache.Keys.First());
+        // ^ buggy
         
         foreach (var item in thumbnailCache)
         {

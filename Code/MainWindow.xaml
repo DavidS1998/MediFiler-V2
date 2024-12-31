@@ -295,7 +295,7 @@
                             Background="Transparent" Height="40" VerticalAlignment="Top">
                         
                             <CommandBar Background="Transparent" DefaultLabelPosition="Collapsed" HorizontalAlignment="Right" Margin="8,0">
-                                <AppBarButton Icon="Bullets" Label="Collapse list" IsEnabled="True" Width="32" Name="CollapseToggle" Tapped="CollapseButton_OnTapped">
+                                <AppBarButton Icon="Bullets" Label="Collapse list" IsEnabled="True" Width="32" Name="CollapseToggle" Click="CollapseButton_OnPointerReleased">
                                 </AppBarButton>
                             </CommandBar>
                         </Grid>

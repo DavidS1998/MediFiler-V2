@@ -593,10 +593,21 @@ namespace MediFiler_V2.Code
             //localSettings.Values["SortPanelPinned"] = _sortPanelPinned.ToString();
         }
         
-        public bool Expanded = true;
+        //public bool Expanded = true;
+        public enum ExpandStates { OPEN, OPEN_NOSET, CLOSED }
+        public ExpandStates CurrentState = ExpandStates.OPEN_NOSET;
+        
+        public void IncrementState()
+        {
+            // Increment the state and loop back to the first state if it goes beyond the last
+            CurrentState = (ExpandStates)(((int)CurrentState + 1) % Enum.GetValues(typeof(ExpandStates)).Length);
+        }
+        
         private void ToggleCollapseList()
         {
-            Expanded = !Expanded;
+            IncrementState();
+            
+            //Expanded = !Expanded;
             //var collapse = !TreeHandler.FullFolderList.FirstOrDefault().AllExpanded;
             
             // Iterate and collapse every FileSystemNode in FileTreeView list
@@ -604,8 +615,25 @@ namespace MediFiler_V2.Code
             {
                 // Skip if node is in TreeHandler.RootNodes
                 if (TreeHandler.RootNodes.Contains(node)) continue;
-                node.AllExpanded = Expanded;
-                node.IsExpanded = Expanded;
+
+                switch (CurrentState)
+                {
+                    case ExpandStates.OPEN:
+                        node.HideSpecialSubFolders = false;
+                        node.AllExpanded = true;
+                        node.IsExpanded = true;
+                        break;
+                    case ExpandStates.OPEN_NOSET:
+                        node.HideSpecialSubFolders = true;
+                        node.AllExpanded = true;
+                        node.IsExpanded = true;
+                        break;
+                    case ExpandStates.CLOSED:
+                        node.HideSpecialSubFolders = false;
+                        node.AllExpanded = false;
+                        node.IsExpanded = false;
+                        break;
+                }
             }
         }
         
@@ -850,7 +878,7 @@ namespace MediFiler_V2.Code
         { _model.Upscale(2); }
         
         // Toggle collapse
-        private void CollapseButton_OnTapped(object sender, TappedRoutedEventArgs e)
+        private void CollapseButton_OnPointerReleased(object sender, RoutedEventArgs e)
         {
             ToggleCollapseList();
         }

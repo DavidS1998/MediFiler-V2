@@ -28,6 +28,12 @@ namespace MediFiler_V2
         public List<FileSystemNode> SubFolders { get; set; } = new();
         public BitmapImage FolderIcon = null;
         public bool IsLoaded = false;
+
+        private bool _hideSpecialSubFolders = false;
+        public bool HideSpecialSubFolders {
+            get { return _hideSpecialSubFolders; } 
+            set { _hideSpecialSubFolders = value; OnPropertyChanged(nameof(HideSpecialSubFolders)); } }
+        
         private int _fileCount;
         public int FileCount { 
             get { return _fileCount; } 
@@ -241,6 +247,7 @@ namespace MediFiler_V2
                 _ when Name.Contains("[SET]") => false,
                 _ when Name.Contains("[Theme]") => false,
                 _ when Parent != null && Parent.Name.Contains("[CREATOR]") => false,
+                _ when SubFolders.All(subFolder => subFolder.Name.Contains('[') && subFolder.Name.Contains(']')) && _hideSpecialSubFolders => false,
                 _ when AllExpanded => true,
                 _ when !AllExpanded => false,
                 _ => true
