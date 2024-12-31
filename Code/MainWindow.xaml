@@ -434,7 +434,9 @@
                     <Grid.Resources>
                         <DataTemplate x:Key="NormalTemplate">
                             <Grid Height="{Binding SizeHeight}" Width="{Binding SizeWidth}" Tapped="FolderViewItemClicked" PointerEntered="FolderViewItem_OnPointerEntered" PointerExited="FolderViewItem_OnPointerExited">
-                                <Image Source="{Binding Path}" Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border Background="Transparent">
+                                    <Image Source="{Binding Path}" Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
                                 <StackPanel Orientation="Vertical" Height="60" VerticalAlignment="Bottom" Background="{Binding BackgroundColor}" Padding="12" IsHitTestVisible="False">
                                     <TextBlock Text="{Binding Name}" TextWrapping="Wrap" MaxLines="2"/>
                                 </StackPanel>

@@ -1057,6 +1057,16 @@ namespace MediFiler_V2.Code
         
         private void FileHolder_OnPointerPressed(object sender, PointerRoutedEventArgs e)
         {
+            // Middle click logic
+            var pointerPoint = e.GetCurrentPoint((UIElement)sender);
+            if (pointerPoint.Properties.IsMiddleButtonPressed)
+            {
+                // Handle middle-click logic here
+                //Debug.WriteLine("Middle mouse button clicked on the grid.");
+                OpenFolderView();
+                return;
+            }
+            
             if (!_model.FileActionInProgress) return;
             if (!e.GetCurrentPoint(ImageViewer).Properties.IsLeftButtonPressed) return;
             
