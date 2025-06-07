@@ -336,6 +336,10 @@
                             VerticalAlignment="Stretch" CanDrag="False" CanDragItems="False" CanReorderItems="False"
                             SelectionMode="None" Margin="60,40,0,150"
                             PointerMoved="SortView_OnPointerMoved" PointerExited="SortView_OnPointerExited">
+                            
+                            <TreeView.Resources>
+                                <code:BottomPaddingConverter x:Key="BottomPaddingConverter"/>
+                            </TreeView.Resources>
                             <TreeView.ItemTemplate>
                                 <DataTemplate x:DataType="local:FileSystemNode">
                                     <TreeViewItem
@@ -348,7 +352,9 @@
                                         Tapped="FolderListLeftClick" RightTapped="FolderListRightClick"
                                         ToolTipService.ToolTip="{x:Bind Name}"
                                         PointerExited="FolderItem_OnPointerExited" PointerEntered="FolderItem_OnPointerEntered">
-                                        <Grid Margin="0" Padding="0" Name="FolderGrid">
+                                        <Grid Name="FolderGrid"
+                                              Padding="{Binding IsLastInGroup, Converter={StaticResource BottomPaddingConverter}}"
+                                              Margin="0">
                                             <TextBlock Foreground="{x:Bind GetColor(FolderColor), Mode=OneWay}"
                                                        Margin="0"
                                                        FontSize="12"

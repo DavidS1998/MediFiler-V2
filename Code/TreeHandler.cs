@@ -45,6 +45,11 @@ public static class TreeHandler
 
         fileTreeView.ItemsSource = RootNodes;
         
+        foreach (var node in RootNodes)
+        {
+            node.UpdateIsLastInGroupFlags();
+        }
+        
         // Print performance data
         //stopwatch.Stop();
         //Debug.WriteLine("Tree generated in " + stopwatch.ElapsedMilliseconds + "ms");

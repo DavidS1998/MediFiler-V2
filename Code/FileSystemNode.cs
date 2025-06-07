@@ -28,8 +28,10 @@ namespace MediFiler_V2
         public List<FileSystemNode> SubFolders { get; set; } = new();
         public BitmapImage FolderIcon = null;
         public bool IsLoaded = false;
+        public bool IsLastInGroup { get; set; }
 
-        private bool _hideSpecialSubFolders = false;
+
+        private bool _hideSpecialSubFolders = true;
         public bool HideSpecialSubFolders {
             get { return _hideSpecialSubFolders; } 
             set { _hideSpecialSubFolders = value; OnPropertyChanged(nameof(HideSpecialSubFolders)); } }
@@ -235,6 +237,29 @@ namespace MediFiler_V2
         {
             return SubFolders.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         }
+        
+// Call this after all SubFolders are populated
+        public void UpdateIsLastInGroupFlags()
+        {
+            for (int i = 0; i < SubFolders.Count; i++)
+            {
+                var child = SubFolders[i];
+                bool isLast = (i == SubFolders.Count - 1);
+
+                bool hasNoSubfolders = child.SubFolders.Count == 0;
+                bool firstSubfolderIsSpecial =
+                    !hasNoSubfolders &&
+                    (child.SubFolders[0].Name.StartsWith("[") || child.SubFolders[0].Name.StartsWith("+"));
+
+                child.IsLastInGroup = isLast && (hasNoSubfolders || firstSubfolderIsSpecial);
+            }
+
+            foreach (var child in SubFolders)
+            {
+                child.UpdateIsLastInGroupFlags();
+            }
+        }
+
         
         public bool ConditionalExpand(bool isExpanded)
         {
